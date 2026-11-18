@@ -16,9 +16,59 @@ from rfikit.evaluate import (
 from rfikit.synth import Corpus, GenParams, generate, render_files, write_corpus
 from rfikit.synth.files import CITATION_HEADER as OUT_CITATION_HEADER
 from rfikit.synth.files import NEGATIVE_HEADER as OUT_NEGATIVE_HEADER
+from rfikit.synth.files import OWNERS, ROOT_README, UnsafeOutput, sha256
 from rfikit.synth.files import RFI_HEADER as OUT_RFI_HEADER
-from rfikit.synth.files import sha256
 from synth_helpers import BOM, EM_DASH, EN_DASH, NBSP, column_text, to_gold
+
+
+def test_owners_sentence_matches_the_spec() -> None:
+    spec = (Path(__file__).resolve().parent.parent / "docs" / "spec.md").read_text(
+        encoding="utf-8"
+    )
+    assert OWNERS in spec
+    assert "NFPA" in OWNERS and "EN are used" in OWNERS
+    assert "employer" not in ROOT_README
+
+
+def test_no_cell_can_start_a_spreadsheet_formula(tmp_path: Path) -> None:
+    for seed in (1, 2, 3, 42, 99):
+        out = tmp_path / str(seed)
+        write_corpus(generate(seed, 80), out)
+        for path in sorted(out.rglob("*.csv")):
+            with path.open(encoding="utf-8", newline="") as handle:
+                for row in csv.reader(handle):
+                    for cell in row:
+                        assert not cell.startswith(("=", "+", "-", "@", "\t", "\r"))
+
+
+def test_a_linked_output_folder_is_refused(corpus: Corpus, tmp_path: Path) -> None:
+    real = tmp_path / "real"
+    real.mkdir()
+    link = tmp_path / "link"
+    link.symlink_to(real, target_is_directory=True)
+    with pytest.raises(UnsafeOutput, match="symbolic link"):
+        write_corpus(corpus, link)
+    assert list(real.iterdir()) == []
+
+
+def test_a_linked_subfolder_or_file_is_refused(corpus: Corpus, tmp_path: Path) -> None:
+    elsewhere = tmp_path / "elsewhere"
+    elsewhere.mkdir()
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "labels").symlink_to(elsewhere, target_is_directory=True)
+    with pytest.raises(UnsafeOutput):
+        write_corpus(corpus, out)
+    (out / "labels").unlink()
+    (out / "input").mkdir()
+    target = elsewhere / "kept.csv"
+    target.write_text("keep")
+    (out / "input" / "rfis.csv").symlink_to(target)
+    with pytest.raises(UnsafeOutput):
+        write_corpus(corpus, out)
+    assert target.read_text() == "keep"
+    assert list(elsewhere.iterdir()) == [target]
+
 
 NAMES = [
     "README.txt",

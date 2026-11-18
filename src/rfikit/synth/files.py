@@ -38,9 +38,10 @@ DISCLAIMER = (
     "shown."
 )
 OWNERS = (
-    "The names IEEE, NESC, IEC, ANSI, ASTM and NEMA are used only to identify "
-    "their documents. The names belong to their owners. This project has no "
-    "affiliation with or endorsement from any of them."
+    "Body names such as IEEE, NESC, IEC, ANSI, ASTM, NEMA, NFPA, UL, ASME, ISA, "
+    "TIA, CSA and EN are used only to identify their documents. The names belong "
+    "to their owners. This project has no affiliation with or endorsement from "
+    "any of them."
 )
 ROOT_README = "\n".join(
     [
@@ -48,9 +49,8 @@ ROOT_README = "\n".join(
         "",
         "All data in this folder is synthetic. The generator wrote the RFIs from",
         "templates. Project codes, role ids and disciplines are invented. No real",
-        "company, facility, project or person appears, and nothing comes from any",
-        "employer. Only standard designations and clause numbers appear, never",
-        "titles or standard text.",
+        "company, facility, project or person appears. Only standard designations",
+        "and clause numbers appear, never titles or standard text.",
         "",
         "Files",
         "- input/rfis.csv: rfi_id, subject, question, response.",
@@ -197,8 +197,31 @@ def render_files(corpus: Corpus) -> dict[str, bytes]:
     return dict(sorted(files.items()))
 
 
+class UnsafeOutput(ValueError):
+    pass
+
+
+def _refuse_symlinks(out: Path, names: Iterable[str]) -> None:
+    paths = [out, out / "input", out / "labels"]
+    paths.extend(out / name for name in names)
+    for path in paths:
+        if path.is_symlink():
+            raise UnsafeOutput(
+                f"{path} is a symbolic link. Pick a plain folder for the output "
+                "or replace the link with a real folder or file, then run again."
+            )
+
+
 def write_corpus(corpus: Corpus, out: Path) -> None:
-    for name, data in render_files(corpus).items():
+    """Write the files of a corpus into out.
+
+    Existing files with the same names are overwritten. The output folder, its
+    input and labels folders and every target file must not be symbolic links,
+    otherwise UnsafeOutput is raised before anything is written.
+    """
+    files = render_files(corpus)
+    _refuse_symlinks(out, files)
+    for name, data in files.items():
         path = out / name
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
