@@ -4,7 +4,7 @@ Status: Accepted
 
 ## Context
 
-The spec fixes four levels (strict span, overlap span, full key, base key), a clause line, breakdowns, baselines and a leak check, but leaves several choices open. Each one changes a published number, so each is written here before the numbers exist.
+The spec fixes four levels (strict span, overlap span, full key, base key), a clause line, breakdowns, baselines and a leak check, but leaves several choices open. Each one changes a published number, so each is written down here, and any later change to a rule is logged here.
 
 ## Decision
 
@@ -26,7 +26,7 @@ Leak check. "Cleaned" means rfikit.textnorm.clean (the one-to-one character map)
 
 Methods. evaluate takes extra span methods as callables from text to a list of (body, start, end). The package never imports benchmarks/; scripts/make_measured.py passes the prototype and the naive baseline. A method is run on each column alone. Its hits are made non-overlapping first (sorted by start, longest first, a hit that starts inside the last kept hit is dropped), because the sweep needs non-overlapping spans and one mention should not count twice. This helps the baselines a little, which is the safe direction. Baselines are scored at strict and overlap span, overall and by body, so the NESC line is the body NESC group. Their key levels are not computed.
 
-The evaluate function reads one folder written by write_corpus (one seed), splits it by the family label, and adds the written folder if given. It makes no interval, since one seed gives none. evaluate_seeds generates the report seeds in memory and is what make_measured.py uses.
+The evaluate function reads one folder written by write_corpus (one seed), splits it by the family label, and adds the written folder if given. It makes no interval, since one seed gives none. A family label other than A or B in that folder raises a LabelError that names the value, so no RFI is silently left out. evaluate_seeds generates the report seeds in memory and is what make_measured.py uses.
 
 Options considered:
 

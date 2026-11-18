@@ -3,9 +3,10 @@ from pathlib import Path
 
 import pytest
 
-from eval_helpers import W1_Q, W2_Q, at, make_folder, write_rows
+from eval_helpers import W1_Q, W2_Q, at, cite, make_folder, write_rows
 from rfikit.evaluate import (
     CITATION_HEADER,
+    MAX_BYTES,
     RFI_HEADER,
     EvalPlan,
     GoldCitation,
@@ -210,7 +211,7 @@ def test_rfikit_preds_carry_keys_and_clauses() -> None:
 
 
 def test_leak_key_cleans_text() -> None:
-    a = Rfi("R1", "Hello  World", "IEEE 80‐ 2013\r\nx", "")
+    a = Rfi("R1", "Hello  World", "IEEE 80\u2010 2013\r\nx", "")
     b = Rfi("R2", "hello world", "ieee 80- 2013 x", "other response")
     assert leak_key(a) == leak_key(b)
     assert leak_key(a) != leak_key(Rfi("R3", "hello world", "ieee 80", ""))
@@ -366,3 +367,76 @@ def test_folder_citation_for_unknown_rfi(tmp_path: Path) -> None:
 
 def test_text_constant_has_second_rfi_parts() -> None:
     assert "ANSI/TIA-568" in W2_Q
+
+
+def test_touching_ends_are_not_hits() -> None:
+    s, e = at(TEXT, "Rule 12")
+    neg = GoldNegative("R1", "question", e, e + 3, "date")
+    out = gold(e + 4, e + 8, key="NFPA 1", scope="out")
+    p = Pred("question", s, e, "NESC")
+    tally = score_item(item([out], [neg]), [p], True)
+    assert tally["neg.date.hit"] == 0
+    assert tally["oos.hit"] == 0
+    before = GoldNegative("R1", "question", s - 3, s, "date")
+    assert score_item(item([], [before]), [p], True)["neg.date.hit"] == 0
+    out_before = gold(s - 3, s, key="NFPA 1", scope="out")
+    assert score_item(item([out_before]), [p], True)["oos.hit"] == 0
+
+
+def test_overlapping_gold_in_one_column_is_rejected(tmp_path: Path) -> None:
+    folder = make_folder(tmp_path / "data")
+    rows = [
+        cite("W1", W1_Q, "IEEE C57.12.00-2015", "IEEE C57", "IEEE C57"),
+        cite("W1", W1_Q, "C57.12.00-2015", "IEEE C57", "IEEE C57"),
+    ]
+    write_rows(folder / "labels" / "citations.csv", CITATION_HEADER, rows)
+    with pytest.raises(LabelError, match="overlap"):
+        items_from_folder(folder)
+
+
+def test_unknown_family_in_data_is_an_error(tmp_path: Path) -> None:
+    folder = make_folder(tmp_path / "data", second_family="C")
+    with pytest.raises(LabelError, match="family 'C'"):
+        evaluate(folder, None, SMALL)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"draws": 0},
+        {"draws": 100_001},
+        {"report_seeds": ()},
+        {"report_seeds": tuple(range(1001))},
+        {"n": 0},
+        {"bootstrap_seed": "x"},
+        {"bootstrap_seed": True},
+    ],
+)
+def test_plan_limits(changes: dict[str, object]) -> None:
+    with pytest.raises(ValueError):
+        EvalPlan(**changes)  # type: ignore[arg-type]
+
+
+def test_plan_limits_allow_the_edges() -> None:
+    EvalPlan(draws=1, n=1, report_seeds=(1,))
+    EvalPlan(draws=100_000, report_seeds=tuple(range(1000)))
+
+
+def test_big_label_file_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = make_folder(tmp_path / "data")
+    monkeypatch.setattr("rfikit.evaluate.MAX_BYTES", 10)
+    with pytest.raises(LabelError, match="the limit is 10"):
+        items_from_folder(folder)
+    assert MAX_BYTES == 64 * 1024 * 1024
+
+
+def test_symlinked_label_file_is_rejected(tmp_path: Path) -> None:
+    folder = make_folder(tmp_path / "data")
+    real = folder / "labels" / "negatives.csv"
+    moved = tmp_path / "elsewhere.csv"
+    real.rename(moved)
+    real.symlink_to(moved)
+    with pytest.raises(LabelError, match="symbolic link"):
+        items_from_folder(folder)

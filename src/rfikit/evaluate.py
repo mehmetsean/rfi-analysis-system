@@ -77,6 +77,7 @@ NEGATIVE_HEADER = ("rfi_id", "column", "start", "end", "kind")
 RFI_HEADER = ("rfi_id", "issue_type", "group_id", "template_id", "family")
 RFI_REQUIRED = ("rfi_id", "template_id", "family")
 INPUT_HEADER = ("rfi_id", "subject", "question", "response")
+MAX_BYTES = 64 * 1024 * 1024
 RFIKIT = "rfikit"
 FAMILIES = ("A", "B")
 
@@ -172,6 +173,11 @@ class _Row:
 
 
 def _read_rows(path: Path, header: tuple[str, ...]) -> list[_Row]:
+    if path.is_symlink():
+        raise LabelError(f"{path.name}: symbolic links are not read")
+    size = path.stat().st_size
+    if size > MAX_BYTES:
+        raise LabelError(f"{path.name}: file is {size} bytes, the limit is {MAX_BYTES}")
     try:
         with path.open(encoding="utf-8", newline="") as handle:
             text = handle.read()
@@ -289,6 +295,18 @@ class EvalPlan:
     draws: int = 2000
     bootstrap_seed: int = 4242
 
+    def __post_init__(self) -> None:
+        if not 1 <= self.draws <= 100_000:
+            raise ValueError("draws must be between 1 and 100000")
+        if not 1 <= len(self.report_seeds) <= 1000:
+            raise ValueError("report_seeds must hold 1 to 1000 seeds")
+        if self.n < 1:
+            raise ValueError("n must be at least 1")
+        if isinstance(self.bootstrap_seed, bool) or not isinstance(
+            self.bootstrap_seed, int
+        ):
+            raise ValueError("bootstrap_seed must be an int")
+
 
 @dataclass(frozen=True)
 class Item:
@@ -325,7 +343,6 @@ class EvalReport:
 
 
 SpanMethod = Callable[[str], Sequence[tuple[str, int, int]]]
-COLUMNS = ("subject", "question", "response")
 KEYED_DIMS = ("body", "noise", "inferred", "catalog")
 KEYED_LEVELS = ("strict", "overlap", "key")
 PLAIN_LEVELS = ("strict", "overlap")
@@ -375,6 +392,8 @@ def items_from_folder(folder: Path) -> list[Item]:
     for rfi_id in [*families, *by_cite, *by_neg]:
         if rfi_id not in known:
             raise LabelError(f"{folder.name}: label for unknown rfi_id {rfi_id!r}")
+    for rfi_id, found in by_cite.items():
+        _check_disjoint(folder, rfi_id, found)
     items: list[Item] = []
     for rfi in rfis:
         if rfi.rfi_id not in families:
@@ -388,6 +407,16 @@ def items_from_folder(folder: Path) -> list[Item]:
             )
         )
     return items
+
+
+def _check_disjoint(folder: Path, rfi_id: str, cites: list[GoldCitation]) -> None:
+    last: dict[str, int] = {}
+    for c in sorted((c for c in cites if c.scope == "in"), key=lambda c: c.start):
+        if c.start < last.get(c.column, 0):
+            raise LabelError(
+                f"{folder.name}: in-scope labels of {rfi_id} overlap in {c.column}"
+            )
+        last[c.column] = max(last.get(c.column, 0), c.end)
 
 
 def drop_overlaps(
@@ -623,6 +652,12 @@ def evaluate(
     methods: Mapping[str, SpanMethod] | None = None,
 ) -> EvalReport:
     items = items_from_folder(data)
+    for i in items:
+        if i.family not in FAMILIES:
+            raise LabelError(
+                f"{data.name}/labels/rfis.csv: family {i.family!r} for "
+                f"{i.rfi.rfi_id} is not A or B"
+            )
     generated = {
         family: [[i for i in items if i.family == family]] for family in FAMILIES
     }
