@@ -8,7 +8,7 @@ All notable changes are listed here. The format follows Keep a Changelog.
 
 - Package scaffold: pyproject.toml, src/rfikit with the frozen data types (Rfi, Designation, Citation) and a stub command line.
 - Designation keys and base keys, with unit and property tests.
-- CI on Python 3.11 to 3.14 (ruff, mypy --strict, pytest with a 90 percent coverage gate), CodeQL and Dependabot.
+- CI on Python 3.11 to 3.14 (ruff, mypy --strict on src and tests, pytest with a 90 percent coverage gate in the CI command), CodeQL and Dependabot.
 - Architecture decision records 1 to 5.
 
 ### Removed

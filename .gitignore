@@ -24,3 +24,6 @@ _site/
 *.xlsx
 *.xls
 *.csv
+!labels/*.csv
+!examples/*.csv
+!heldout/*.csv
