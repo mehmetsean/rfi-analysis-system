@@ -511,3 +511,8 @@ def test_unit_after_item_drops_the_item(text: str) -> None:
 def test_nesc_on_next_line_is_not_a_list_item() -> None:
     text = "IEEE C57.12.00, C2\nNESC Rule 232"
     assert keys(text) == ["IEEE C57.12.00", "NESC Rule 232"]
+
+
+def test_clause_reach_is_forty_characters() -> None:
+    assert keys("IEEE 80" + " " * 40 + "Table 3") == ["IEEE 80 Table 3"]
+    assert keys("IEEE 80" + " " * 41 + "Table 3") == ["IEEE 80"]
