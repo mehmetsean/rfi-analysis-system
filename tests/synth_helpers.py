@@ -3,7 +3,12 @@ import re
 from rfikit.evaluate import GoldCitation
 from rfikit.synth.model import CitationLabel, GeneratedRfi
 
-DASHES = {"‐", "‑", "‒", "−"}
+DASHES = {chr(code) for code in (0x2010, 0x2011, 0x2012, 0x2212)}
+EN_DASH = chr(0x2013)
+EM_DASH = chr(0x2014)
+NBSP = chr(0xA0)
+NNBSP = chr(0x202F)
+BOM = chr(0xFEFF)
 BODY_WORDS = ("IEEE", "IEC", "ANSI", "ASTM", "NEMA", "NESC")
 
 

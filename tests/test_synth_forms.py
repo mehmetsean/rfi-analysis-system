@@ -7,6 +7,7 @@ from rfikit.synth import cites, noise
 from rfikit.synth.forms import Rendered, render_entry, render_nesc
 from rfikit.synth.params import GenParams
 from rfikit.synth.rng import Rng
+from synth_helpers import EM_DASH, EN_DASH
 
 
 def sample(
@@ -153,7 +154,7 @@ def test_noise_classes_change_the_text_as_named() -> None:
                 out = noise.apply_noise(Rng(seed), item, name)
                 assert out != item.text, (item.text, name)
                 assert out == out.strip()
-                assert "\u2013" not in out and "\u2014" not in out
+                assert EN_DASH not in out and EM_DASH not in out
                 if name == "unicode_dash":
                     assert "-" not in out
                     assert set(out) - set(item.text) <= set(noise.DASHES)

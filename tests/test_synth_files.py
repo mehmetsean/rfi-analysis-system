@@ -18,7 +18,7 @@ from rfikit.synth.files import CITATION_HEADER as OUT_CITATION_HEADER
 from rfikit.synth.files import NEGATIVE_HEADER as OUT_NEGATIVE_HEADER
 from rfikit.synth.files import RFI_HEADER as OUT_RFI_HEADER
 from rfikit.synth.files import sha256
-from synth_helpers import column_text, to_gold
+from synth_helpers import BOM, EM_DASH, EN_DASH, NBSP, column_text, to_gold
 
 NAMES = [
     "README.txt",
@@ -152,11 +152,11 @@ def test_crlf_and_non_ascii_survive_the_round_trip(
 ) -> None:
     raw = (folder / "input" / "rfis.csv").read_bytes()
     text = raw.decode("utf-8")
-    assert not text.startswith("﻿")
-    assert "\u2013" not in text and "\u2014" not in text
+    assert not text.startswith(BOM)
+    assert EN_DASH not in text and EM_DASH not in text
     stored = read_inputs(folder)
     assert any("\r\n" in row["question"] for row in stored.values())
-    assert any(" " in row["subject"] + row["question"] for row in stored.values())
+    assert any(NBSP in row["subject"] + row["question"] for row in stored.values())
 
 
 def test_writing_twice_gives_the_same_bytes(corpus: Corpus, tmp_path: Path) -> None:

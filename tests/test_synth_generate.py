@@ -12,6 +12,10 @@ from rfikit.types import BODIES
 from synth_helpers import (
     BODY_WORDS,
     DASHES,
+    EM_DASH,
+    EN_DASH,
+    NBSP,
+    NNBSP,
     cites_nesc,
     column_text,
     explicit_nesc,
@@ -163,8 +167,8 @@ def test_noise_labels_are_backed_by_the_text(corpus: Corpus) -> None:
                 assert all(w == w.upper() for w in words)
             if c.noise_class == "spacing":
                 assert (
-                    "\u00a0" in piece
-                    or "\u202f" in piece
+                    NBSP in piece
+                    or NNBSP in piece
                     or "  " in piece
                     or re.search(r"[A-Za-z]\d", piece)
                     or re.search(r"\b[A-Z] \d", piece)
@@ -264,10 +268,10 @@ def test_the_texts_are_never_repeated(corpus: Corpus) -> None:
 def test_no_en_or_em_dash(corpus: Corpus) -> None:
     for g in corpus.rfis:
         text = g.rfi.subject + g.rfi.question + g.rfi.response
-        assert "\u2013" not in text and "\u2014" not in text
+        assert EN_DASH not in text and EM_DASH not in text
     for path in SYNTH.glob("*.py"):
         raw = path.read_text(encoding="utf-8")
-        assert "\u2013" not in raw and "\u2014" not in raw
+        assert EN_DASH not in raw and EM_DASH not in raw
 
 
 def test_families_follow_the_template_list(corpus: Corpus) -> None:
@@ -307,7 +311,7 @@ def test_generator_does_not_import_evaluate() -> None:
 
 
 def test_norm_helper_still_strips_noise() -> None:
-    assert norm("IEEE\r\nC57.12.\n00‑ 2015") == "IEEEC57.12.00-2015"
+    assert norm("IEEE\r\nC57.12.\n00" + chr(0x2011) + " 2015") == "IEEEC57.12.00-2015"
 
 
 def test_family_b_rows_are_about_a_quarter(corpus: Corpus) -> None:

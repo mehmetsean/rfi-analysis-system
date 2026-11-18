@@ -1,9 +1,9 @@
 from rfikit.synth.forms import Rendered
 from rfikit.synth.rng import Rng
 
-DASHES = ("‐", "‑", "‒", "−")
+DASHES = tuple(chr(code) for code in (0x2010, 0x2011, 0x2012, 0x2212))
 BREAKS = ("\n", "\r\n", "\n  ")
-SPACES = (" ", " ")
+SPACES = (chr(0xA0), chr(0x202F))
 MISSPELLINGS = {
     "IEEE": ("IEE", "IEEEE"),
     "IEC": ("IE", "ICE"),

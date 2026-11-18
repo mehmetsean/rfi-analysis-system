@@ -3,7 +3,7 @@ from hypothesis import strategies as st
 
 from rfikit.evaluate import NEGATIVE_KINDS, NOISE_CLASSES
 from rfikit.synth import GenParams, generate
-from synth_helpers import column_text
+from synth_helpers import EM_DASH, EN_DASH, column_text
 
 PARAMS = st.builds(
     GenParams,
@@ -47,7 +47,7 @@ def test_offsets_hold_for_any_seed(seed: int, n: int, params: GenParams) -> None
             if left[0] == right[0]:
                 assert left[2] <= right[1]
         joined = g.rfi.subject + g.rfi.question + g.rfi.response
-        assert "\u2013" not in joined and "\u2014" not in joined
+        assert EN_DASH not in joined and EM_DASH not in joined
 
 
 @settings(max_examples=60, deadline=None)
