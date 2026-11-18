@@ -3,7 +3,7 @@ Synthetic data. Example input and output of rfikit analyze.
 rfis.csv is the input of rfikit generate --seed 42 --n 200.
 results/ is the output of rfikit analyze on that file:
 
-rfikit analyze examples/rfis.csv --out results/ --synthetic
+rfikit analyze examples/rfis.csv --out examples/results/ --synthetic
 
 Rebuild or check these files with scripts/make_examples.py.
 

@@ -12,9 +12,11 @@ The input is synthetic data.
 
 ## Top base keys (up to 20)
 
+NESC (no rule given) counts mentions of NESC with no rule, table or section, such as an edition alone. It is not a count of one rule.
+
 | Base key | Citations |
 |---|---|
-| NESC | 64 |
+| NESC (no rule given) | 64 |
 | NESC Rule 238 | 7 |
 | ANSI C84.1 | 6 |
 | ASTM A153/A153M | 6 |
@@ -48,7 +50,7 @@ The input is synthetic data.
 
 ## Citations per RFI
 
-How many RFIs have 0, 1, 2 and more citations.
+How many RFIs have each number of citations.
 
 | Citations | RFIs |
 |---|---|
@@ -60,18 +62,18 @@ How many RFIs have 0, 1, 2 and more citations.
 
 ## RFIs with the most citations (up to 10)
 
-| rfi\_id | Citations |
+| RFI id | Citations |
 |---|---|
-| 'R0044' | 4 |
-| 'R0047' | 4 |
-| 'R0068' | 4 |
-| 'R0071' | 4 |
-| 'R0075' | 4 |
-| 'R0087' | 4 |
-| 'R0109' | 4 |
-| 'R0141' | 4 |
-| 'R0168' | 4 |
-| 'R0003' | 3 |
+| R0044 | 4 |
+| R0047 | 4 |
+| R0068 | 4 |
+| R0071 | 4 |
+| R0075 | 4 |
+| R0087 | 4 |
+| R0109 | 4 |
+| R0141 | 4 |
+| R0168 | 4 |
+| R0003 | 3 |
 
 ## Extraction rates, measured on synthetic data
 
@@ -127,7 +129,7 @@ Measured on synthetic data: generated sets A and B from rfikit.synth and the wri
 
 ## License
 
-All rights reserved. You may view the code and run it to evaluate it. Commercial use needs a paid license from Mehmet Tuzunkan: https://www.linkedin.com/in/mstuzunkan
+All rights reserved. You may view the code and run it to evaluate it. Commercial use needs a paid license from Mehmet Tuzunkan: https\://www\.linkedin.com/in/mstuzunkan
 
 ## Disclaimer
 

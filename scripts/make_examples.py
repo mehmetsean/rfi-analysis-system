@@ -1,10 +1,6 @@
-"""Rebuild or check examples/.
-
-python scripts/make_examples.py          rewrite examples/
-python scripts/make_examples.py --check  rebuild in a temp folder, exit 1 on a diff
-"""
-
 import argparse
+import contextlib
+import io
 import shutil
 import sys
 import tempfile
@@ -24,7 +20,7 @@ README = "\n".join(
         f"rfis.csv is the input of rfikit generate --seed {SEED} --n {COUNT}.",
         "results/ is the output of rfikit analyze on that file:",
         "",
-        "rfikit analyze examples/rfis.csv --out results/ --synthetic",
+        "rfikit analyze examples/rfis.csv --out examples/results/ --synthetic",
         "",
         "Rebuild or check these files with scripts/make_examples.py.",
         "",
@@ -39,6 +35,11 @@ README = "\n".join(
 
 
 def build(folder: Path) -> None:
+    with contextlib.redirect_stdout(io.StringIO()):
+        _build(folder)
+
+
+def _build(folder: Path) -> None:
     data = folder / "data"
     if rfikit(["generate", "--seed", str(SEED), "--n", str(COUNT), "--out", str(data)]):
         raise SystemExit("generate failed")
