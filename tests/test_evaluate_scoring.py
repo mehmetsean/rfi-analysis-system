@@ -427,7 +427,7 @@ def test_big_label_file_is_rejected(
 ) -> None:
     folder = make_folder(tmp_path / "data")
     monkeypatch.setattr("rfikit.evaluate.MAX_BYTES", 10)
-    with pytest.raises(LabelError, match="the limit is 10"):
+    with pytest.raises(LabelError, match="over the limit of 10 bytes"):
         items_from_folder(folder)
     assert MAX_BYTES == 64 * 1024 * 1024
 
@@ -439,4 +439,52 @@ def test_symlinked_label_file_is_rejected(tmp_path: Path) -> None:
     real.rename(moved)
     real.symlink_to(moved)
     with pytest.raises(LabelError, match="symbolic link"):
+        items_from_folder(folder)
+
+
+def test_missing_label_file_names_the_file(tmp_path: Path) -> None:
+    folder = make_folder(tmp_path / "data")
+    (folder / "labels" / "negatives.csv").unlink()
+    with pytest.raises(LabelError, match="negatives.csv: missing or not a regular"):
+        items_from_folder(folder)
+
+
+def test_label_folder_in_place_of_a_file_is_rejected(tmp_path: Path) -> None:
+    folder = make_folder(tmp_path / "data")
+    path = folder / "labels" / "negatives.csv"
+    path.unlink()
+    path.mkdir()
+    with pytest.raises(LabelError, match="not a regular file"):
+        items_from_folder(folder)
+
+
+def test_unreadable_label_file_is_rejected(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = make_folder(tmp_path / "data")
+
+    def refuse(self: Path, *args: object, **kwargs: object) -> None:
+        raise PermissionError("denied")
+
+    monkeypatch.setattr(Path, "open", refuse)
+    with pytest.raises(LabelError, match="file cannot be read"):
+        items_from_folder(folder)
+
+
+def _repeat_last_row(path: Path) -> None:
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+    path.write_text("".join(lines) + lines[-1], encoding="utf-8")
+
+
+def test_repeated_input_rfi_id_is_rejected(tmp_path: Path) -> None:
+    folder = make_folder(tmp_path / "data")
+    _repeat_last_row(folder / "input" / "rfis.csv")
+    with pytest.raises(LabelError, match="input/rfis.csv repeats rfi_id"):
+        items_from_folder(folder)
+
+
+def test_repeated_label_rfi_id_is_rejected(tmp_path: Path) -> None:
+    folder = make_folder(tmp_path / "data")
+    _repeat_last_row(folder / "labels" / "rfis.csv")
+    with pytest.raises(LabelError, match="labels/rfis.csv repeats rfi_id"):
         items_from_folder(folder)

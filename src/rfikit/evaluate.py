@@ -175,12 +175,17 @@ class _Row:
 def _read_rows(path: Path, header: tuple[str, ...]) -> list[_Row]:
     if path.is_symlink():
         raise LabelError(f"{path.name}: symbolic links are not read")
-    size = path.stat().st_size
-    if size > MAX_BYTES:
-        raise LabelError(f"{path.name}: file is {size} bytes, the limit is {MAX_BYTES}")
+    if not path.is_file():
+        raise LabelError(f"{path.name}: missing or not a regular file")
     try:
-        with path.open(encoding="utf-8", newline="") as handle:
-            text = handle.read()
+        with path.open("rb") as handle:
+            raw = handle.read(MAX_BYTES + 1)
+    except OSError:
+        raise LabelError(f"{path.name}: file cannot be read") from None
+    if len(raw) > MAX_BYTES:
+        raise LabelError(f"{path.name}: file is over the limit of {MAX_BYTES} bytes")
+    try:
+        text = raw.decode("utf-8")
     except UnicodeDecodeError:
         raise LabelError(f"{path.name}: file is not valid UTF-8") from None
     if text.startswith("\ufeff"):
@@ -376,11 +381,21 @@ def items_from_corpus(corpus: Corpus) -> list[Item]:
     return items
 
 
+def _check_unique(folder: Path, name: str, ids: list[str]) -> None:
+    seen: set[str] = set()
+    for rfi_id in ids:
+        if rfi_id in seen:
+            raise LabelError(f"{folder.name}: {name} repeats rfi_id {rfi_id!r}")
+        seen.add(rfi_id)
+
+
 def items_from_folder(folder: Path) -> list[Item]:
     rfis = read_inputs(folder / "input" / "rfis.csv")
     labels = read_rfi_labels(folder / "labels" / "rfis.csv")
     cites = read_citations(folder / "labels" / "citations.csv")
     negatives = read_negatives(folder / "labels" / "negatives.csv")
+    _check_unique(folder, "input/rfis.csv", [rfi.rfi_id for rfi in rfis])
+    _check_unique(folder, "labels/rfis.csv", [label.rfi_id for label in labels])
     families = {label.rfi_id: label.family for label in labels}
     known = {rfi.rfi_id for rfi in rfis}
     by_cite: dict[str, list[GoldCitation]] = {}
