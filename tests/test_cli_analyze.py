@@ -1,9 +1,12 @@
 import json
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
+from contextlib import AbstractContextManager
 from pathlib import Path
+from typing import Any, TextIO
 
 import pytest
 
+from rfikit import io as rio
 from rfikit.cli import clean_up, main, make_folders
 from rfikit.io import InputError
 from rfikit.types import Rfi
@@ -319,10 +322,10 @@ def test_folder_made_by_another_process_is_not_ours(
     out = tmp_path / "a" / "b"
     real = Path.mkdir
 
-    def racing(self: Path, *args: object, **kwargs: object) -> None:
+    def racing(self: Path, *args: Any, **kwargs: Any) -> None:
         if self == out:
-            real(self)
-        real(self)
+            real(self, *args, **kwargs)
+        real(self, *args, **kwargs)
 
     monkeypatch.setattr(Path, "mkdir", racing)
     created = make_folders(out)
@@ -338,10 +341,10 @@ def test_make_folders_refuses_a_file_made_in_between(
     out = tmp_path / "a" / "b"
     real = Path.mkdir
 
-    def racing(self: Path, *args: object, **kwargs: object) -> None:
+    def racing(self: Path, *args: Any, **kwargs: Any) -> None:
         if self == out:
             out.write_text("x", encoding="utf-8")
-        real(self)
+        real(self, *args, **kwargs)
 
     monkeypatch.setattr(Path, "mkdir", racing)
     with pytest.raises(InputError, match="not a folder"):
@@ -365,8 +368,8 @@ def test_make_folders_refuses_a_folder_filled_in_between(
     out = tmp_path / "a" / "b"
     real = Path.mkdir
 
-    def racing(self: Path, *args: object, **kwargs: object) -> None:
-        real(self)
+    def racing(self: Path, *args: Any, **kwargs: Any) -> None:
+        real(self, *args, **kwargs)
         if self == out:
             (out / "x.txt").write_text("x", encoding="utf-8")
 
@@ -374,3 +377,54 @@ def test_make_folders_refuses_a_folder_filled_in_between(
     with pytest.raises(InputError, match="not empty"):
         make_folders(out)
     assert (out / "x.txt").exists()
+
+
+def test_make_folders_removes_its_folders_when_the_final_check_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    def refuse(folder: Path) -> None:
+        raise InputError("refused, try again")
+
+    monkeypatch.setattr("rfikit.cli.check_analysis_folder", refuse)
+    with pytest.raises(InputError, match="refused"):
+        make_folders(tmp_path / "a" / "b")
+    assert not (tmp_path / "a").exists()
+
+
+@pytest.mark.parametrize("fail_at", [2, 3, 4])
+@pytest.mark.parametrize("existing", [False, True])
+def test_late_failures_remove_every_written_file(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, fail_at: int, existing: bool
+) -> None:
+    source = write(tmp_path / "rfis.csv", CSV)
+    real = rio.atomic_text
+    calls = {"n": 0}
+
+    def counting(
+        path: Path, protected: Sequence[Path] = ()
+    ) -> AbstractContextManager[TextIO]:
+        calls["n"] += 1
+        if calls["n"] == fail_at:
+            raise InputError("write failed, try again")
+        return real(path, protected)
+
+    monkeypatch.setattr("rfikit.report.atomic_text", counting)
+    out = tmp_path / "out"
+    if existing:
+        out.mkdir()
+    assert main(["analyze", str(source), "--out", str(out)]) == 1
+    assert out.is_dir() if existing else not out.exists()
+    if existing:
+        assert names(out) == []
+
+
+def test_dangling_symlink_out_is_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    source = write(tmp_path / "rfis.csv", CSV)
+    link = tmp_path / "link"
+    link.symlink_to(tmp_path / "nowhere")
+    assert main(["analyze", str(source), "--out", str(link)]) == 1
+    assert "symbolic link" in capsys.readouterr().err
+    assert link.is_symlink()
+    assert not (tmp_path / "nowhere").exists()

@@ -375,7 +375,7 @@ def test_rate_ignores_booleans() -> None:
 
 
 def test_short_cell_line_separators() -> None:
-    assert short_cell("a b") == "a b"
+    assert short_cell("a\u2029b") == "a b"
 
 
 def test_plain_cell_unit_separator() -> None:
@@ -383,6 +383,7 @@ def test_plain_cell_unit_separator() -> None:
 
 
 def test_md_cell_uppercase_www() -> None:
+    assert md_cell("a\u2029b") == "a b"
     assert md_cell("WWW.example.com") == "WWW\\.example.com"
 
 

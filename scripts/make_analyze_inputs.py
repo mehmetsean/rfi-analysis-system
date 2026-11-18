@@ -17,6 +17,8 @@ def write_file(path: Path, cell: str, rows: int) -> None:
 
 
 def build(out: Path, many_rows: int = MANY[2], wide_rows: int = WIDE[2]) -> None:
+    if out.is_symlink() or (out.exists() and not out.is_dir()):
+        raise SystemExit(f"{out.name}: output is not a plain folder, pick a new folder")
     if out.exists() and any(out.iterdir()):
         raise SystemExit(
             f"{out.name}: folder is not empty, pick an empty or new folder"

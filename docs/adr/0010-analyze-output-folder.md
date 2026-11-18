@@ -13,7 +13,7 @@ analyze writes four files: citations.csv, analysis.md, analysis.html and README.
 
 ## Decision
 
-The second option. analyze writes only into a new or empty folder, using the same check_folder as generate (the same message: "folder is not empty, pick an empty or new folder"). A missing folder is created, parents included. A symbolic link as the output folder and an output path that is a file are refused, each with one next step. The checks run before the export is read. The folders are created before the export is read; if the read, the analysis or a write fails, rfikit removes the files this run wrote and the folders this run created.
+The second option. analyze writes only into a new or empty folder, using the same check_folder as generate (the same message: "folder is not empty, pick an empty or new folder"). A missing folder is created, parents included. A symbolic link as the output folder and an output path that is a file are refused, each with one next step. The checks run before the export is read. The folders are created before the export is read; if the read, the analysis or a write fails (a keyboard interrupt too), rfikit removes the files this run wrote and the folders this run created.
 
 Each file is still written by mkstemp and os.replace through io.atomic_text, so write_analysis stays safe when it is called from Python on a folder that is not empty: a symbolic link or a directory under one of the four names is refused, and an optional list of protected files (the CLI passes the export and the column map) is refused when a target is the same file, hard links included. citations.csv uses the same row builder, header and formula escape as extract.
 
@@ -25,7 +25,7 @@ A rerun needs a new folder or an emptied one. Cleanup rule: on any failure after
 
 Memory. analyze runs one pass over the RFIs. analyze(rfis, synthetic, sink) calls the optional sink with each (rfi_id, citation) as it is found and keeps only counters: base key counts, body counts, a histogram of citations per RFI, the 10 RFIs with the most citations, the totals and the set of rfi_ids (a repeated id raises ValueError, the same rule as the reader). AnalysisResult holds those counters and no citations. report.analyze_to(out, rfis, synthetic, protected) passes a sink that writes the rows of citations.csv in batches through the same atomic temp file, then calls write_analysis for the three report files, so the counts have one source, the analyze loop. A first version, no longer in this repo, kept every citation and was measured at a 1.53 GB peak for 2.7 million citations and 2.37 GB for 4.14 million (about 570 bytes per citation).
 
-Measured on this Mac (macOS 27.2.1 arm64, Python 3.13.13, one run each, /usr/bin/time -l, peak is the maximum resident set size), on the two files from scripts/make_analyze_inputs.py:
+Measured on this Mac (macOS 27.2.1 arm64, Python 3.13.13, one run each and one reviewer rerun of each on the same Mac, /usr/bin/time -l, peak is the maximum resident set size), on the two files from scripts/make_analyze_inputs.py:
 
 ```
 python3 scripts/make_analyze_inputs.py bench-analyze/

@@ -42,3 +42,17 @@ def test_main_writes_default_row_counts(
         "rfis_100k.csv",
         "rfis_110.csv",
     ]
+
+
+def test_refuses_a_link_and_a_file(tmp_path: Path) -> None:
+    real = tmp_path / "real"
+    real.mkdir()
+    link = tmp_path / "link"
+    link.symlink_to(real)
+    with pytest.raises(SystemExit, match="not a plain folder"):
+        build(link, 1, 1)
+    assert list(real.iterdir()) == []
+    plain = tmp_path / "file"
+    plain.write_text("x", encoding="utf-8")
+    with pytest.raises(SystemExit, match="not a plain folder"):
+        build(plain, 1, 1)
