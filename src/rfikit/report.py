@@ -37,6 +37,17 @@ def _skipped(char: str) -> bool:
     return char.isspace() or unicodedata.category(char) in ("Cf", "Cc")
 
 
+def plain_cell(value: str) -> str:
+    return "".join(f"\\x{ord(c):02x}" if _control(c) else c for c in value)
+
+
+def _control(char: str) -> bool:
+    code = ord(char)
+    if char in CONTROL:
+        return False
+    return code < 0x20 or 0x7F <= code <= 0x9F
+
+
 def escape_cell(value: str) -> str:
     start = 0
     while start < len(value) and _skipped(value[start]):
@@ -50,7 +61,7 @@ def csv_chunk(rows: Iterable[Sequence[str]]) -> str:
     buffer = io.StringIO()
     writer = csv.writer(buffer, lineterminator="\n")
     for row in rows:
-        writer.writerow([escape_cell(cell) for cell in row])
+        writer.writerow([escape_cell(plain_cell(cell)) for cell in row])
     return buffer.getvalue()
 
 

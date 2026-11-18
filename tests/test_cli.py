@@ -707,3 +707,14 @@ def test_extract_checks_output_before_reading(
     missing = tmp_path / "missing.txt"
     assert main(["extract", str(missing), "--out", str(folder)]) == 1
     assert "a_folder: output is not a regular file" in capsys.readouterr().err
+
+
+def test_extract_cleans_control_characters(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "a.csv"
+    path.write_text("rfi_id,subject,question\nR\x1b[2J,IEEE 80,\n", encoding="utf-8")
+    assert main(["extract", str(path)]) == 0
+    out = capsys.readouterr().out
+    assert "\x1b" not in out
+    assert out.splitlines()[1].startswith("R\\x1b[2J,subject,")

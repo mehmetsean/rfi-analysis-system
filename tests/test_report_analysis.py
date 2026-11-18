@@ -16,6 +16,7 @@ from rfikit.report import (
     csv_batches,
     load_measured,
     md_cell,
+    plain_cell,
     rate_rows,
     render_html,
     render_markdown,
@@ -308,3 +309,16 @@ def test_write_analysis_writes_the_three_report_files(tmp_path: Path) -> None:
         "analysis.html",
         "analysis.md",
     ]
+
+
+def test_plain_cell_replaces_controls() -> None:
+    assert plain_cell("a\x1b[31mb\x07c") == "a\\x1b[31mb\\x07c"
+    assert plain_cell("x\x7fy\x85z\x9f") == "x\\x7fy\\x85z\\x9f"
+    assert plain_cell("tab\there\r\nok \u202e") == "tab\there\r\nok \u202e"
+
+
+def test_csv_cells_have_no_raw_controls(tmp_path: Path) -> None:
+    analyze_to(tmp_path, [Rfi("A\x1b[2J\x07", "IEEE 80", "", "")])
+    raw = (tmp_path / "citations.csv").read_bytes()
+    assert b"\x1b" not in raw and b"\x07" not in raw
+    assert b"A\\x1b[2J\\x07" in raw
