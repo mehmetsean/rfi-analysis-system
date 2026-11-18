@@ -12,7 +12,7 @@ The input is synthetic data.
 
 ## Top base keys (up to 20)
 
-NESC (no rule given) counts mentions of NESC with no rule, table or section, such as an edition alone. It is not a count of one rule.
+NESC (no rule given) counts citations to the NESC, also written as ANSI C2 or IEEE C2, that give no rule, table or section, such as an edition alone. It is not a count of one rule.
 
 | Base key | Citations |
 |---|---|
@@ -129,7 +129,7 @@ Measured on synthetic data: generated sets A and B from rfikit.synth and the wri
 
 ## License
 
-All rights reserved. You may view the code and run it to evaluate it. Commercial use needs a paid license from Mehmet Tuzunkan: https\://www\.linkedin.com/in/mstuzunkan
+All rights reserved. You may view the code and run it to evaluate it. Commercial use needs a paid license from Mehmet Tuzunkan: https://www.linkedin.com/in/mstuzunkan
 
 ## Disclaimer
 
