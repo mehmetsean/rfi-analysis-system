@@ -19,9 +19,9 @@ COMMON = frozenset(
     "for not per the was you can but has had".split()
 )
 UNITS = frozenset(
-    "kva kv mva mw kw hz ft mm cm v a amp amps ohm ohms kvar mvar psi awg"
-    " kcmil mcm".split()
+    "kva kv mva mw kw hz ft mm cm amp amps ohm ohms kvar mvar psi awg kcmil mcm".split()
 )
+SHORT_UNIT = re.compile(r"[ \t]*[AV](?![A-Za-z])")
 
 
 def _rx(pattern: str) -> Pattern[str]:
@@ -218,7 +218,7 @@ def read_items(text: str, pos: int, body: str, lower: bool) -> list[Read]:
         if m is None or not _fits(body, m):
             return found
         after = word_at(text, m.end())
-        if after in UNITS or after == "nesc":
+        if after in UNITS or after == "nesc" or SHORT_UNIT.match(text, m.end()):
             return found
         design = _build(body, m, (), lower)
         if design is None:

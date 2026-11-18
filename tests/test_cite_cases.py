@@ -485,3 +485,29 @@ def test_clause_of_something_else_is_not_bare_nesc() -> None:
 def test_misspelled_neighbor_can_take_a_clause() -> None:
     text = "IEEE 80-2013 with IEE 81, Table 7"
     assert keys(text) == ["IEEE 80-2013 Table 7"]
+
+
+UNIT_KEEP = [
+    "See IEEE C57.12.00, C57.12.90\nA copy is attached.",
+    "IEEE C57.12.00 and C57.12.91 a test is required",
+]
+UNIT_DROP = [
+    "IEEE C57.12.00, C57\nkVA rating",
+    "ANSI C84.1, C12\r\nkV",
+    "IEEE C57.12.00, C57 V rating",
+]
+
+
+@pytest.mark.parametrize("text", UNIT_KEEP)
+def test_single_letter_word_after_item_is_not_a_unit(text: str) -> None:
+    assert len(keys(text)) == 2
+
+
+@pytest.mark.parametrize("text", UNIT_DROP)
+def test_unit_after_item_drops_the_item(text: str) -> None:
+    assert len(keys(text)) == 1
+
+
+def test_nesc_on_next_line_is_not_a_list_item() -> None:
+    text = "IEEE C57.12.00, C2\nNESC Rule 232"
+    assert keys(text) == ["IEEE C57.12.00", "NESC Rule 232"]
