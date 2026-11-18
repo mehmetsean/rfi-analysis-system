@@ -21,6 +21,7 @@ from rfikit.report import (
     render_html,
     render_markdown,
     render_readme,
+    short_cell,
     write_analysis,
 )
 from rfikit.types import Rfi
@@ -73,7 +74,7 @@ def test_markdown_tables() -> None:
     assert "| IEEE | 3 |" in text
     assert "| 0 | 1 |" in text
     assert "| 4 | 1 |" in text
-    assert "| 'R1' | 4 |" in text
+    assert "| R1 | 4 |" in text
     assert text.index("| ASTM A123 | 2 |") < text.index("| IEEE 80 | 2 |")
 
 
@@ -322,3 +323,52 @@ def test_csv_cells_have_no_raw_controls(tmp_path: Path) -> None:
     raw = (tmp_path / "citations.csv").read_bytes()
     assert b"\x1b" not in raw and b"\x07" not in raw
     assert b"A\\x1b[2J\\x07" in raw
+
+
+def test_short_cell() -> None:
+    assert short_cell("R0044") == "R0044"
+    assert short_cell("x" * 40) == "x" * 40
+    assert short_cell("x" * 41) == "x" * 40 + "..."
+    assert short_cell("a\x1bb\u202ec\nd\u2028e\u200bf") == "a b c d e f"
+
+
+def test_rfi_id_cells_are_plain() -> None:
+    result = analyze([Rfi("rfi_id_1\u202e", "IEEE 80", "", "")])
+    text = render_markdown(result, DOC)
+    assert "| RFI id | Citations |" in text
+    assert "| rfi\\_id\\_1  | 1 |" in text
+    assert "'rfi" not in text
+    assert "<td>rfi_id_1 </td>" in render_html(result, DOC)
+
+
+def test_bare_nesc_is_labeled() -> None:
+    result = analyze([Rfi("A", "per 2002 NESC", "NESC Rule 232", "")])
+    assert ("NESC", 1) in result.key_counts
+    for text in (render_markdown(result, DOC), render_html(result, DOC)):
+        assert "NESC (no rule given)" in text
+        assert "no rule, table or section" in text
+    assert "NESC (no rule given)" not in render_markdown(analyze(ROWS), DOC)
+
+
+def test_bare_nesc_key_stays_in_csv(tmp_path: Path) -> None:
+    analyze_to(tmp_path, [Rfi("A", "per 2002 NESC", "", "")])
+    row = (tmp_path / "citations.csv").read_text(encoding="utf-8").splitlines()[1]
+    assert ",NESC 2002,NESC," in row
+
+
+def test_md_cell_blocks_autolinks() -> None:
+    assert md_cell("x www.evil.com") == "x www\\.evil.com"
+    assert md_cell("x http://evil.com") == "x http\\://evil.com"
+    assert md_cell("HTTPS://a.b ftp://c.d") == "HTTPS\\://a.b ftp\\://c.d"
+    assert md_cell("awww.x") == "awww.x"
+
+
+def test_md_cell_tilde() -> None:
+    assert md_cell("~~x~~") == "\\~\\~x\\~\\~"
+
+
+def test_rate_ignores_booleans() -> None:
+    levels = {"strict": {"precision": True, "recall": 0.5, "f1": False}}
+    doc = {"full": {"sets": {"A": {"methods": {"rfikit": {"levels": levels}}}}}}
+    row = [r for r in rate_rows(doc) if r[:3][2] == "strict span" and r[0] == "rfikit"]
+    assert row[0][3:] == ("n/a", "0.500", "n/a")

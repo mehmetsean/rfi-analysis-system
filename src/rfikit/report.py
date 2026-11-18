@@ -12,7 +12,7 @@ from typing import Any
 from rfikit.analyze import MOST, AnalysisResult, analyze
 from rfikit.io import atomic_text
 from rfikit.notice import DISCLAIMER, LICENSE_LINE, OWNERS
-from rfikit.textnorm import clip
+from rfikit.textnorm import MAX_SHOWN
 from rfikit.types import Citation, Rfi
 
 LEADING = ("=", "+", "-", "@", "＝", "＋", "－", "＠")
@@ -143,6 +143,15 @@ CSP = (
     "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'none'"
 )
 MD_SPECIAL = re.compile(r"([\\|`<>\[\]*_&!~])")
+SCHEME = re.compile(r"\b(https?|ftp):", re.IGNORECASE)
+WWW = re.compile(r"\bwww\.", re.IGNORECASE)
+HIDDEN = ("Cc", "Cf", "Zl", "Zp")
+BARE_NESC = "NESC"
+BARE_NESC_LABEL = "NESC (no rule given)"
+BARE_NESC_NOTE = (
+    "NESC (no rule given) counts mentions of NESC with no rule, table or section, "
+    "such as an edition alone. It is not a count of one rule."
+)
 LINE_BREAKS = re.compile(r"[\r\n\x0b\x0c\x85\u2028\u2029]+")
 
 
@@ -156,7 +165,16 @@ class Section:
 
 
 def md_cell(text: str) -> str:
-    return MD_SPECIAL.sub(r"\\\1", LINE_BREAKS.sub(" ", text))
+    text = MD_SPECIAL.sub(r"\\\1", LINE_BREAKS.sub(" ", text))
+    text = SCHEME.sub(r"\1\\:", text)
+    return WWW.sub(r"www\\.", text)
+
+
+def short_cell(value: str) -> str:
+    text = "".join(" " if unicodedata.category(c) in HIDDEN else c for c in value)
+    if len(text) > MAX_SHOWN:
+        return text[:MAX_SHOWN] + "..."
+    return text
 
 
 def load_measured() -> Json:
@@ -198,10 +216,13 @@ def build_sections(result: AnalysisResult, doc: Json) -> list[Section]:
             ("RFIs with at least one citation", str(with_cites)),
         ),
     )
-    top = tuple((k, str(n)) for k, n in result.key_counts[:TOP_KEYS])
+    top = tuple(
+        (BARE_NESC_LABEL if k == BARE_NESC else k, str(n))
+        for k, n in result.key_counts[:TOP_KEYS]
+    )
     bodies = tuple((b, str(n)) for b, n in result.body_counts)
     sizes = tuple((str(n), str(m)) for n, m in result.per_rfi)
-    most = tuple((clip(i), str(n)) for i, n in result.most)
+    most = tuple((short_cell(i), str(n)) for i, n in result.most)
     rates = Section(
         RATES_TITLE,
         str(doc.get("data", "")),
@@ -211,12 +232,15 @@ def build_sections(result: AnalysisResult, doc: Json) -> list[Section]:
     return [
         summary,
         Section(
-            f"Top base keys (up to {TOP_KEYS})", "", ("Base key", "Citations"), top
+            f"Top base keys (up to {TOP_KEYS})",
+            BARE_NESC_NOTE if BARE_NESC in dict(result.key_counts) else "",
+            ("Base key", "Citations"),
+            top,
         ),
         Section("Citations per body", "", ("Body", "Citations"), bodies),
         Section(
             "Citations per RFI",
-            "How many RFIs have 0, 1, 2 and more citations.",
+            "How many RFIs have each number of citations.",
             ("Citations", "RFIs"),
             sizes,
             "No RFIs read.",
@@ -224,7 +248,7 @@ def build_sections(result: AnalysisResult, doc: Json) -> list[Section]:
         Section(
             f"RFIs with the most citations (up to {MOST})",
             "",
-            ("rfi_id", "Citations"),
+            ("RFI id", "Citations"),
             most,
         ),
         rates,
