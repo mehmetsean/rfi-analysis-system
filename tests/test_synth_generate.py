@@ -308,3 +308,10 @@ def test_generator_does_not_import_evaluate() -> None:
 
 def test_norm_helper_still_strips_noise() -> None:
     assert norm("IEEE\r\nC57.12.\n00‑ 2015") == "IEEEC57.12.00-2015"
+
+
+def test_family_b_rows_are_about_a_quarter(corpus: Corpus) -> None:
+    share = len([g for g in corpus.rfis if g.family == "B"]) / len(corpus.rfis)
+    assert 0.15 < share < 0.35
+    for g in corpus.rfis:
+        assert ("-A" in g.template_id) == (g.family == "A")

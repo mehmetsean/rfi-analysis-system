@@ -88,3 +88,18 @@ def test_text_is_plain() -> None:
         for text in (t.subject, t.question, t.response):
             assert text.isascii()
             assert "  " not in text
+
+
+def test_a_quarter_of_the_templates_per_issue_type_are_family_b() -> None:
+    for issue in ISSUE_TYPES:
+        families = Counter(t.family for t in TEMPLATES if t.issue_type == issue)
+        assert families["A"] == 3 and families["B"] == 1, issue
+
+
+def test_family_b_has_its_own_ids_and_wording() -> None:
+    a = [t for t in TEMPLATES if t.family == "A"]
+    b = [t for t in TEMPLATES if t.family == "B"]
+    assert all("-B" in t.template_id for t in b)
+    a_text = {t.question for t in a} | {t.subject for t in a}
+    for t in b:
+        assert t.question not in a_text and t.subject not in a_text
