@@ -1,6 +1,8 @@
 import csv
 import io
 import json
+import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -27,7 +29,10 @@ def test_no_command(capsys: pytest.CaptureFixture[str]) -> None:
 def test_analyze_stub(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["analyze", "x"]) == 1
     captured = capsys.readouterr()
-    assert captured.err == "rfikit: the command analyze is not built yet\n"
+    assert captured.err == (
+        "rfikit: the command analyze is not built yet, "
+        "use extract, generate or evaluate\n"
+    )
     assert captured.out == ""
 
 
@@ -280,7 +285,7 @@ def test_extract_out_replaces_and_refuses_same_file(
     path.write_text("rfi_id,subject,question\nR1,S,See ASTM A36\n", encoding="utf-8")
     original = path.read_text(encoding="utf-8")
     assert main(["extract", str(path), "--out", str(path)]) == 1
-    assert "same file as the input" in capsys.readouterr().err
+    assert "same file as n.csv" in capsys.readouterr().err
     assert path.read_text(encoding="utf-8") == original
     out = tmp_path / "o.csv"
     out.write_text("old", encoding="utf-8")
@@ -341,7 +346,9 @@ def test_generate_negative_seed(
         == 1
     )
     captured = capsys.readouterr()
-    assert captured.err == "rfikit: --seed must not be negative\n"
+    assert captured.err == (
+        "rfikit: --seed must not be negative, pass 0 or a larger whole number\n"
+    )
 
 
 def test_generate_n_boundary(
@@ -476,3 +483,194 @@ def test_evaluate_label_error_clips_id(
     err = capsys.readouterr().err
     assert "repeats rfi_id" in err
     assert long not in err
+
+
+def make_corpus(folder: Path, capsys: pytest.CaptureFixture[str]) -> Path:
+    assert main(["generate", "--seed", "3", "--n", "5", "--out", str(folder)]) == 0
+    capsys.readouterr()
+    return folder
+
+
+def edit_manifest(folder: Path, changes: dict[str, object]) -> None:
+    path = folder / "manifest.json"
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    manifest.update(changes)
+    path.write_text(json.dumps(manifest), encoding="utf-8")
+
+
+def refused(folder: Path, capsys: pytest.CaptureFixture[str]) -> bool:
+    argv = ["generate", "--seed", "4", "--n", "5", "--out", str(folder)]
+    code = main(argv)
+    err = capsys.readouterr().err
+    if code == 1:
+        assert "not empty" in err
+    return code == 1
+
+
+def test_generate_accepts_a_real_corpus(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    folder = make_corpus(tmp_path / "c", capsys)
+    assert not refused(folder, capsys)
+
+
+@pytest.mark.parametrize(
+    "changes",
+    [
+        {"generator": 1},
+        {"generator": {"seed": "3", "n": 5}},
+        {"generator": {"seed": True, "n": 5}},
+        {"generator": {"seed": 3}},
+        {"synthetic": "yes"},
+        {"synthetic": 1},
+        {"files": {}},
+        {"files": {"../x.txt": "0"}},
+        {"files": {"input/missing.csv": "0"}},
+        {"files": []},
+    ],
+)
+def test_generate_refuses_crafted_manifest(
+    changes: dict[str, object],
+    tmp_path: Path,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    folder = make_corpus(tmp_path / "c", capsys)
+    edit_manifest(folder, changes)
+    assert refused(folder, capsys)
+
+
+def test_generate_refuses_edited_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    folder = make_corpus(tmp_path / "c", capsys)
+    with (folder / "input" / "rfis.csv").open("a", encoding="utf-8") as handle:
+        handle.write("extra\n")
+    assert refused(folder, capsys)
+
+
+def test_synthetic_must_be_exactly_true(tmp_path: Path) -> None:
+    folder = tmp_path / "f"
+    folder.mkdir()
+    for value in ("yes", 1, None):
+        (folder / "manifest.json").write_text(
+            json.dumps({"synthetic": value}), encoding="utf-8"
+        )
+        assert not cli.is_synthetic(folder)
+    (folder / "manifest.json").write_text('{"synthetic": true}', encoding="utf-8")
+    assert cli.is_synthetic(folder)
+
+
+def test_write_corpus_does_not_write_through_links(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    outside = tmp_path / "outside.csv"
+    outside.write_text("keep", encoding="utf-8")
+    out = tmp_path / "c"
+    (out / "input").mkdir(parents=True)
+    os.link(outside, out / "input" / "rfis.csv")
+    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(out)]) == 1
+    assert outside.read_text(encoding="utf-8") == "keep"
+    capsys.readouterr()
+    empty = tmp_path / "e"
+    (empty / "input").mkdir(parents=True)
+    os.link(outside, empty / "input" / "rfis.csv")
+    from rfikit.synth import generate, write_corpus
+
+    write_corpus(generate(1, 3), empty)
+    assert outside.read_text(encoding="utf-8") == "keep"
+    assert (empty / "input" / "rfis.csv").read_text(encoding="utf-8") != "keep"
+
+
+def test_missing_seed_is_usage_error(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main(["generate", "--n", "3", "--out", "o"]) == 2
+    assert "--seed" in capsys.readouterr().err
+
+
+def test_column_map_needs_csv(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "n.txt"
+    path.write_text("ASTM A36", encoding="utf-8")
+    mapping = tmp_path / "m.json"
+    mapping.write_text("{}", encoding="utf-8")
+    assert main(["extract", str(path), "--column-map", str(mapping)]) == 1
+    err = capsys.readouterr().err
+    assert err == (
+        "rfikit: --column-map works only with a .csv file, "
+        "drop it or pass a .csv file\n"
+    )
+
+
+def test_extract_out_cannot_replace_column_map(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "n.csv"
+    path.write_text("No,Title,Body\n1,S,ASTM A36\n", encoding="utf-8")
+    mapping = tmp_path / "m.json"
+    names = {"rfi_id": "No", "subject": "Title", "question": "Body"}
+    mapping.write_text(json.dumps(names), encoding="utf-8")
+    before = mapping.read_text(encoding="utf-8")
+    argv = ["extract", str(path), "--column-map", str(mapping), "--out", str(mapping)]
+    assert main(argv) == 1
+    assert "same file as m.json" in capsys.readouterr().err
+    assert mapping.read_text(encoding="utf-8") == before
+
+
+def test_json_cannot_land_in_input_folders(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "data", capsys)
+    written = make_corpus(tmp_path / "written", capsys)
+    target = data / "input" / "rfis.csv"
+    before = target.read_bytes()
+    assert main(["evaluate", str(data), "--json", str(target)]) == 1
+    assert "inside the input folder data" in capsys.readouterr().err
+    assert target.read_bytes() == before
+    argv = ["evaluate", str(data), "--written", str(written)]
+    assert main([*argv, "--json", str(written / "new.json")]) == 1
+    assert "inside the input folder written" in capsys.readouterr().err
+    assert not (written / "new.json").exists()
+
+
+def test_label_error_names_folder_and_next_step(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "data", capsys)
+    (data / "input" / "rfis.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    assert main(["evaluate", str(data)]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("rfikit: data: rfis.csv: missing column 'rfi_id', check")
+    assert "docs/annotation_guide.md" in err
+    assert (ROOT / "docs" / "annotation_guide.md").exists()
+
+
+def test_newline_id_in_labels_is_one_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "data", capsys)
+    rows = 'rfi_id,subject,question,response\n"a\nb",S,Q,\n"a\nb",S,Q,\n'
+    (data / "input" / "rfis.csv").write_text(rows, encoding="utf-8")
+    assert main(["evaluate", str(data)]) == 1
+    assert len(capsys.readouterr().err.splitlines()) == 1
+
+
+def test_real_cli_into_head(tmp_path: Path) -> None:
+    script = Path(sys.executable).parent / "rfikit"
+    if not script.exists():
+        pytest.skip("console script not installed")
+    path = tmp_path / "big.txt"
+    path.write_text("IEEE 1547 and " * 40_000, encoding="utf-8")
+    run = subprocess.Popen(
+        [sys.executable, "-I", str(script), "extract", str(path)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+    assert run.stdout is not None
+    assert run.stderr is not None
+    first = run.stdout.readline()
+    run.stdout.close()
+    err = run.stderr.read()
+    run.wait()
+    run.stderr.close()
+    assert first.startswith(b"rfi_id,column,")
+    assert err == b""

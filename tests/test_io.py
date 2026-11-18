@@ -12,11 +12,13 @@ from rfikit.cite import extract_rfi
 from rfikit.io import (
     InputError,
     atomic_text,
+    check_outside,
     read_column_map,
     read_rfis,
     read_text,
 )
 from rfikit.report import csv_text, escape_cell
+from rfikit.textnorm import clip
 from rfikit.types import Rfi
 
 
@@ -173,7 +175,7 @@ def test_row_cap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
 def test_field_cap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(rio, "MAX_FIELD", 5)
     path = write(tmp_path / "a.csv", "rfi_id,subject,question\nA,S,123456\n")
-    with pytest.raises(InputError, match="line 2, column question: value is over 5"):
+    with pytest.raises(InputError, match="line 2, column 'question': value is over 5"):
         read_rfis(path)
     path = write(tmp_path / "b.csv", "rfi_id,subject,question\nA,S,12345\n")
     assert read_rfis(path)[0].question == "12345"
@@ -296,7 +298,7 @@ def test_field_cap_names_the_column(
     monkeypatch.setattr(rio, "MAX_FIELD", 3)
     path = write(tmp_path / "a.csv", "No,Title,Body\n1,S,12345\n")
     names = {"rfi_id": "No", "subject": "Title", "question": "Body"}
-    with pytest.raises(InputError, match="column Body: value is over 3 characters"):
+    with pytest.raises(InputError, match="column 'Body': value is over 3 characters"):
         read_rfis(path, names)
 
 
@@ -328,15 +330,15 @@ def test_atomic_text_refusals(tmp_path: Path) -> None:
     with pytest.raises(InputError, match="not a regular file"), atomic_text(tmp_path):
         pass
     with (
-        pytest.raises(InputError, match="same file as the input"),
-        atomic_text(real, real),
+        pytest.raises(InputError, match="same file as"),
+        atomic_text(real, [real]),
     ):
         pass
     hard = tmp_path / "hard.txt"
     os.link(real, hard)
     with (
-        pytest.raises(InputError, match="same file as the input"),
-        atomic_text(hard, real),
+        pytest.raises(InputError, match="same file as"),
+        atomic_text(hard, [real]),
     ):
         pass
     assert real.read_text(encoding="utf-8") == "x"
@@ -395,3 +397,98 @@ def test_cite_does_not_import_io() -> None:
     source = (Path(rio.__file__).parent / "cite.py").read_text(encoding="utf-8")
     for name in ("rfikit.io", "rfikit.synth", "rfikit.evaluate"):
         assert name not in source
+
+
+def test_clip_boundaries() -> None:
+    assert clip("a" * 40) == repr("a" * 40)
+    assert clip("a" * 41) == "'" + "a" * 40 + "...'"
+    assert clip("a\nb") == "'a\\nb'"
+
+
+def test_newline_id_gives_one_line(tmp_path: Path) -> None:
+    rows = 'rfi_id,subject,question\n"a\nb",S,Q\n"a\nb",S,Q\n'
+    path = write(tmp_path / "a.csv", rows)
+    with pytest.raises(InputError) as caught:
+        read_rfis(path)
+    assert "\n" not in str(caught.value)
+    assert "'a\\nb'" in str(caught.value)
+
+
+@pytest.mark.parametrize(
+    "value",
+    ["​=1", "⁠=1", "﻿﻿=1", "\x00=1", "​ ﻿\x00+1"],
+)
+def test_escape_cell_skips_invisible_characters(value: str) -> None:
+    assert escape_cell(value) == "'" + value
+
+
+def test_new_file_follows_umask(tmp_path: Path) -> None:
+    old = os.umask(0o077)
+    try:
+        target = tmp_path / "new.csv"
+        with atomic_text(target) as handle:
+            handle.write("x")
+    finally:
+        os.umask(old)
+    assert target.stat().st_mode & 0o777 == 0o600
+
+
+def test_existing_mode_is_kept(tmp_path: Path) -> None:
+    target = tmp_path / "old.csv"
+    target.write_text("old", encoding="utf-8")
+    target.chmod(0o600)
+    old = os.umask(0o022)
+    try:
+        with atomic_text(target) as handle:
+            handle.write("x")
+    finally:
+        os.umask(old)
+    assert target.stat().st_mode & 0o777 == 0o600
+
+
+def test_new_file_default_mode(tmp_path: Path) -> None:
+    old = os.umask(0o022)
+    try:
+        target = tmp_path / "new.csv"
+        with atomic_text(target) as handle:
+            handle.write("x")
+    finally:
+        os.umask(old)
+    assert target.stat().st_mode & 0o777 == 0o644
+
+
+def test_protected_list(tmp_path: Path) -> None:
+    first = write(tmp_path / "a.txt", "x")
+    second = write(tmp_path / "b.txt", "y")
+    with (
+        pytest.raises(InputError, match="same file as b.txt"),
+        atomic_text(second, [first, second]),
+    ):
+        pass
+
+
+def test_check_outside(tmp_path: Path) -> None:
+    folder = tmp_path / "data"
+    folder.mkdir()
+    with pytest.raises(InputError, match="inside the input folder data"):
+        check_outside(folder / "x" / ".." / "out.json", [folder])
+    check_outside(tmp_path / "out.json", [folder])
+    link = tmp_path / "link"
+    link.symlink_to(folder)
+    with pytest.raises(InputError, match="inside the input folder"):
+        check_outside(link / "out.json", [folder])
+
+
+def test_open_flags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    seen: list[int] = []
+    real_open = os.open
+
+    def spy(path: Path, flags: int, *rest: int) -> int:
+        seen.append(flags)
+        return real_open(path, flags, *rest)
+
+    path = write(tmp_path / "a.txt", "x")
+    monkeypatch.setattr("rfikit.io.os.open", spy)
+    assert read_text(path) == "x"
+    assert seen[0] & os.O_NOFOLLOW
+    assert seen[0] & os.O_NONBLOCK

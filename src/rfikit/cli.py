@@ -10,9 +10,12 @@ from rfikit import __version__
 from rfikit.cite import extract, extract_rfi
 from rfikit.evaluate import EvalPlan, LabelError, evaluate
 from rfikit.io import (
+    MAX_BYTES,
     WRITE_HINT,
     InputError,
     atomic_text,
+    check_output,
+    check_outside,
     iter_rfis,
     read_column_map,
     read_text,
@@ -21,7 +24,7 @@ from rfikit.io import (
 from rfikit.measured import HEAD_LEVELS, summarize
 from rfikit.report import csv_chunk
 from rfikit.synth import GenParams, generate, write_corpus
-from rfikit.synth.files import UnsafeOutput
+from rfikit.synth.files import UnsafeOutput, sha256
 from rfikit.types import Citation, Rfi
 
 EXTRACT_HEADER = (
@@ -78,6 +81,10 @@ def _batches(rows: Iterable[list[str]]) -> Iterator[str]:
 
 
 def extract_chunks(path: Path, column_map: Path | None) -> Iterator[str]:
+    if path.suffix.lower() != ".csv" and column_map is not None:
+        raise InputError(
+            "--column-map works only with a .csv file, drop it or pass a .csv file"
+        )
     if path.suffix.lower() == ".csv":
         names = read_column_map(column_map) if column_map else None
         rfis = iter_rfis(path, names)
@@ -121,7 +128,9 @@ def cmd_extract(args: argparse.Namespace) -> int:
     chunks = extract_chunks(path, args.column_map)
     if args.out is None:
         return stream_stdout(chunks)
-    with atomic_text(args.out, path) as handle:
+    protected = [path] if args.column_map is None else [path, args.column_map]
+    check_output(args.out, protected)
+    with atomic_text(args.out, protected) as handle:
         for chunk in chunks:
             handle.write(chunk)
     return 0
@@ -140,9 +149,34 @@ def is_synthetic(folder: Path) -> bool:
     return manifest is not None and manifest.get("synthetic") is True
 
 
+def _is_int(value: object) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
+def _files_match(folder: Path, files: object) -> bool:
+    if not isinstance(files, dict) or not files:
+        return False
+    root = Path(os.path.realpath(folder))
+    for name, digest in files.items():
+        path = folder / str(name)
+        inside = Path(os.path.realpath(path)).is_relative_to(root)
+        if not inside or path.is_symlink() or not path.is_file():
+            return False
+        if path.stat().st_size > MAX_BYTES or sha256(path.read_bytes()) != digest:
+            return False
+    return True
+
+
 def is_corpus(folder: Path) -> bool:
     manifest = read_manifest(folder)
-    return is_synthetic(folder) and manifest is not None and "generator" in manifest
+    if manifest is None or manifest.get("synthetic") is not True:
+        return False
+    made = manifest.get("generator")
+    if not isinstance(made, dict):
+        return False
+    if not (_is_int(made.get("seed")) and _is_int(made.get("n"))):
+        return False
+    return _files_match(folder, manifest.get("files"))
 
 
 def check_folder(out: Path) -> None:
@@ -157,9 +191,11 @@ def check_folder(out: Path) -> None:
 
 def cmd_generate(args: argparse.Namespace) -> int:
     if args.seed < 0:
-        raise InputError("--seed must not be negative")
+        raise InputError("--seed must not be negative, pass 0 or a larger whole number")
     if not 1 <= args.n <= MAX_N:
-        raise InputError(f"--n must be between 1 and {MAX_N}")
+        raise InputError(
+            f"--n must be between 1 and {MAX_N}, pass a number in that range"
+        )
     check_folder(args.out)
     corpus = generate(args.seed, args.n, GenParams())
     try:
@@ -185,7 +221,8 @@ def render_summary(summary: Json, synthetic: bool = True) -> str:
     for set_name, block in summary["sets"].items():
         if block["methods"]["rfikit"]["rfis"] == 0:
             lines.append(
-                f"Set {set_name}: no RFIs to score (none left after the leak check)"
+                f"Set {set_name}: no RFIs to score "
+                "(none left after the leak check, or the folder has none)"
             )
             lines.append("")
             continue
@@ -217,14 +254,30 @@ def need_folder(path: Path) -> None:
         raise InputError(f"{shown(path)}: not a folder, check the path")
 
 
+LABEL_HINT = (
+    "check that the folder was written by rfikit generate or follows the "
+    "label format in docs/annotation_guide.md"
+)
+
+
+def run_evaluate(folders: list[Path], written: Path | None) -> Json:
+    try:
+        return summarize(evaluate(folders[0], written, EvalPlan()))
+    except LabelError as error:
+        names = " and ".join(shown(folder) for folder in folders)
+        raise InputError(f"{names}: {error}, {LABEL_HINT}") from None
+
+
 def cmd_evaluate(args: argparse.Namespace) -> int:
     folders = [args.data]
     if args.written is not None:
         folders.append(args.written)
     for folder in folders:
         need_folder(folder)
-    report = evaluate(args.data, args.written, EvalPlan())
-    summary = summarize(report)
+    if args.json is not None:
+        check_output(args.json)
+        check_outside(args.json, folders)
+    summary = run_evaluate(folders, args.written)
     synthetic = all(is_synthetic(folder) for folder in folders)
     sys.stdout.write(render_summary(summary, synthetic))
     if args.json is not None:
@@ -234,7 +287,11 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
 
 
 def cmd_analyze(args: argparse.Namespace) -> int:
-    print("rfikit: the command analyze is not built yet", file=sys.stderr)
+    print(
+        "rfikit: the command analyze is not built yet, "
+        "use extract, generate or evaluate",
+        file=sys.stderr,
+    )
     return 1
 
 

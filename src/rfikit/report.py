@@ -1,14 +1,21 @@
 import csv
 import io
+import unicodedata
 from collections.abc import Iterable, Sequence
 
 LEADING = ("=", "+", "-", "@", "＝", "＋", "－", "＠")
 CONTROL = ("\t", "\r", "\n")
 
 
+def _skipped(char: str) -> bool:
+    return char.isspace() or unicodedata.category(char) in ("Cf", "Cc")
+
+
 def escape_cell(value: str) -> str:
-    probe = value.lstrip().removeprefix("﻿").lstrip()
-    if value.startswith(CONTROL) or probe.startswith(LEADING):
+    start = 0
+    while start < len(value) and _skipped(value[start]):
+        start += 1
+    if value.startswith(CONTROL) or value[start:].startswith(LEADING):
         return "'" + value
     return value
 

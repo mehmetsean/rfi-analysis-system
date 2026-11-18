@@ -4,7 +4,7 @@ import json
 import os
 import stat
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Iterator, Sequence
 from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, TextIO
@@ -28,7 +28,10 @@ class InputError(ValueError):
 
 
 def shown(path: Path) -> str:
-    return path.name or str(path)
+    name = path.name or str(path)
+    return "".join(
+        c if c.isprintable() else c.encode("unicode_escape").decode() for c in name
+    )
 
 
 def _mib(cap: int) -> str:
@@ -45,7 +48,7 @@ def _read_file(path: Path, cap: int) -> str:
         raise InputError(
             f"{name}: file is missing or is not a regular file, check the path"
         )
-    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0)
+    flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0)
     try:
         fd = os.open(path, flags)
     except OSError:
@@ -95,7 +98,7 @@ def read_column_map(path: Path) -> dict[str, str]:
     for key, value in data.items():
         if key not in FIELDS:
             raise InputError(
-                f"{name}: unknown key {clip(str(key))!r}, "
+                f"{name}: unknown key {clip(str(key))}, "
                 f"allowed keys: {', '.join(FIELDS)}"
             )
         if not isinstance(value, str) or value == "":
@@ -121,21 +124,21 @@ def _header_index(
         column = column_map.get(field, field)
         if header.count(column) > 1:
             raise InputError(
-                f"{name}: duplicate column {clip(column)!r}, "
+                f"{name}: duplicate column {clip(column)}, "
                 "rename one of them in the file"
             )
         if column in header:
             index[field] = header.index(column)
         elif field in REQUIRED or field in column_map:
             raise InputError(
-                f"{name}: missing column {clip(column)!r} for {field}, "
+                f"{name}: missing column {clip(column)} for {field}, "
                 "add it to the file or fix the column map"
             )
     for field, position in index.items():
         for other, spot in index.items():
             if field < other and position == spot:
                 raise InputError(
-                    f"{name}: column {clip(header[position])!r} is used for both "
+                    f"{name}: column {clip(header[position])} is used for both "
                     f"{field} and {other}, fix the column map"
                 )
     return index
@@ -150,7 +153,7 @@ def iter_rfis(path: Path, column_map: dict[str, str] | None = None) -> Iterator[
     except csv.Error as error:
         raise _bad_csv(name, error) from None
     if header is None:
-        raise InputError(f"{name}: file is empty, it needs a header row")
+        raise InputError(f"{name}: file is empty, add a header row")
     index = _header_index(name, header, column_map or {})
     return _rows(name, reader, header, index)
 
@@ -187,7 +190,7 @@ def _rows(
                 )
             if rfi_id in seen:
                 raise InputError(
-                    f"{name} line {line}: rfi_id {clip(rfi_id)!r} repeats, "
+                    f"{name} line {line}: rfi_id {clip(rfi_id)} repeats, "
                     "give each row a unique rfi_id"
                 )
             seen.add(rfi_id)
@@ -212,19 +215,42 @@ def _remove(path: str) -> None:
         pass
 
 
-@contextmanager
-def atomic_text(path: Path, source: Path | None = None) -> Iterator[TextIO]:
+def _umask() -> int:
+    old = os.umask(0)
+    os.umask(old)
+    return old
+
+
+def check_output(path: Path, protected: Sequence[Path] = ()) -> None:
     name = shown(path)
     if path.is_symlink():
         raise InputError(f"{name}: output is a symbolic link, pick another file")
     if path.exists():
         if not path.is_file():
             raise InputError(f"{name}: output is not a regular file, pick another file")
-        if source is not None and source.exists() and os.path.samefile(path, source):
+        for other in protected:
+            if other.exists() and os.path.samefile(path, other):
+                raise InputError(
+                    f"{name}: output is the same file as {shown(other)}, "
+                    "pick another file"
+                )
+
+
+def check_outside(path: Path, folders: Sequence[Path]) -> None:
+    target = Path(os.path.realpath(path))
+    for folder in folders:
+        if target.is_relative_to(Path(os.path.realpath(folder))):
             raise InputError(
-                f"{name}: output is the same file as the input, pick another file"
+                f"{shown(path)}: output is inside the input folder {shown(folder)}, "
+                "pick a path outside it"
             )
-    failed = f"{name}: file cannot be written, {WRITE_HINT}"
+
+
+@contextmanager
+def atomic_text(path: Path, protected: Sequence[Path] = ()) -> Iterator[TextIO]:
+    check_output(path, protected)
+    failed = f"{shown(path)}: file cannot be written, {WRITE_HINT}"
+    mode = stat.S_IMODE(path.stat().st_mode) if path.exists() else 0o666 & ~_umask()
     try:
         fd, temp = tempfile.mkstemp(dir=path.parent, prefix=".rfikit-", suffix=".tmp")
     except OSError:
@@ -232,7 +258,7 @@ def atomic_text(path: Path, source: Path | None = None) -> Iterator[TextIO]:
     try:
         with os.fdopen(fd, "w", encoding="utf-8", newline="") as handle:
             yield handle
-        os.chmod(temp, 0o644)
+        os.chmod(temp, mode)
         os.replace(temp, path)
     except OSError:
         _remove(temp)

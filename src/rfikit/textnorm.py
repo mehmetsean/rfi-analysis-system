@@ -28,6 +28,7 @@ MAX_SHOWN = 40
 
 
 def clip(value: str) -> str:
-    if len(value) <= MAX_SHOWN:
-        return value
-    return value[:MAX_SHOWN] + "..."
+    text = repr(value[:MAX_SHOWN])
+    if len(value) > MAX_SHOWN:
+        text = text[:-1] + "..." + text[-1]
+    return text
