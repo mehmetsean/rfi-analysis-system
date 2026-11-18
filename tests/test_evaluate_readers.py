@@ -160,6 +160,13 @@ def test_short_row(tmp_path: Path) -> None:
         read_negatives(path)
 
 
+def test_duplicate_header(tmp_path: Path) -> None:
+    path = tmp_path / "n.csv"
+    path.write_text("rfi_id,column,start,end,kind,kind\nW1,subject,0,4,date,date\n")
+    with pytest.raises(LabelError, match="duplicate column 'kind'"):
+        read_negatives(path)
+
+
 def test_bom_file(tmp_path: Path) -> None:
     path = tmp_path / "n.csv"
     path.write_bytes(b"\xef\xbb\xbfrfi_id,column,start,end,kind\n")

@@ -164,6 +164,9 @@ def _read_rows(path: Path, header: tuple[str, ...]) -> list[_Row]:
         first = next(reader, None)
         if first is None:
             raise LabelError(f"{path.name}: file is empty")
+        for name in first:
+            if first.count(name) > 1:
+                raise LabelError(f"{path.name}: duplicate column {name!r}")
         for name in header:
             if name not in first:
                 raise LabelError(f"{path.name}: missing column {name!r}")
