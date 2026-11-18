@@ -29,7 +29,7 @@ W049,question,77,87,date
 W054,question,84,92,room_number
 W054,question,120,134,ansi_class
 W055,question,116,123,kva_rating
-W059,question,22,34,nema_premium
+W059,question,87,99,nema_premium
 W061,question,81,91,date
 W066,question,126,133,sheet_number
 W072,subject,0,8,bare_nesc_no_context

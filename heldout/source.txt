@@ -214,7 +214,7 @@ response: EOR: Not without a submittal.
 
 === W046 | standard_applicability | -
 subject: Concrete reference for the pad
-question: Does [[c ASTM C94/C94M | ASTM C94/C94M | real noise=misspelled | ASMT C94/C94M]] apply to the transformer pad pour, or only by the specification? The mix list shows [[c ASTM C150/C150M | ASTM C150/C150M | real | ASTM C150/C150M]] and the compaction test as [[c ASTM D1557-12e1 | ASTM D1557 | real | ASTM D1557-12e1]].
+question: Does [[c ASTM C94/C94M | ASTM C94/C94M | real noise=misspelled | ASMT C94/C94M]] apply to the transformer pad pour, or does the specification cover it alone? The mix list shows [[c ASTM C150/C150M | ASTM C150/C150M | real | ASTM C150/C150M]] and the compaction test as [[c ASTM D1557-12e1 | ASTM D1557 | real | ASTM D1557-12e1]].
 response: EOR: The specification lists [[c ASTM C33/C33M | ASTM C33/C33M | real | ASTM C33/C33M]] for aggregate.
 
 === W047 | missing_information | -
@@ -275,9 +275,9 @@ question: The specification only says [[c IEC 60255 | IEC 60255 | real | IEC 602
 subject: Clock reference
 question: The vendor cites [[c IEEE 1588-2019 | IEEE 1588 | real | IEEE/IEC 1588-2019]] while the specification cites [[c IEEE 1588-2019 | IEEE 1588 | real | IEEE 1588-2019]]. Do these name the same document?
 
-=== W059 | design_clarification | -
+=== W059 | standard_applicability | -
 subject: Nameplate data sheet reference
-question: Which year should the [[n nema_premium | NEMA Premium]] motor nameplate data sheet show, [[c NEMA MG 1-2016 | NEMA MG 1 | real | ANSI/NEMA MG 1-2016]] as in the template, or another?
+question: Does [[c NEMA MG 1-2016 | NEMA MG 1 | real | ANSI/NEMA MG 1-2016]], as in the template, apply to the nameplate data sheet of the [[n nema_premium | NEMA Premium]] motor, or does another year apply?
 
 === W060 | substitution_request | -
 subject: Alternate conduit fittings
@@ -394,4 +394,4 @@ question: Which detail follows [[c IEEE 1584-2018 Clause 4.1 | IEEE 1584 | real 
 
 === W085 | standard_applicability | -
 subject: Unit nameplate and standard year
-question: Log tag \U0001d400 cannot be read on site. Does [[c IEEE C57.12.00-2015 | IEEE C57.12.00 | real noise=line_break | IEEE\r\nC57.12.00-2015]] still apply to the unit?
+question: The voltage pasted from the calculation sheet shows as \U0001d449 = 69 kV. Does [[c IEEE C57.12.00-2015 | IEEE C57.12.00 | real noise=line_break | IEEE\r\nC57.12.00-2015]] still apply to the unit?

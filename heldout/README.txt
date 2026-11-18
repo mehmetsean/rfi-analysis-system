@@ -10,6 +10,7 @@ Files
 - input/rfis.csv: rfi_id, subject, question, response.
 - labels/citations.csv, labels/negatives.csv, labels/rfis.csv: the labels.
   In labels/rfis.csv the template_id is empty and the family is "written".
+- input/README.txt and labels/README.txt: short notices for those folders.
 - source.txt: the marked-up text the files above are built from.
 - manifest.json: sha256 of the source, each input, label and README file,
   and counts.

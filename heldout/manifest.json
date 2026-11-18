@@ -2,14 +2,16 @@
   "synthetic": true,
   "source": {
     "path": "heldout/source.txt",
-    "sha256": "c521f7a0eecdeb9979aef1d2d77a603ee0d89f638c6fb34da5207b9fa70bbe13"
+    "sha256": "5550b35737567f7089a6f76dab6d09d57b8d09492a644f57ea202b0b903df933"
   },
   "files": {
-    "heldout/README.txt": "6c888502269e072cc316c318321751185ca320d7e26c9b34235fcafb7abea8df",
-    "heldout/input/rfis.csv": "f09f450de5305e9c7a6137b7ceb8c834dca92729d8c1574bb782bd12ba33737d",
-    "heldout/labels/citations.csv": "4702c27e27a319bfce1fe60b6c14185c3190dc58273d2921b87a6b8d59b728a4",
-    "heldout/labels/negatives.csv": "e7898ec8bb88914010b0efed8aba3a74e4f76fb35f3a43ad5c1f7f1c30c776a3",
-    "heldout/labels/rfis.csv": "d3b47bfce7f2d9ecdc28428a3bc3f698d3394627aeec04ce6e6deeac08943f22"
+    "heldout/README.txt": "8a64e8ea44dd203c84fb94c9ee0075be588d6c3ae58b9a91aa0fa156d543736a",
+    "heldout/input/README.txt": "4b8c21c5067b7d9d1e9fdadedd41b7a4767a9f0e85bbb245b3c84395880e8b4e",
+    "heldout/input/rfis.csv": "90ba5c070b2992ec119ca79c91359af7339920ecd077103c9e344b6048ad909b",
+    "heldout/labels/README.txt": "b5e449514c6daac2cc0648355f3acef85fcc0c684595bb5c5b4007b0680e974f",
+    "heldout/labels/citations.csv": "929f594ee82eeed528c3a48512cbd7de4d1b463d5270c80066efb995c03fa57b",
+    "heldout/labels/negatives.csv": "e6dc9b2218ec358836f9f71307d0106b9b0aaae586d9eb3bfdd09d23cb914954",
+    "heldout/labels/rfis.csv": "edde150c15c7848b34af955ae18f00f3c22befb0dcf9cfa9805658dd6324f75d"
   },
   "counts": {
     "rfis": 85,
@@ -56,11 +58,11 @@
       "spec_section": 2
     },
     "issue_types": {
-      "design_clarification": 13,
+      "design_clarification": 12,
       "document_conflict": 15,
       "field_condition": 13,
       "missing_information": 15,
-      "standard_applicability": 15,
+      "standard_applicability": 16,
       "substitution_request": 14
     },
     "recurring_groups": 12

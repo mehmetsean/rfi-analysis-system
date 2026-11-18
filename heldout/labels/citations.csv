@@ -96,8 +96,8 @@ W044,response,105,118,,,ASTM F1554-20,ASTM F1554,in,0,real,
 W045,question,30,46,,,ASTM A615/A615M,ASTM A615/A615M,in,0,real,spacing
 W045,question,80,95,,,ASTM A706/A706M,ASTM A706/A706M,in,0,real,
 W046,question,5,18,,,ASTM C94/C94M,ASTM C94/C94M,in,0,real,misspelled
-W046,question,103,118,,,ASTM C150/C150M,ASTM C150/C150M,in,0,real,
-W046,question,146,161,,,ASTM D1557-12e1,ASTM D1557,in,0,real,
+W046,question,115,130,,,ASTM C150/C150M,ASTM C150/C150M,in,0,real,
+W046,question,158,173,,,ASTM D1557-12e1,ASTM D1557,in,0,real,
 W046,response,29,42,,,ASTM C33/C33M,ASTM C33/C33M,in,0,real,
 W047,question,34,44,,,NEMA ICS 6,NEMA ICS 6,in,0,real,
 W047,question,49,54,,,NEMA ICS 2,NEMA ICS 2,in,1,real,list_continuation
@@ -139,7 +139,7 @@ W057,question,58,83,,,IEC 60255-118-1:2018,IEC 60255-118-1,in,0,real,unicode_das
 W057,question,123,138,,,IEC 60255-190-3,IEC 60255-190-3,in,0,invented,
 W058,question,17,35,,,IEEE 1588-2019,IEEE 1588,in,0,real,
 W058,question,66,80,,,IEEE 1588-2019,IEEE 1588,in,0,real,
-W059,question,68,87,,,NEMA MG 1-2016,NEMA MG 1,in,0,real,
+W059,question,5,24,,,NEMA MG 1-2016,NEMA MG 1,in,0,real,
 W060,question,40,49,,,NEMA FB 1,NEMA FB 1,in,0,real,misspelled
 W060,question,83,95,,,UL 514B,UL 514B,out,0,real,
 W061,question,97,116,,,ASTM A153/A153M-16a,ASTM A153/A153M,in,0,real,unicode_dash
@@ -195,4 +195,4 @@ W083,question,40,52,29,36,IEEE 80-2013 Table 3,IEEE 80,in,0,real,case
 W084,question,33,47,21,29,IEEE 1584-2018 Clause 4.1,IEEE 1584,in,0,real,
 W084,question,69,85,87,95,IEC 60076-3:2013 Figure 2,IEC 60076-3,in,0,real,
 W084,question,101,116,122,129,ANSI C84.1-2020 Annex B,ANSI C84.1,in,0,real,
-W085,question,39,59,,,IEEE C57.12.00-2015,IEEE C57.12.00,in,0,real,line_break
+W085,question,71,91,,,IEEE C57.12.00-2015,IEEE C57.12.00,in,0,real,line_break

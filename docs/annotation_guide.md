@@ -32,6 +32,8 @@ A citation is a written reference to a document of one of six bodies: IEEE, NESC
 
 Example: in "2017 NESC Rule 232B1" the span is "2017 NESC", the clause is "Rule 232B1", the key is "NESC 2017 Rule 232B1" and the base key is "NESC Rule 232B1".
 
+Text pasted from an equation editor can hold characters above U+FFFF, such as the math italic letters in W085. Offsets count code points, so such a character is one position.
+
 ## Keys
 
 Keys are written by hand in the style that rfikit.types.Designation.key() and base_key() print. No parser produced them. tests/test_heldout_set.py checks that each key agrees with the labeled text (test_key_matches_slice), that each base key follows the stated rule (test_base_key_rule) and that clause keywords match (test_clause_matches_key). Keys never include co-bodies.
@@ -122,7 +124,7 @@ A hard negative is text that looks like a citation and is not one. The span cove
 | date | 2017-06-01, 06/12/2019 |
 | spec_section | Section 26 05 26 |
 
-Spans for bare_rule and bare_nesc_no_context are the keyword and id ("Rule 12"). Spans for spec_section include the word "Section". A negative never overlaps an in-scope citation.
+Spans for bare_rule and bare_nesc_no_context are the keyword and id ("Rule 12"). Spans for spec_section include the word "Section". A negative never overlaps an in-scope citation. A plain voltage or length such as "69 kV" or "3 ft" is not labeled, because it does not look like a designation.
 
 ## Noise classes
 
