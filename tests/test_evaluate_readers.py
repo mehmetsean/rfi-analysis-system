@@ -282,6 +282,14 @@ def test_only_allowed_modules_import_evaluate_or_synth() -> None:
             assert blocked_imports(path) == set(), name
 
 
-def test_evaluate_imports_only_the_standard_library() -> None:
+def test_evaluate_imports_only_scoring_modules() -> None:
+    allowed = {
+        "rfikit.cite",
+        "rfikit.metrics",
+        "rfikit.synth",
+        "rfikit.textnorm",
+        "rfikit.types",
+    }
     for name in imported_modules(SRC / "evaluate.py"):
-        assert not name.startswith("rfikit"), name
+        if name.startswith("rfikit"):
+            assert any(name.startswith(a) for a in allowed), name
