@@ -7,7 +7,6 @@ from pathlib import Path
 from typing import Any
 
 from rfikit import __version__
-from rfikit.analyze import analyze
 from rfikit.cite import extract, extract_rfi
 from rfikit.evaluate import EvalPlan, LabelError, evaluate
 from rfikit.io import (
@@ -24,10 +23,10 @@ from rfikit.io import (
 from rfikit.measured import HEAD_LEVELS, summarize
 from rfikit.report import (
     CITATION_HEADER,
+    analyze_to,
     citation_row,
     csv_batches,
     csv_chunk,
-    write_analysis,
 )
 from rfikit.synth import GenParams, generate, write_corpus
 from rfikit.synth.files import UnsafeOutput
@@ -246,7 +245,7 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         )
     check_analysis_folder(args.out)
     names = read_column_map(args.column_map) if args.column_map else None
-    result = analyze(iter_rfis(path, names), args.synthetic)
+    fresh = not args.out.exists()
     try:
         args.out.mkdir(parents=True, exist_ok=True)
     except OSError:
@@ -254,12 +253,24 @@ def cmd_analyze(args: argparse.Namespace) -> int:
             f"{shown(args.out)}: folder cannot be written, {WRITE_HINT}"
         ) from None
     protected = [path] if args.column_map is None else [path, args.column_map]
-    write_analysis(args.out, result, protected)
+    try:
+        result = analyze_to(args.out, iter_rfis(path, names), args.synthetic, protected)
+    except BaseException:
+        if fresh:
+            _drop_empty(args.out)
+        raise
     print(
-        f"Analyzed {result.rfis_read} RFIs, {len(result.citations)} citations, "
+        f"Analyzed {result.rfis_read} RFIs, {result.citation_total} citations, "
         f"wrote 4 files to {shown(args.out)}"
     )
     return 0
+
+
+def _drop_empty(folder: Path) -> None:
+    try:
+        folder.rmdir()
+    except OSError:
+        pass
 
 
 def build_parser() -> argparse.ArgumentParser:

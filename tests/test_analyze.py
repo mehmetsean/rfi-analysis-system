@@ -1,11 +1,12 @@
 import subprocess
 import sys
 
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
 from rfikit.analyze import MOST, AnalysisResult, analyze
-from rfikit.types import Rfi
+from rfikit.types import Citation, Rfi
 
 
 def rfi(rfi_id: str, subject: str = "", question: str = "", response: str = "") -> Rfi:
@@ -14,13 +15,13 @@ def rfi(rfi_id: str, subject: str = "", question: str = "", response: str = "") 
 
 def test_empty_input() -> None:
     result = analyze([])
-    assert result == AnalysisResult(0, (), (), (), (), (), False)
+    assert result == AnalysisResult(0, 0, (), (), (), (), False)
 
 
 def test_rfis_without_citations() -> None:
     result = analyze([rfi("A", "hello"), rfi("B", "world")])
     assert result.rfis_read == 2
-    assert result.citations == ()
+    assert result.citation_total == 0
     assert result.key_counts == ()
     assert result.body_counts == ()
     assert result.per_rfi == ((0, 2),)
@@ -28,8 +29,12 @@ def test_rfis_without_citations() -> None:
 
 
 def test_scans_all_three_columns() -> None:
-    result = analyze([rfi("A", "IEEE 80", "ASTM A123", "NEMA TC 2")])
-    columns = [c.column for _, c in result.citations]
+    seen: list[tuple[str, Citation]] = []
+    result = analyze(
+        [rfi("A", "IEEE 80", "ASTM A123", "NEMA TC 2")],
+        sink=lambda i, c: seen.append((i, c)),
+    )
+    columns = [c.column for _, c in seen]
     assert columns == ["subject", "question", "response"]
     assert result.per_rfi == ((3, 1),)
 
@@ -71,8 +76,9 @@ def test_synthetic_flag() -> None:
 
 
 def test_citations_carry_rfi_id() -> None:
-    result = analyze([rfi("X-1", "IEEE 80")])
-    assert result.citations[0][0] == "X-1"
+    seen: list[str] = []
+    analyze([rfi("X-1", "IEEE 80")], sink=lambda i, c: seen.append(i))
+    assert seen == ["X-1"]
 
 
 PIECES = ["IEEE 80", "ASTM A123", "NESC Rule 232", "see", " ", "x", "\n"]
@@ -82,8 +88,10 @@ TEXTS = st.lists(st.sampled_from(PIECES), max_size=12).map("".join)
 @given(st.lists(TEXTS, max_size=8))
 def test_totals_agree(texts: list[str]) -> None:
     rows = [rfi(f"R{i}", t, t) for i, t in enumerate(texts)]
-    result = analyze(rows)
-    total = len(result.citations)
+    seen: list[str] = []
+    result = analyze(rows, sink=lambda i, c: seen.append(i))
+    total = len(seen)
+    assert result.citation_total == total
     assert sum(n for _, n in result.body_counts) == total
     assert sum(n for _, n in result.key_counts) == total
     assert sum(n * m for n, m in result.per_rfi) == total
@@ -99,3 +107,8 @@ def test_analyze_does_not_import_synth_or_evaluate() -> None:
     )
     done = subprocess.run([sys.executable, "-c", code], check=False)
     assert done.returncode == 0
+
+
+def test_repeated_rfi_id_is_refused() -> None:
+    with pytest.raises(ValueError, match="'A' repeats"):
+        analyze([rfi("A"), rfi("B"), rfi("A")])

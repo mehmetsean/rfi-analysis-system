@@ -204,3 +204,29 @@ def test_analyze_escapes_formula_ids(tmp_path: Path) -> None:
     assert main(["analyze", str(source), "--out", str(out)]) == 0
     text = (out / "citations.csv").read_text(encoding="utf-8")
     assert text.splitlines()[1].startswith("'=A1,")
+
+
+def test_analyze_bad_row_midway_leaves_nothing(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    text = "rfi_id,subject,question\nR1,IEEE 80,\nR2,x\n"
+    source = write(tmp_path / "rfis.csv", text)
+    fresh = tmp_path / "fresh"
+    assert main(["analyze", str(source), "--out", str(fresh)]) == 1
+    assert "line 3" in capsys.readouterr().err
+    assert not fresh.exists()
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert main(["analyze", str(source), "--out", str(empty)]) == 1
+    assert names(empty) == []
+
+
+def test_analyze_streams_in_batches(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr("rfikit.report.BATCH", 2)
+    source = write(tmp_path / "rfis.csv", CSV)
+    out = tmp_path / "results"
+    assert main(["analyze", str(source), "--out", str(out)]) == 0
+    lines = (out / "citations.csv").read_text(encoding="utf-8").splitlines()
+    assert len(lines) == 5

@@ -12,6 +12,7 @@ from rfikit.io import InputError
 from rfikit.notice import DISCLAIMER, LICENSE_LINE
 from rfikit.report import (
     RATES_TITLE,
+    analyze_to,
     csv_batches,
     load_measured,
     md_cell,
@@ -233,7 +234,7 @@ def test_input_cannot_add_markup(items: list[tuple[str, str, str]]) -> None:
 
 
 def test_write_analysis_files(tmp_path: Path) -> None:
-    write_analysis(tmp_path, analyze(ROWS))
+    analyze_to(tmp_path, ROWS)
     names = sorted(p.name for p in tmp_path.iterdir())
     assert names == ["README.txt", "analysis.html", "analysis.md", "citations.csv"]
     lines = (tmp_path / "citations.csv").read_text(encoding="utf-8").splitlines()
@@ -242,7 +243,7 @@ def test_write_analysis_files(tmp_path: Path) -> None:
 
 
 def test_write_analysis_escapes_formula_cells(tmp_path: Path) -> None:
-    write_analysis(tmp_path, analyze([Rfi("=1+1", "IEEE 80", "", "")]))
+    analyze_to(tmp_path, [Rfi("=1+1", "IEEE 80", "", "")])
     lines = (tmp_path / "citations.csv").read_text(encoding="utf-8").splitlines()
     assert lines[1].startswith("'=1+1,subject,")
 
@@ -252,8 +253,8 @@ def test_write_analysis_is_byte_stable(tmp_path: Path) -> None:
     second = tmp_path / "b"
     first.mkdir()
     second.mkdir()
-    write_analysis(first, analyze(ROWS))
-    write_analysis(second, analyze(ROWS))
+    analyze_to(first, ROWS)
+    analyze_to(second, ROWS)
     for path in first.iterdir():
         assert path.read_bytes() == (second / path.name).read_bytes()
 
@@ -262,7 +263,7 @@ def test_write_analysis_refuses_protected_file(tmp_path: Path) -> None:
     source = tmp_path / "citations.csv"
     source.write_text("keep", encoding="utf-8")
     with pytest.raises(InputError, match="same file"):
-        write_analysis(tmp_path, analyze(ROWS), [source])
+        analyze_to(tmp_path, ROWS, protected=[source])
     assert source.read_text(encoding="utf-8") == "keep"
 
 
@@ -273,24 +274,24 @@ def test_write_analysis_refuses_symlink_target(tmp_path: Path) -> None:
     out.mkdir()
     (out / "analysis.md").symlink_to(other)
     with pytest.raises(InputError, match="symbolic link"):
-        write_analysis(out, analyze(ROWS))
+        analyze_to(out, ROWS)
     assert other.read_text(encoding="utf-8") == "keep"
 
 
 def test_write_analysis_refuses_directory_target(tmp_path: Path) -> None:
     (tmp_path / "README.txt").mkdir()
     with pytest.raises(InputError, match="not a regular file"):
-        write_analysis(tmp_path, analyze(ROWS))
+        analyze_to(tmp_path, ROWS)
 
 
 def test_write_analysis_missing_folder(tmp_path: Path) -> None:
     with pytest.raises(InputError, match="cannot be written"):
-        write_analysis(tmp_path / "missing", analyze(ROWS))
+        analyze_to(tmp_path / "missing", ROWS)
 
 
 def test_write_analysis_replaces_own_files(tmp_path: Path) -> None:
     (tmp_path / "analysis.md").write_text("old", encoding="utf-8")
-    write_analysis(tmp_path, analyze(ROWS))
+    analyze_to(tmp_path, ROWS)
     assert "# rfikit analysis" in (tmp_path / "analysis.md").read_text(encoding="utf-8")
 
 
@@ -298,3 +299,12 @@ def test_csv_batches_split_rows(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr("rfikit.report.BATCH", 2)
     chunks = list(csv_batches([["a"], ["b"], ["c"]]))
     assert chunks == ["a\nb\n", "c\n"]
+
+
+def test_write_analysis_writes_the_three_report_files(tmp_path: Path) -> None:
+    write_analysis(tmp_path, analyze(ROWS))
+    assert sorted(p.name for p in tmp_path.iterdir()) == [
+        "README.txt",
+        "analysis.html",
+        "analysis.md",
+    ]

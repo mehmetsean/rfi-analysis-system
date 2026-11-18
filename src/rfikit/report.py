@@ -9,11 +9,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from rfikit.analyze import MOST, AnalysisResult
+from rfikit.analyze import MOST, AnalysisResult, analyze
 from rfikit.io import atomic_text
 from rfikit.notice import DISCLAIMER, LICENSE_LINE, OWNERS
 from rfikit.textnorm import clip
-from rfikit.types import Citation
+from rfikit.types import Citation, Rfi
 
 LEADING = ("=", "+", "-", "@", "＝", "＋", "－", "＠")
 CONTROL = ("\t", "\r", "\n")
@@ -175,7 +175,7 @@ def rate_rows(doc: Json) -> list[tuple[str, ...]]:
 
 
 def build_sections(result: AnalysisResult, doc: Json) -> list[Section]:
-    total = len(result.citations)
+    total = result.citation_total
     with_cites = sum(m for n, m in result.per_rfi if n > 0)
     summary = Section(
         "Summary",
@@ -315,11 +315,6 @@ def write_analysis(
     out: Path, result: AnalysisResult, protected: Sequence[Path] = ()
 ) -> None:
     doc = load_measured()
-    rows = (citation_row(rfi_id, c) for rfi_id, c in result.citations)
-    with atomic_text(out / "citations.csv", protected) as handle:
-        handle.write(csv_chunk([list(CITATION_HEADER)]))
-        for chunk in csv_batches(rows):
-            handle.write(chunk)
     texts = (
         ("analysis.md", render_markdown(result, doc)),
         ("analysis.html", render_html(result, doc)),
@@ -328,3 +323,26 @@ def write_analysis(
     for name, text in texts:
         with atomic_text(out / name, protected) as handle:
             handle.write(text)
+
+
+def analyze_to(
+    out: Path,
+    rfis: Iterable[Rfi],
+    synthetic: bool = False,
+    protected: Sequence[Path] = (),
+) -> AnalysisResult:
+    batch: list[list[str]] = []
+    with atomic_text(out / "citations.csv", protected) as handle:
+        handle.write(csv_chunk([list(CITATION_HEADER)]))
+
+        def add(rfi_id: str, c: Citation) -> None:
+            batch.append(citation_row(rfi_id, c))
+            if len(batch) >= BATCH:
+                handle.write(csv_chunk(batch))
+                batch.clear()
+
+        result = analyze(rfis, synthetic, add)
+        if batch:
+            handle.write(csv_chunk(batch))
+    write_analysis(out, result, protected)
+    return result
