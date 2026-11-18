@@ -1,10 +1,13 @@
+import csv
+import io
 import json
+import sys
 from pathlib import Path
 
 import pytest
 from prototype_baseline import naive_spans, prototype_spans
 
-from rfikit import __version__
+from rfikit import __version__, cli
 from rfikit.cli import EXTRACT_HEADER, MAX_N, main, render_summary
 from rfikit.evaluate import EvalPlan, evaluate_seeds
 from rfikit.measured import summarize
@@ -24,7 +27,7 @@ def test_no_command(capsys: pytest.CaptureFixture[str]) -> None:
 def test_analyze_stub(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["analyze", "x"]) == 1
     captured = capsys.readouterr()
-    assert "not built yet" in captured.err
+    assert captured.err == "rfikit: the command analyze is not built yet\n"
     assert captured.out == ""
 
 
@@ -85,7 +88,9 @@ def test_extract_column_map(tmp_path: Path, capsys: pytest.CaptureFixture[str]) 
 def test_extract_errors(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["extract", str(tmp_path / "none.txt")]) == 1
     captured = capsys.readouterr()
-    assert captured.err == "rfikit: none.txt: missing or not a regular file\n"
+    assert captured.err == (
+        "rfikit: none.txt: file is missing or is not a regular file, check the path\n"
+    )
     assert "Traceback" not in captured.err
     path = tmp_path / "a.txt"
     path.write_text("x", encoding="utf-8")
@@ -95,7 +100,7 @@ def test_extract_errors(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> N
     assert "symbolic link" in capsys.readouterr().err
     gone = tmp_path / "no_folder" / "o.csv"
     assert main(["extract", str(path), "--out", str(gone)]) == 1
-    assert "cannot be written" in capsys.readouterr().err
+    assert "file cannot be written" in capsys.readouterr().err
 
 
 def test_generate_matches_write_corpus(
@@ -104,8 +109,7 @@ def test_generate_matches_write_corpus(
     out = tmp_path / "cli"
     assert main(["generate", "--seed", "42", "--n", "20", "--out", str(out)]) == 0
     line = capsys.readouterr().out
-    assert "20" in line
-    assert str(out) in line
+    assert line == "Wrote 20 synthetic RFIs (seed 42) to cli\n"
     expected = render_files(generate(42, 20))
     for name, data in expected.items():
         assert (out / name).read_bytes() == data
@@ -185,7 +189,10 @@ def test_render_undefined_value() -> None:
         "sets": {
             "A": {
                 "methods": {
-                    "rfikit": {"levels": {"strict": {"precision": None, "recall": 0.5}}}
+                    "rfikit": {
+                        "rfis": 3,
+                        "levels": {"strict": {"precision": None, "recall": 0.5}},
+                    }
                 }
             }
         },
@@ -194,3 +201,278 @@ def test_render_undefined_value() -> None:
     row = next(line for line in text.splitlines() if " strict " in line).split()
     assert row[2:] == ["n/a", "0.500", "n/a"]
     assert "Leak check: pool 0" in text
+
+
+def parse(text: str) -> list[list[str]]:
+    return list(csv.reader(io.StringIO(text, newline="")))
+
+
+def test_extract_clause_and_inferred(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "n.txt"
+    path.write_text("IEEE C57.12.00, C57.12.90 clause 5.3", encoding="utf-8")
+    assert main(["extract", str(path)]) == 0
+    rows = parse(capsys.readouterr().out)
+    assert rows[0] == list(EXTRACT_HEADER)
+    assert rows[1:] == [
+        ["", "text", "0", "14", "IEEE C57.12.00", "IEEE C57.12.00"]
+        + ["IEEE C57.12.00", "IEEE", "", "", "0"],
+        ["", "text", "16", "25", "C57.12.90", "IEEE C57.12.90 Clause 5.3"]
+        + ["IEEE C57.12.90", "IEEE", "26", "36", "1"],
+    ]
+
+
+def test_upper_case_csv_name(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "rfis.CSV"
+    path.write_text("rfi_id,subject,question\nR1,S,See ASTM A36\n", encoding="utf-8")
+    assert main(["extract", str(path)]) == 0
+    assert "R1,question," in capsys.readouterr().out
+
+
+def test_other_suffix_is_text(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "rfis.tsv"
+    path.write_text("See ASTM A36", encoding="utf-8")
+    assert main(["extract", str(path)]) == 0
+    assert ",text," in capsys.readouterr().out
+
+
+def test_offsets_are_code_points_csv(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    subject = "\U0001f600\U0001f600 IEEE 1547-2018"
+    path = tmp_path / "rfis.csv"
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["rfi_id", "subject", "question"])
+        writer.writerow(["R1", subject, "none"])
+    assert main(["extract", str(path)]) == 0
+    rows = parse(capsys.readouterr().out)[1:]
+    assert len(rows) == 1
+    start, end = int(rows[0][2]), int(rows[0][3])
+    assert rows[0][1] == "subject"
+    assert (start, end) == (3, len(subject))
+    assert subject[start:end] == rows[0][4]
+
+
+def test_offsets_are_code_points_text(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    text = "\U0001f600\U0001f600 IEEE 1547-2018"
+    path = tmp_path / "n.txt"
+    path.write_text(text, encoding="utf-8")
+    assert main(["extract", str(path)]) == 0
+    rows = parse(capsys.readouterr().out)[1:]
+    assert len(rows) == 1
+    start, end = int(rows[0][2]), int(rows[0][3])
+    assert text[start:end] == rows[0][4]
+    assert start == 3
+
+
+def test_extract_out_replaces_and_refuses_same_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "n.csv"
+    path.write_text("rfi_id,subject,question\nR1,S,See ASTM A36\n", encoding="utf-8")
+    original = path.read_text(encoding="utf-8")
+    assert main(["extract", str(path), "--out", str(path)]) == 1
+    assert "same file as the input" in capsys.readouterr().err
+    assert path.read_text(encoding="utf-8") == original
+    out = tmp_path / "o.csv"
+    out.write_text("old", encoding="utf-8")
+    assert main(["extract", str(path), "--out", str(out)]) == 0
+    assert out.read_text(encoding="utf-8").startswith("rfi_id,column,")
+
+
+def test_extract_failure_leaves_no_output(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "n.csv"
+    path.write_text(
+        "rfi_id,subject,question\nR1,S,See ASTM A36\nR1,S,Q\n", encoding="utf-8"
+    )
+    out = tmp_path / "o.csv"
+    assert main(["extract", str(path), "--out", str(out)]) == 1
+    assert "repeats" in capsys.readouterr().err
+    assert not out.exists()
+    assert [p.name for p in tmp_path.iterdir()] == ["n.csv"]
+
+
+def test_extract_stdout_is_utf8_bytes(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    path = tmp_path / "n.txt"
+    path.write_text("\U0001f600 IEEE 1547", encoding="utf-8")
+    raw = io.BytesIO()
+    monkeypatch.setattr(sys, "stdout", io.TextIOWrapper(raw, encoding="ascii"))
+    assert main(["extract", str(path)]) == 0
+    data = raw.getvalue()
+    assert data.startswith(b"rfi_id,column,")
+    assert b"\r" not in data
+    assert data.endswith(b"\n")
+
+
+def test_extract_broken_pipe(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    path = tmp_path / "n.txt"
+    path.write_text("IEEE 1547", encoding="utf-8")
+
+    class Broken:
+        class buffer:  # noqa: N801
+            @staticmethod
+            def write(data: bytes) -> int:
+                raise BrokenPipeError
+
+    monkeypatch.setattr(sys, "stdout", Broken)
+    assert main(["extract", str(path)]) == 1
+    assert capsys.readouterr().err == ""
+
+
+def test_generate_negative_seed(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert (
+        main(["generate", "--seed", "-1", "--n", "5", "--out", str(tmp_path / "o")])
+        == 1
+    )
+    captured = capsys.readouterr()
+    assert captured.err == "rfikit: --seed must not be negative\n"
+
+
+def test_generate_n_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(cli, "MAX_N", 5)
+    assert (
+        main(["generate", "--seed", "1", "--n", "5", "--out", str(tmp_path / "a")]) == 0
+    )
+    assert (
+        main(["generate", "--seed", "1", "--n", "6", "--out", str(tmp_path / "b")]) == 1
+    )
+    assert "between 1 and 5" in capsys.readouterr().err
+
+
+def test_generate_folder_rules(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    out = tmp_path / "data"
+    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(out)]) == 0
+    assert main(["generate", "--seed", "2", "--n", "3", "--out", str(out)]) == 0
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "keep.txt").write_text("x", encoding="utf-8")
+    capsys.readouterr()
+    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(other)]) == 1
+    assert "not empty" in capsys.readouterr().err
+    assert (other / "keep.txt").exists()
+    fake = tmp_path / "fake"
+    fake.mkdir()
+    (fake / "manifest.json").write_text('{"synthetic": true}', encoding="utf-8")
+    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(fake)]) == 1
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(empty)]) == 0
+    held = tmp_path / "held"
+    held.mkdir()
+    (held / "manifest.json").write_text("not json", encoding="utf-8")
+    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(held)]) == 1
+
+
+def test_evaluate_not_a_folder(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    assert main(["evaluate", str(tmp_path / "typed")]) == 1
+    assert capsys.readouterr().err == "rfikit: typed: not a folder, check the path\n"
+    data = tmp_path / "data"
+    main(["generate", "--seed", "5", "--n", "5", "--out", str(data)])
+    capsys.readouterr()
+    assert main(["evaluate", str(data), "--written", str(tmp_path / "w")]) == 1
+    assert "w: not a folder" in capsys.readouterr().err
+
+
+def test_evaluate_exact_lines_and_json(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = tmp_path / "data"
+    main(["generate", "--seed", "5", "--n", "20", "--out", str(data)])
+    capsys.readouterr()
+    result = tmp_path / "s.json"
+    assert main(["evaluate", str(data), "--json", str(result)]) == 0
+    out = capsys.readouterr().out
+    assert "Leak check: pool 12000, A dropped 2 of 16, B dropped 0 of 4\n" in out
+    assert out.endswith("Measured on synthetic data.\n")
+    summary = json.loads(result.read_text(encoding="utf-8"))
+    expected = json.dumps(summary, sort_keys=True, indent=1) + "\n"
+    assert result.read_text(encoding="utf-8") == expected
+
+
+def test_evaluate_table_matches_summary(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = tmp_path / "data"
+    main(["generate", "--seed", "5", "--n", "20", "--out", str(data)])
+    capsys.readouterr()
+    result = tmp_path / "s.json"
+    argv = ["evaluate", str(data), "--written", str(HELDOUT), "--json", str(result)]
+    assert main(argv) == 0
+    out = capsys.readouterr().out
+    summary = json.loads(result.read_text(encoding="utf-8"))
+    levels = summary["sets"]["written"]["methods"]["rfikit"]["levels"]
+    lines = out.split("Set written")[1].splitlines()
+    for level, got in levels.items():
+        row = next(
+            x.split() for x in lines if x.startswith("rfikit") and f" {level} " in x
+        )
+        assert row[2:] == [f"{got[k]:.3f}" for k in ("precision", "recall", "f1")]
+
+
+def test_evaluate_empty_set(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    data = tmp_path / "data"
+    main(["generate", "--seed", "5", "--n", "1", "--out", str(data)])
+    capsys.readouterr()
+    assert main(["evaluate", str(data)]) == 0
+    out = capsys.readouterr().out
+    assert "Set A: no RFIs to score" in out
+    assert "Set B: no RFIs to score" in out
+    assert "precision" not in out
+
+
+def test_other_marker_line(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    data = tmp_path / "data"
+    main(["generate", "--seed", "5", "--n", "20", "--out", str(data)])
+    manifest = data / "manifest.json"
+    parsed = json.loads(manifest.read_text(encoding="utf-8"))
+    parsed["synthetic"] = False
+    manifest.write_text(json.dumps(parsed), encoding="utf-8")
+    capsys.readouterr()
+    assert main(["evaluate", str(data)]) == 0
+    out = capsys.readouterr().out
+    assert out.endswith("Scored on the labeled folders given.\n")
+    manifest.unlink()
+    assert main(["evaluate", str(data)]) == 0
+    assert "Scored on the labeled folders given." in capsys.readouterr().out
+    good = tmp_path / "good"
+    main(["generate", "--seed", "6", "--n", "20", "--out", str(good)])
+    capsys.readouterr()
+    assert main(["evaluate", str(good), "--written", str(data)]) == 0
+    assert "Scored on the labeled folders given." in capsys.readouterr().out
+
+
+def test_evaluate_label_error_clips_id(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = tmp_path / "data"
+    main(["generate", "--seed", "5", "--n", "5", "--out", str(data)])
+    capsys.readouterr()
+    long = "R" * 100
+    rows = ["rfi_id,subject,question,response", f"{long},S,Q,", f"{long},S,Q,"]
+    (data / "input" / "rfis.csv").write_text("\n".join(rows) + "\n", encoding="utf-8")
+    assert main(["evaluate", str(data)]) == 1
+    err = capsys.readouterr().err
+    assert "repeats rfi_id" in err
+    assert long not in err
