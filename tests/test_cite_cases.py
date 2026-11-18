@@ -529,3 +529,7 @@ def test_nesc_table_needs_one_or_two_digits_after_the_dash() -> None:
         "NESC Table 232-12",
     ]
     assert keys("The NESC governs." + FAR + "Table 232-123") == ["NESC"]
+
+
+def test_clause_word_inside_a_designation_is_not_a_clause() -> None:
+    assert keys("IEEE 80 NEMA SEC 5") == ["IEEE 80", "NEMA SEC 5"]
