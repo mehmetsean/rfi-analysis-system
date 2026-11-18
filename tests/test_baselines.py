@@ -25,10 +25,7 @@ def test_prototype_keeps_its_known_flaws() -> None:
     found = texts(text, prototype_spans(text))
     assert "Rule 232" in found
     assert "IEEE 80" not in found
-    assert (
-        prototype_spans("IEEE C57.12.00-2015")[0].end == len("IEEE C57.12.00-2015") - 0
-        or True
-    )
+    assert prototype_spans("IEEE C57.12.00-2015") == [("IEEE", 0, len("IEEE C57.12"))]
 
 
 def test_prototype_has_no_normalization() -> None:

@@ -38,3 +38,5 @@ def test_word_at() -> None:
     assert word_at("a  kVA unit", 1) == "kva"
     assert word_at("a  ", 1) == ""
     assert word_at("abc", 3) == ""
+    assert word_at("C57\r\nkVA", 3) == "kva"
+    assert word_at("C2\nNESC", 2) == "nesc"

@@ -12,7 +12,7 @@ for _code in _SPACE_CODES:
 for _code in _BREAK_CODES:
     _TABLE[_code] = "\n"
 
-_WORD = re.compile(r"[ \t]*([A-Za-z]+)", re.ASCII)
+_WORD = re.compile(r"[ \t\r\n]*([A-Za-z]+)", re.ASCII)
 
 
 def clean(text: str) -> str:

@@ -275,6 +275,15 @@ def test_list_stops_at_plain_number_and_units() -> None:
     assert keys("IEEE 1547, 2017 NESC") == ["IEEE 1547", "NESC 2017"]
 
 
+def test_list_stops_at_units_on_the_next_line() -> None:
+    assert keys("IEEE C57.12.00, C57\nkVA rating") == ["IEEE C57.12.00"]
+    assert keys("ANSI C84.1, C12\r\nkV") == ["ANSI C84.1"]
+    assert keys("IEEE C57.12.00, C2\nNESC Rule 232") == [
+        "IEEE C57.12.00",
+        "NESC Rule 232",
+    ]
+
+
 def test_clause_after_list_binds_last_item() -> None:
     assert keys("IEEE C57.12.00 and C57.91, Section 4") == [
         "IEEE C57.12.00",
