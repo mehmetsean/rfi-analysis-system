@@ -35,7 +35,7 @@ rfikit evaluate data/ --written heldout/ --json summary.json
 
 For example, after `rfikit generate --seed 42 --n 600 --out data/`, the command `rfikit evaluate data/` prints the line "Leak check: pool 12000, A dropped 0 of 456, B dropped 0 of 144" just before its last line. The leak line counts repeats after cleaning (character map, lower case, white space collapsed), not only exact repeats. The pool is the set of distinct subject and question pairs in the synthetic training corpora, seeds 1 to 10, families A and B. Dropped counts the RFIs in your folder whose pair is in the pool; they are left out of the scores. The last line says "Measured on synthetic data." only when every scored folder has a manifest.json with "synthetic": true.
 
-Errors print one line starting with "rfikit:" and exit with 1. A wrong option exits with 2.
+Input errors print one line starting with "rfikit:" and exit with 1. A wrong option prints a usage message and exits with 2.
 
 ## Development quickstart
 

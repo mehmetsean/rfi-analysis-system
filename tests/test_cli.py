@@ -645,3 +645,74 @@ def test_folder_name_with_newline_is_one_line(
     err = capsys.readouterr().err
     assert len(err.splitlines()) == 1
     assert "da\\nta" in err
+
+
+def test_label_error_names_both_folders(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "data", capsys)
+    written = make_corpus(tmp_path / "other", capsys)
+    (written / "input" / "rfis.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    assert main(["evaluate", str(data), "--written", str(written)]) == 1
+    err = capsys.readouterr().err
+    assert err.startswith("rfikit: data and other: rfis.csv: missing column")
+
+
+def test_label_symlink_gets_link_hint(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "data", capsys)
+    labels = data / "labels" / "rfis.csv"
+    real = tmp_path / "real.csv"
+    real.write_bytes(labels.read_bytes())
+    labels.unlink()
+    labels.symlink_to(real)
+    assert main(["evaluate", str(data)]) == 1
+    err = capsys.readouterr().err
+    assert err.endswith(
+        "symbolic links are not read, replace the link with a real file\n"
+    )
+    assert "annotation_guide" not in err
+
+
+def test_family_with_newline_is_one_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "data", capsys)
+    path = data / "labels" / "rfis.csv"
+    rows = list(csv.reader(io.StringIO(path.read_text(encoding="utf-8"))))
+    column = rows[0].index("family")
+    rows[1][column] = "A\nB"
+    buffer = io.StringIO()
+    csv.writer(buffer, lineterminator="\n").writerows(rows)
+    path.write_text(buffer.getvalue(), encoding="utf-8")
+    assert main(["evaluate", str(data)]) == 1
+    err = capsys.readouterr().err
+    assert len(err.splitlines()) == 1
+    assert "'A\\nB'" in err
+
+
+def test_generate_into_unreadable_folder(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    out = tmp_path / "locked"
+    out.mkdir()
+    out.chmod(0)
+    try:
+        if os.access(out, os.R_OK):
+            pytest.skip("running with permissions that ignore the mode")
+        argv = ["generate", "--seed", "1", "--n", "2", "--out", str(out)]
+        assert main(argv) == 1
+        assert "locked: folder cannot be written" in capsys.readouterr().err
+    finally:
+        out.chmod(0o755)
+
+
+def test_extract_checks_output_before_reading(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    folder = tmp_path / "a_folder"
+    folder.mkdir()
+    missing = tmp_path / "missing.txt"
+    assert main(["extract", str(missing), "--out", str(folder)]) == 1
+    assert "a_folder: output is not a regular file" in capsys.readouterr().err

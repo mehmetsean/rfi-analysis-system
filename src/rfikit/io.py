@@ -131,7 +131,7 @@ def _header_index(
             index[field] = header.index(column)
         elif field in REQUIRED or field in column_map:
             raise InputError(
-                f"{name}: missing column {clip(column)} for {field}, "
+                f"{name}: missing column {clip(column)} for the {field} field, "
                 "add it to the file or fix the column map"
             )
     for field, position in index.items():
@@ -242,7 +242,11 @@ def check_outside(path: Path, folders: Sequence[Path]) -> None:
             if not item.exists():
                 continue
             for folder in folders:
-                if os.path.samefile(item, folder):
+                try:
+                    same = os.path.samefile(item, folder)
+                except OSError:
+                    continue
+                if same:
                     raise InputError(
                         f"{shown(path)}: output is inside the input folder "
                         f"{shown(folder)}, pick a path outside it"

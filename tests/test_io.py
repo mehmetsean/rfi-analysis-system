@@ -196,7 +196,8 @@ def test_column_map_partial(tmp_path: Path) -> None:
 
 def test_column_map_missing_column(tmp_path: Path) -> None:
     path = write(tmp_path / "a.csv", "rfi_id,subject,question\n1,S,Q\n")
-    with pytest.raises(InputError, match="missing column 'Reply' for response"):
+    message = "missing column 'Reply' for the response field"
+    with pytest.raises(InputError, match=message):
         read_rfis(path, {"response": "Reply"})
 
 
@@ -477,6 +478,25 @@ def test_check_outside(tmp_path: Path) -> None:
     link.symlink_to(folder)
     with pytest.raises(InputError, match="inside the input folder"):
         check_outside(link / "out.json", [folder])
+
+
+def test_check_outside_link_into_subfolder(tmp_path: Path) -> None:
+    folder = tmp_path / "data"
+    (folder / "labels").mkdir(parents=True)
+    link = tmp_path / "to_labels"
+    link.symlink_to(folder / "labels")
+    with pytest.raises(InputError, match="inside the input folder data"):
+        check_outside(link / "out.json", [folder])
+
+
+def test_check_outside_link_inside_folder(tmp_path: Path) -> None:
+    folder = tmp_path / "data"
+    folder.mkdir()
+    away = tmp_path / "away"
+    away.mkdir()
+    (folder / "to_away").symlink_to(away)
+    with pytest.raises(InputError, match="inside the input folder data"):
+        check_outside(folder / "to_away" / "out.json", [folder])
 
 
 def test_open_flags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

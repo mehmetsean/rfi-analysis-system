@@ -124,11 +124,12 @@ def stream_stdout(chunks: Iterable[str]) -> int:
 
 def cmd_extract(args: argparse.Namespace) -> int:
     path = Path(args.file)
+    protected = [path] if args.column_map is None else [path, args.column_map]
+    if args.out is not None:
+        check_output(args.out, protected)
     chunks = extract_chunks(path, args.column_map)
     if args.out is None:
         return stream_stdout(chunks)
-    protected = [path] if args.column_map is None else [path, args.column_map]
-    check_output(args.out, protected)
     with atomic_text(args.out, protected) as handle:
         for chunk in chunks:
             handle.write(chunk)
@@ -151,7 +152,13 @@ def is_synthetic(folder: Path) -> bool:
 def check_folder(out: Path) -> None:
     if out.is_symlink() or not out.is_dir():
         return
-    if any(out.iterdir()):
+    try:
+        filled = any(out.iterdir())
+    except OSError:
+        raise InputError(
+            f"{shown(out)}: folder cannot be written, {WRITE_HINT}"
+        ) from None
+    if filled:
         raise InputError(
             f"{shown(out)}: folder is not empty, pick an empty or new folder"
         )
@@ -226,6 +233,11 @@ LABEL_HINT = (
     "check that the folder was written by rfikit generate or follows the "
     "label format in docs/annotation_guide.md"
 )
+LINK_HINT = "replace the link with a real file"
+
+
+def label_hint(message: str) -> str:
+    return LINK_HINT if "symbolic link" in message else LABEL_HINT
 
 
 def run_evaluate(folders: list[Path], written: Path | None) -> Json:
@@ -233,7 +245,7 @@ def run_evaluate(folders: list[Path], written: Path | None) -> Json:
         return summarize(evaluate(folders[0], written, EvalPlan()))
     except LabelError as error:
         names = " and ".join(shown(folder) for folder in folders)
-        raise InputError(f"{names}: {error}, {LABEL_HINT}") from None
+        raise InputError(f"{names}: {error}, {label_hint(str(error))}") from None
 
 
 def cmd_evaluate(args: argparse.Namespace) -> int:
