@@ -197,6 +197,8 @@ def test_build_files() -> None:
         "heldout/labels/negatives.csv",
         "heldout/labels/rfis.csv",
         "heldout/README.txt",
+        "heldout/input/README.txt",
+        "heldout/labels/README.txt",
         "heldout/manifest.json",
     }
     assert files["heldout/labels/citations.csv"].decode().splitlines()[1] == (

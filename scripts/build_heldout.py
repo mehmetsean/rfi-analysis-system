@@ -55,6 +55,7 @@ README_LINES = [
     "- input/rfis.csv: rfi_id, subject, question, response.",
     "- labels/citations.csv, labels/negatives.csv, labels/rfis.csv: the labels.",
     '  In labels/rfis.csv the template_id is empty and the family is "written".',
+    "- input/README.txt and labels/README.txt: short notices for those folders.",
     "- source.txt: the marked-up text the files above are built from.",
     "- manifest.json: sha256 of the source, each input, label and README file,",
     "  and counts.",
@@ -78,6 +79,20 @@ README_LINES = [
     "affiliation with or endorsement from any of them.",
 ]
 README_TEXT = "\n".join(README_LINES) + "\n"
+
+FOLDER_LICENSE = (
+    "All rights reserved. You may view the code and run it to evaluate it. "
+    "Commercial use needs a paid license from Mehmet Tuzunkan: "
+    "https://www.linkedin.com/in/mstuzunkan"
+)
+INPUT_README = (
+    "Synthetic data. The RFIs were written by hand for this repo. "
+    "Rules are in docs/annotation_guide.md.\n\n" + FOLDER_LICENSE + "\n"
+)
+LABELS_README = INPUT_README.replace(
+    "The RFIs were written by hand for this repo.",
+    "The labels for these RFIs were written by hand.",
+)
 
 
 class BuildError(ValueError):
@@ -405,6 +420,8 @@ def build(source: str) -> dict[str, bytes]:
         [[r.rfi_id, r.issue_type, r.group_id, "", "written"] for r in rfis],
     )
     files["heldout/README.txt"] = README_TEXT.encode("utf-8")
+    files["heldout/input/README.txt"] = INPUT_README.encode("utf-8")
+    files["heldout/labels/README.txt"] = LABELS_README.encode("utf-8")
     files["heldout/manifest.json"] = _manifest(rfis, files, source)
     return files
 
