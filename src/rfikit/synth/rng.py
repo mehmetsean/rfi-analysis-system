@@ -11,6 +11,8 @@ class Rng:
     def __init__(self, seed: int) -> None:
         if isinstance(seed, bool) or not isinstance(seed, int):
             raise TypeError("seed must be an int")
+        if seed < 0:
+            raise ValueError("seed must not be negative")
         self._random = random.Random(seed)
 
     def unit(self) -> float:

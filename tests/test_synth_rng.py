@@ -89,3 +89,23 @@ def test_synth_modules_use_only_random_and_no_math() -> None:
                 assert node.attr not in BANNED_CALLS, (path, node.attr)
             if isinstance(node, ast.Call) and isinstance(node.func, ast.Name):
                 assert node.func.id not in ("hash", "id"), path
+
+
+def test_negative_seed_is_rejected() -> None:
+    with pytest.raises(ValueError, match="negative"):
+        Rng(-1)
+
+
+def test_only_rng_imports_random_and_nothing_seeds_it() -> None:
+    for path in sorted(SYNTH.glob("*.py")):
+        tree = ast.parse(path.read_text(encoding="utf-8"))
+        for node in ast.walk(tree):
+            names: list[str] = []
+            if isinstance(node, ast.Import):
+                names = [a.name for a in node.names]
+            elif isinstance(node, ast.ImportFrom):
+                names = [node.module or ""]
+            if "random" in names:
+                assert path.name == "rng.py", path
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute):
+                assert node.func.attr != "seed", path
