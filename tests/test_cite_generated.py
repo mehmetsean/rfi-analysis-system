@@ -98,7 +98,7 @@ def test_cite_does_not_import_synth_or_evaluate() -> None:
     assert done.returncode == 0
 
 
-def test_cite_files_import_only_types_and_textnorm() -> None:
+def test_cite_files_import_only_allowed_modules() -> None:
     allowed = {"rfikit.types", "rfikit.textnorm", "rfikit.cite_grammar"}
     for name in ("cite.py", "cite_grammar.py", "textnorm.py"):
         tree = ast.parse((SRC / name).read_text())

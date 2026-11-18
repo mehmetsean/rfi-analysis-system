@@ -271,7 +271,7 @@ def _ratio(pattern: str) -> float:
 
 @pytest.mark.parametrize("pattern", PATTERNS)
 def test_hostile_input_runs_in_linear_time(pattern: str) -> None:
-    best = min(_ratio(pattern) for _ in range(1))
+    best = _ratio(pattern)
     for _ in range(3):
         if best < 3:
             break
