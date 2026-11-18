@@ -365,3 +365,17 @@ def test_family_b_rows_are_about_a_quarter(corpus: Corpus) -> None:
     assert 0.15 < share < 0.35
     for g in corpus.rfis:
         assert ("-A" in g.template_id) == (g.family == "A")
+
+
+def test_a_citation_pool_of_one_document_raises(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from rfikit.synth import cites
+    from rfikit.synth.rng import Rng
+
+    module = sys.modules["rfikit.synth.generate"]
+    params = GenParams()
+    only = cites.make_cite(Rng(3), params, "IEEE")
+    monkeypatch.setattr(cites, "make_cite", lambda rng, p, body: only)
+    with pytest.raises(RuntimeError, match="differs from the others"):
+        module._another_cite(Rng(1), params, {"c1": only})

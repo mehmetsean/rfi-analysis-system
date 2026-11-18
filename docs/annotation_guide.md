@@ -141,10 +141,10 @@ The source text for the set writes special characters as escapes. The built inpu
 
 ## The catalog column
 
-The value "real" means a catalog entry: an identifier written to match a published designation. It is not checked against the standards. The value "invented" means a number that fits the grammar. For this set the catalog value describes the document, not the edition.
-- real: the designation is a published document of that body, to the best of the annotator's knowledge.
-- invented: the number fits the grammar but the annotator cannot confirm that the document exists. When unsure, mark invented.
-- A bare NESC rule or table is real only for rules the annotator is sure exist.
+The value "real" means the designation was written to match a published document of that body: in generated data it is a catalog entry, in the written set it is the annotator's judgment. Neither is checked against the standards, and both are identifiers only. The value "invented" means a number that fits the grammar and is not meant to match a published document. For this set the catalog value describes the document, not the edition.
+- real: written to match a published document of that body, to the annotator's knowledge. Not checked against the standards.
+- invented: the number fits the grammar and is not meant to match a published document. When unsure, mark invented.
+- A bare NESC rule or table is real only for rule or table numbers the annotator is confident appear in the NESC.
 
 ## Issue types
 

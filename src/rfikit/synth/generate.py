@@ -79,10 +79,14 @@ def _another_cite(
         for name, spec in found.items()
         if name[0] == "c" and isinstance(spec, CiteSpec)
     ]
-    while True:
+    for _ in range(MAX_TRIES):
         spec = cites.make_cite(rng, params, cites.pick_body(rng))
         if spec.rendered.designation.base_key() not in used:
             return spec
+    raise RuntimeError(
+        "could not draw a citation that differs from the others in the template;"
+        " widen the catalog or the invented number pool, then run again"
+    )
 
 
 def _text_value(rng: Rng, params: GenParams, kind: str) -> str:
@@ -146,7 +150,10 @@ def _has_nesc(drawn: dict[str, CiteSpec | ListSpec]) -> bool:
 def _build(
     rng: Rng, params: GenParams, template: Template
 ) -> tuple[list[Builder], tuple[str, ...]]:
-    """Return the built columns and the slot values before noise."""
+    """Return the built columns and the subject and question slot values.
+
+    The values are taken before noise.
+    """
     texts = [template.subject, template.question, ""]
     if template.response and rng.chance(params.response_rate):
         texts[2] = template.response
