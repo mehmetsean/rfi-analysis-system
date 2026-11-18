@@ -5,7 +5,7 @@ W005,question,19,35,spec_section
 W006,question,6,13,sheet_number
 W006,question,144,162,ansi_sheet
 W010,question,145,154,part_number
-W012,question,126,133,drawing_number
+W012,question,100,107,drawing_number
 W013,question,17,27,date
 W014,question,147,154,sheet_number
 W021,response,44,52,rfi_number
@@ -16,11 +16,11 @@ W024,question,32,39,nema_enclosure
 W024,question,54,61,nema_enclosure
 W025,question,38,45,nema_enclosure
 W025,question,74,81,nema_enclosure
-W030,question,67,73,kva_rating
-W032,question,152,157,drawing_number
+W030,question,55,61,kva_rating
+W032,question,109,114,drawing_number
 W037,response,70,83,date
-W039,question,171,185,ansi_class
-W039,question,210,213,astm_grade
+W039,question,157,171,ansi_class
+W039,question,196,199,astm_grade
 W043,question,19,35,spec_section
 W043,question,163,181,ansi_sheet
 W044,question,166,175,part_number

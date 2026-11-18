@@ -38,7 +38,7 @@ W036,standard_applicability,single-W036,,written
 W037,field_condition,single-W037,,written
 W038,missing_information,single-W038,,written
 W039,substitution_request,single-W039,,written
-W040,design_clarification,single-W040,,written
+W040,missing_information,single-W040,,written
 W041,standard_applicability,single-W041,,written
 W042,missing_information,single-W042,,written
 W043,document_conflict,single-W043,,written
@@ -56,7 +56,7 @@ W054,field_condition,single-W054,,written
 W055,document_conflict,single-W055,,written
 W056,standard_applicability,single-W056,,written
 W057,missing_information,single-W057,,written
-W058,standard_applicability,single-W058,,written
+W058,design_clarification,single-W058,,written
 W059,design_clarification,single-W059,,written
 W060,substitution_request,single-W060,,written
 W061,field_condition,single-W061,,written
@@ -79,3 +79,8 @@ W077,substitution_request,single-W077,,written
 W078,field_condition,single-W078,,written
 W079,substitution_request,single-W079,,written
 W080,document_conflict,single-W080,,written
+W081,document_conflict,single-W081,,written
+W082,missing_information,single-W082,,written
+W083,standard_applicability,single-W083,,written
+W084,design_clarification,single-W084,,written
+W085,standard_applicability,single-W085,,written

@@ -2,35 +2,35 @@
   "synthetic": true,
   "source": {
     "path": "heldout/source.txt",
-    "sha256": "df6a2df1f3e4f7e8c86701f5ee85a08b0146b8d7c4deffedce2aa9f3540f6d38"
+    "sha256": "c521f7a0eecdeb9979aef1d2d77a603ee0d89f638c6fb34da5207b9fa70bbe13"
   },
   "files": {
-    "heldout/README.txt": "97ad645054037edd89d53b8377009e1f29d7f047f7d3a99561710662018c7d57",
-    "heldout/input/rfis.csv": "98ccc70f4fd5d9ddbe432b68840fb64a144d5de56f2274f390a2bef4e36203aa",
-    "heldout/labels/citations.csv": "e87918bb95bf06f722db240c905a36b20a26a14b652ea27abeed63ab2a9dc62a",
-    "heldout/labels/negatives.csv": "7095cda0b6446489983cf442a95e48332af4d2f5f3867eb62ad93339d3d0ca4a",
-    "heldout/labels/rfis.csv": "a263aa6bad1b837ed61ec625a5ce9b928b8163311786848b9124344a352b55d4"
+    "heldout/README.txt": "6c888502269e072cc316c318321751185ca320d7e26c9b34235fcafb7abea8df",
+    "heldout/input/rfis.csv": "f09f450de5305e9c7a6137b7ceb8c834dca92729d8c1574bb782bd12ba33737d",
+    "heldout/labels/citations.csv": "4702c27e27a319bfce1fe60b6c14185c3190dc58273d2921b87a6b8d59b728a4",
+    "heldout/labels/negatives.csv": "e7898ec8bb88914010b0efed8aba3a74e4f76fb35f3a43ad5c1f7f1c30c776a3",
+    "heldout/labels/rfis.csv": "d3b47bfce7f2d9ecdc28428a3bc3f698d3394627aeec04ce6e6deeac08943f22"
   },
   "counts": {
-    "rfis": 80,
-    "citations_in_scope": 160,
+    "rfis": 85,
+    "citations_in_scope": 185,
     "citations_out_of_scope": 12,
     "citations_per_body": {
-      "ANSI": 18,
-      "ASTM": 26,
-      "IEC": 22,
-      "IEEE": 48,
-      "NEMA": 20,
-      "NESC": 26
+      "ANSI": 21,
+      "ASTM": 28,
+      "IEC": 27,
+      "IEEE": 54,
+      "NEMA": 27,
+      "NESC": 28
     },
-    "citations_inferred": 18,
+    "citations_inferred": 19,
     "noise_classes": {
-      "case": 5,
-      "line_break": 6,
-      "list_continuation": 7,
-      "misspelled": 4,
-      "spacing": 5,
-      "unicode_dash": 4
+      "case": 6,
+      "line_break": 8,
+      "list_continuation": 8,
+      "misspelled": 6,
+      "spacing": 8,
+      "unicode_dash": 7
     },
     "negatives": 51,
     "negatives_per_kind": {
@@ -56,11 +56,11 @@
       "spec_section": 2
     },
     "issue_types": {
-      "design_clarification": 12,
-      "document_conflict": 14,
+      "design_clarification": 13,
+      "document_conflict": 15,
       "field_condition": 13,
-      "missing_information": 13,
-      "standard_applicability": 14,
+      "missing_information": 15,
+      "standard_applicability": 15,
       "substitution_request": 14
     },
     "recurring_groups": 12
