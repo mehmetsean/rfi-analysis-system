@@ -4,7 +4,7 @@ rfikit will find standard citations in engineering RFIs and return normalized de
 
 ## Status
 
-Being rebuilt. Version 0.1 is not released. The design is in [docs/spec.md](docs/spec.md) and the decisions are in [docs/adr](docs/adr/README.md). The package has the citation extractor, a synthetic data generator, an evaluation and a command line. The analyze command is not built yet.
+Being rebuilt. Version 0.1 is not released. The design is in [docs/spec.md](docs/spec.md) and the decisions are in [docs/adr](docs/adr/README.md). The package has the citation extractor, a synthetic data generator, an evaluation and a command line.
 
 ## Command line
 
@@ -34,6 +34,17 @@ rfikit evaluate data/ --written heldout/ --json summary.json
 ```
 
 For example, after `rfikit generate --seed 42 --n 600 --out data/`, the command `rfikit evaluate data/` prints the line "Leak check: pool 12000, A dropped 0 of 456, B dropped 0 of 144" just before its last line. The leak line counts repeats after cleaning (character map, lower case, white space collapsed), not only exact repeats. The pool is the set of distinct subject and question pairs in the synthetic training corpora, seeds 1 to 10, families A and B. Dropped counts the RFIs in your folder whose pair is in the pool; they are left out of the scores. The last line says "Measured on synthetic data." only when every scored folder has a manifest.json with "synthetic": true.
+
+Write the citations and an analysis of an RFI export into a new or empty folder (a missing folder is created; a folder with any file in it is refused, see ADR 10):
+
+```
+rfikit analyze rfis.csv --out results/
+rfikit analyze rfis.csv --out results/ --column-map map.json
+```
+
+The folder gets four files: citations.csv (the same columns as `rfikit extract`), analysis.md and analysis.html (RFIs read, top 20 base keys, citations per body, citations per RFI, the 10 RFIs with the most citations, and the measured extraction rates), and README.txt with the license notice and the disclaimer. The rates are copied from src/rfikit/measured.json and labeled "measured on synthetic data" for family A, family B and the written set; a level a method does not have prints n/a. The HTML is one static file with no script and no external resource. Input text is shown cut to 40 characters and escaped. `--synthetic` adds a line saying the input is synthetic data. analyze reads a .csv file only. The result is held in memory, which was not measured for the largest inputs.
+
+examples/ holds the output for seed 42 and 200 synthetic RFIs; `python scripts/make_examples.py --check` rebuilds it and fails on any byte difference, and CI runs that check. The analysis is decision support only, not legal, engineering, tax, accounting or assurance advice. No guarantee of compliance. rfikit does not say whether a standard applies or what it requires; check every citation against the official standard. False positives and misses are expected; the measured rates are shown.
 
 Input errors print one line starting with "rfikit:" and exit with 1. A wrong option prints a usage message and exits with 2.
 
