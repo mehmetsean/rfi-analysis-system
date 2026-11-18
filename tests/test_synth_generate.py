@@ -1,5 +1,6 @@
 import ast
 import re
+import sys
 from pathlib import Path
 
 import pytest
@@ -8,6 +9,7 @@ from keychecks import check_key_matches_slice, expected_base, key_clause, norm
 from rfikit.evaluate import NEGATIVE_KINDS, NOISE_CLASSES
 from rfikit.synth import Corpus, GenParams, generate
 from rfikit.synth.library import TEMPLATES
+from rfikit.synth.templates import Template
 from rfikit.types import BODIES
 from synth_helpers import (
     BODY_WORDS,
@@ -250,6 +252,50 @@ def test_the_corpus_covers_every_class(corpus: Corpus) -> None:
     assert len([c for c in in_scope if c.inferred]) >= 50
     with_clause = [c for c in in_scope if c.clause_start is not None]
     assert len(with_clause) >= 50
+
+
+def patch_templates(monkeypatch: pytest.MonkeyPatch, question: str) -> None:
+    module = sys.modules["rfikit.synth.generate"]
+    template = Template("dc-A9", "A", "design_clarification", "Subject", question, "")
+    monkeypatch.setattr(module, "TEMPLATES", (template,))
+    monkeypatch.setattr(module, "ISSUE_TYPES", ("design_clarification",))
+
+
+def test_a_pool_that_is_too_small_raises(monkeypatch: pytest.MonkeyPatch) -> None:
+    patch_templates(monkeypatch, "{d1}")
+    with pytest.raises(RuntimeError, match="unused"):
+        generate(1, 10)
+
+
+def test_a_small_pool_gives_unique_values_under_the_pool_size(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    patch_templates(monkeypatch, "{a1}")
+    for seed in range(5):
+        corpus = generate(seed, 5)
+        assert len({g.rfi.question for g in corpus.rfis}) == 5
+
+
+def test_noise_variants_do_not_count_as_new_values(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    patch_templates(monkeypatch, "{y1} {d1}")
+    seen = set()
+    for g in generate(4, 60, GenParams(noise_rate=1.0)).rfis:
+        key = (tuple(c.key for c in g.citations), g.rfi.question.split(" ")[-1])
+        assert key not in seen
+        seen.add(key)
+
+
+def test_two_plain_citations_name_different_documents(corpus: Corpus) -> None:
+    checked = 0
+    for g in corpus.rfis:
+        if g.template_id in ("cf-A3", "sr-A1", "dc-A1", "dc-B1"):
+            found = [c for c in g.citations if c.column == "question"]
+            assert len(found) == 2
+            assert found[0].base_key != found[1].base_key
+            checked += 1
+    assert checked > 20
 
 
 def test_the_texts_are_never_repeated(corpus: Corpus) -> None:

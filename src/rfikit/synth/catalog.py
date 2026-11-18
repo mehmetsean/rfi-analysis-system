@@ -59,7 +59,7 @@ IEEE = (
     Entry("IEEE", "1547.1", _e("2020")),
     Entry("IEEE", "1547a", _e("2020")),
     Entry("IEEE", "1584", _e("2018")),
-    Entry("IEEE", "1588", _e("2019"), joint="IEEE/IEC"),
+    Entry("IEEE", "1588", _e("2019")),
 )
 
 IEC = (
@@ -76,7 +76,7 @@ IEC = (
     Entry("IEC", "61000", _e("2015"), part="4-30"),
     Entry("IEC", "61439", _e("2020"), part="1"),
     Entry("IEC", "61850", _e(), part=""),
-    Entry("IEC", "61850", _e("2009", "2014"), part="6"),
+    Entry("IEC", "61850", _e("2009"), part="6"),
     Entry("IEC", "61850", _e("2010"), part="7-4"),
     Entry("IEC", "61850", _a(("2011", ""), ("2011", "+AMD1:2020")), part="8-1"),
     Entry("IEC", "61850", _e("2011"), part="9-2"),
@@ -94,7 +94,6 @@ ANSI = (
     Entry("ANSI", "C12.1", _e("2014")),
     Entry("ANSI", "C12.20", _e("2015")),
     Entry("ANSI", "C63.4", _e("2014")),
-    Entry("ANSI", "C80.1", _e("2020")),
     Entry("ANSI", "C119.4", _e("2016")),
     Entry("ANSI", "Z535.4", _e("2011")),
     Entry("ANSI", "Z87.1", _e("2020")),
@@ -109,7 +108,6 @@ ASTM = (
     Entry("ASTM", "A572/A572M", _e("21")),
     Entry("ASTM", "A786/A786M", _e("09")),
     Entry("ASTM", "B117", _e("19")),
-    Entry("ASTM", "B187/B187M", _e("22")),
     Entry("ASTM", "C33/C33M", _e("18")),
     Entry("ASTM", "C94/C94M", _e("22")),
     Entry("ASTM", "C150/C150M", _e("22")),
@@ -157,7 +155,6 @@ NESC_RULES = (
     "239",
     "250B",
     "250C",
-    "410A",
     "420",
 )
 NESC_TABLES = ("232-1", "234-1", "235-1", "235-5", "250-1", "253-1")
@@ -176,7 +173,6 @@ OUT_OF_SCOPE = (
     OutOfScope("ISA", "84.00.01", True),
     OutOfScope("ISA", "12.12.01", True),
     OutOfScope("TIA", "568-D", True),
-    OutOfScope("CSA", "C22.2 No. 94"),
     OutOfScope("CSA", "Z462"),
     OutOfScope("EN", "50160"),
     OutOfScope("EN", "61850-8-1"),

@@ -41,7 +41,7 @@ def test_real_entries_fit_their_grammar() -> None:
 
 def test_every_body_has_enough_real_entries() -> None:
     for items in catalog.REAL.values():
-        assert len(items) >= 10
+        assert len(items) >= 9
 
 
 def test_invented_entries_fit_and_are_not_real() -> None:

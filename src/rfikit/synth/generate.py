@@ -48,7 +48,7 @@ def _draw_cites(
         if name in found:
             continue
         if kind == "c":
-            found[name] = cites.make_cite(rng, params, cites.pick_body(rng))
+            found[name] = _another_cite(rng, params, found)
         elif kind == "w":
             found[name] = cites.make_cite(
                 rng, params, cites.pick_body(rng), clause_mode="yes"
@@ -69,6 +69,20 @@ def _draw_cites(
         elif kind == "o":
             found[name] = cites.make_out(rng)
     return found
+
+
+def _another_cite(
+    rng: Rng, params: GenParams, found: dict[str, CiteSpec | ListSpec]
+) -> CiteSpec:
+    used = [
+        spec.rendered.designation.base_key()
+        for name, spec in found.items()
+        if name[0] == "c" and isinstance(spec, CiteSpec)
+    ]
+    while True:
+        spec = cites.make_cite(rng, params, cites.pick_body(rng))
+        if spec.rendered.designation.base_key() not in used:
+            return spec
 
 
 def _text_value(rng: Rng, params: GenParams, kind: str) -> str:
@@ -110,6 +124,18 @@ def _draw_rest(
     return found
 
 
+def _value_key(
+    drawn: dict[str, CiteSpec | ListSpec], rest: dict[str, NegSpec | str], name: str
+) -> str:
+    if name in drawn:
+        spec = drawn[name]
+        if isinstance(spec, ListSpec):
+            return "|".join(i.rendered.designation.key() for i in spec.items)
+        return spec.rendered.designation.key()
+    other = rest[name]
+    return other.text if isinstance(other, NegSpec) else other
+
+
 def _has_nesc(drawn: dict[str, CiteSpec | ListSpec]) -> bool:
     for spec in drawn.values():
         if isinstance(spec, CiteSpec) and spec.rendered.designation.body == "NESC":
@@ -120,6 +146,7 @@ def _has_nesc(drawn: dict[str, CiteSpec | ListSpec]) -> bool:
 def _build(
     rng: Rng, params: GenParams, template: Template
 ) -> tuple[list[Builder], tuple[str, ...]]:
+    """Return the built columns and the slot values before noise."""
     texts = [template.subject, template.question, ""]
     if template.response and rng.chance(params.response_rate):
         texts[2] = template.response
@@ -127,8 +154,13 @@ def _build(
     names = [name for column in parts for kind, name in column if kind == "slot"]
     drawn = _draw_cites(rng, params, names)
     rest = _draw_rest(rng, params, names, _has_nesc(drawn))
+    values = tuple(
+        _value_key(drawn, rest, name)
+        for name in dict.fromkeys(
+            n for column in parts[:2] for k, n in column if k == "slot"
+        )
+    )
     builders: list[Builder] = []
-    emitted: list[str] = []
     for column, pieces in zip(COLUMNS, parts, strict=True):
         builder = Builder(column)
         for kind, value in pieces:
@@ -138,18 +170,17 @@ def _build(
             if value in drawn:
                 spec = drawn[value]
                 if isinstance(spec, ListSpec):
-                    emitted.append(builder.add_list(spec))
+                    builder.add_list(spec)
                 else:
-                    emitted.append(builder.add_cite(spec))
+                    builder.add_cite(spec)
                 continue
             other = rest[value]
             if isinstance(other, NegSpec):
-                emitted.append(builder.add_negative(other))
+                builder.add_negative(other)
             else:
                 builder.add_text(other)
-                emitted.append(other)
         builders.append(builder)
-    return builders, tuple(emitted)
+    return builders, values
 
 
 def _pick_template(rng: Rng, params: GenParams) -> Template:
@@ -161,6 +192,14 @@ def _pick_template(rng: Rng, params: GenParams) -> Template:
 
 
 def generate(seed: int, n: int, params: GenParams | None = None) -> Corpus:
+    """Write n labeled RFIs for a seed.
+
+    No (template, slot values) pair repeats. The pair is the template id and
+    the values of the slots in the subject and question before noise (the
+    designation key for a citation), so a noise variant, a clause style or a
+    response does not make a repeat look new. A repeat is drawn again, and
+    RuntimeError is raised when 500 draws in a row repeat.
+    """
     if isinstance(n, bool) or not isinstance(n, int) or n < 0:
         raise ValueError("n must be a non-negative int")
     params = params or GenParams()
@@ -171,8 +210,8 @@ def generate(seed: int, n: int, params: GenParams | None = None) -> Corpus:
     for index in range(1, n + 1):
         for _ in range(MAX_TRIES):
             template = _pick_template(rng, params)
-            builders, emitted = _build(rng, params, template)
-            key = (template.template_id, emitted)
+            builders, values = _build(rng, params, template)
+            key = (template.template_id, values)
             if key not in seen:
                 seen.add(key)
                 break

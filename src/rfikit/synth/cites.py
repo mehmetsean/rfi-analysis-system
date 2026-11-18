@@ -102,7 +102,7 @@ def _joint_token(rng: Rng, entry: Entry) -> str:
     }.get(body, ())
     token = body
     joint = entry.joint
-    if not entry.real and allowed and rng.chance(0.2):
+    if not entry.real and allowed and rng.chance(0.5):
         joint = rng.pick(allowed)
     if joint and not entry.doc_type and rng.chance(0.5):
         token = joint
