@@ -29,6 +29,7 @@ packages = ["src/rfikit"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["scripts"]
 
 [tool.ruff]
 line-length = 88
@@ -40,4 +41,5 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.mypy]
 strict = true
+mypy_path = "scripts"
 files = ["src", "tests"]
