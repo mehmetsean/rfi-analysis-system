@@ -241,3 +241,64 @@ def test_main_modes(
     (tmp_path / bh.SOURCE_PATH).write_text("=== bad\n", encoding="utf-8")
     assert bh.main([]) == 1
     assert "error" in capsys.readouterr().out
+
+
+BS = chr(92)
+
+
+def test_cr_and_astral_escapes() -> None:
+    assert bh.unescape("a" + BS + "r" + BS + "nb") == "a\r\nb"
+    assert bh.unescape(BS + "U0001d400") == chr(0x1D400)
+
+
+def test_astral_character_offsets() -> None:
+    raw = BS + "U0001d400 [[c IEEE 80 | IEEE 80 | real | IEEE 80]]"
+    column = bh.parse_column(raw)
+    (cite,) = column.citations
+    assert column.text[cite.start : cite.end] == "IEEE 80"
+    assert cite.start == 2
+
+
+@pytest.mark.parametrize(
+    "escape", [BS + "ud800", BS + "udfff", BS + "U0000d900", BS + "U00110000"]
+)
+def test_bad_code_points(escape: str) -> None:
+    with pytest.raises(bh.BuildError, match="not a valid character"):
+        bh.unescape(escape)
+
+
+def test_error_names_rfi_column_and_line() -> None:
+    source = "=== W1 | a | b\nsubject: fine\nquestion: bad [[c K | B | real | x\n"
+    with pytest.raises(bh.BuildError) as info:
+        bh.parse_source(source)
+    message = str(info.value)
+    assert "W1" in message
+    assert "question" in message
+    assert "line 3" in message
+
+
+def prepare(tmp_path: Path, data: bytes) -> None:
+    (tmp_path / "heldout").mkdir()
+    (tmp_path / bh.SOURCE_PATH).write_bytes(data)
+
+
+def test_crlf_source_fails_check(tmp_path: Path) -> None:
+    prepare(tmp_path, SMALL.encode("utf-8"))
+    bh.write(tmp_path)
+    assert bh.check(tmp_path) == []
+    crlf = SMALL.replace("\n", "\r\n").encode("utf-8")
+    (tmp_path / bh.SOURCE_PATH).write_bytes(crlf)
+    assert "differs: heldout/manifest.json" in bh.check(tmp_path)
+
+
+def test_main_missing_and_bad_source(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.setattr(bh, "ROOT", tmp_path)
+    (tmp_path / "heldout").mkdir()
+    assert bh.main(["--check"]) == 1
+    assert "cannot find" in capsys.readouterr().out
+    prepare_bytes = b"=== W1 | a | b\nsubject: \xff\xfe\n"
+    (tmp_path / bh.SOURCE_PATH).write_bytes(prepare_bytes)
+    assert bh.main([]) == 1
+    assert "not valid UTF-8" in capsys.readouterr().out

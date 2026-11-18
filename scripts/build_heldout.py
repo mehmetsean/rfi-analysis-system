@@ -22,7 +22,8 @@ FLAGS are words: real or invented (one is required), out, inferred and
 noise=CLASS. BODY is the text. Without marks the whole BODY is the span.
 <s>..</s> marks the span and <k>..</k> marks the clause. A body with only
 <k> is allowed for an inferred citation: the clause is also the span.
-Escapes: \\n, \\\\ and \\uXXXX. U+2013 and U+2014 are rejected.
+Escapes: \\n, \\r, \\\\, \\uXXXX and \\UXXXXXXXX.
+Surrogates, U+2013 and U+2014 are rejected.
 """
 
 import csv
@@ -39,7 +40,7 @@ SOURCE_PATH = "heldout/source.txt"
 COLUMNS = ("subject", "question", "response")
 BANNED = (chr(0x2013), chr(0x2014))
 TAG = re.compile(r"(</?[sk]>)")
-ESCAPE = re.compile(r"\\(n|\\|u[0-9a-fA-F]{4})")
+ESCAPE = re.compile(r"\\(n|r|\\|u[0-9a-fA-F]{4}|U[0-9a-fA-F]{8})")
 
 README_LINES = [
     "Written held-out set for rfikit (synthetic data)",
@@ -55,7 +56,8 @@ README_LINES = [
     "- labels/citations.csv, labels/negatives.csv, labels/rfis.csv: the labels.",
     '  In labels/rfis.csv the template_id is empty and the family is "written".',
     "- source.txt: the marked-up text the files above are built from.",
-    "- manifest.json: sha256 of every file and counts.",
+    "- manifest.json: sha256 of the source, each input, label and README file,",
+    "  and counts.",
     "- CHANGES.md: label fixes made after the first commit.",
     "Rules for the labels are in docs/annotation_guide.md. One annotator labeled",
     "the set, so there is no agreement measure.",
@@ -70,8 +72,7 @@ README_LINES = [
     "Decision support only, not legal, engineering, tax, accounting or assurance "
     "advice. No guarantee of compliance. rfikit does not say whether a standard "
     "applies or what it requires; check every citation against the official "
-    "standard. False positives and misses are expected; the measured rates are "
-    "shown.",
+    "standard. False positives and misses are expected.",
     "The names IEEE, NESC, IEC, ANSI, ASTM and NEMA are used only to identify "
     "their documents. The names belong to their owners. This project has no "
     "affiliation with or endorsement from any of them.",
@@ -119,6 +120,12 @@ class ParsedRfi:
     columns: dict[str, ParsedColumn]
 
 
+def _code_point(number: int, raw: str) -> str:
+    if 0xD800 <= number <= 0xDFFF or number > 0x10FFFF:
+        raise BuildError(f"escape U+{number:04X} is not a valid character in {raw!r}")
+    return chr(number)
+
+
 def unescape(raw: str) -> str:
     position = 0
     pieces: list[str] = []
@@ -134,10 +141,12 @@ def unescape(raw: str) -> str:
         code = match.group(1)
         if code == "n":
             pieces.append("\n")
+        elif code == "r":
+            pieces.append("\r")
         elif code == "\\":
             pieces.append("\\")
         else:
-            pieces.append(chr(int(code[1:], 16)))
+            pieces.append(_code_point(int(code[1:], 16), raw))
         position = match.end()
     return "".join(pieces)
 
@@ -278,6 +287,7 @@ def parse_column(raw: str) -> ParsedColumn:
 def parse_source(source: str) -> list[ParsedRfi]:
     rfis: list[ParsedRfi] = []
     raw_fields: dict[str, str] = {}
+    field_lines: dict[str, int] = {}
     header: list[str] = []
 
     def finish() -> None:
@@ -286,7 +296,15 @@ def parse_source(source: str) -> list[ParsedRfi]:
         for needed in ("subject", "question"):
             if needed not in raw_fields:
                 raise BuildError(f"{header[0]}: missing {needed}")
-        columns = {name: parse_column(raw_fields.get(name, "")) for name in COLUMNS}
+        columns: dict[str, ParsedColumn] = {}
+        for name in COLUMNS:
+            try:
+                columns[name] = parse_column(raw_fields.get(name, ""))
+            except BuildError as error:
+                where = field_lines.get(name, 0)
+                raise BuildError(
+                    f"{header[0]} {name} (source line {where}): {error}"
+                ) from None
         group = header[2] if header[2] != "-" else "single-" + header[0]
         rfis.append(ParsedRfi(header[0], header[1], group, columns))
 
@@ -297,6 +315,7 @@ def parse_source(source: str) -> list[ParsedRfi]:
             finish()
             header = [part.strip() for part in line[4:].split("|")]
             raw_fields = {}
+            field_lines = {}
             if len(header) != 3 or not all(header):
                 raise BuildError(f"line {number}: header needs 'id | type | group'")
             continue
@@ -306,6 +325,7 @@ def parse_source(source: str) -> list[ParsedRfi]:
         if name in raw_fields:
             raise BuildError(f"line {number}: {header[0]} repeats {name}")
         raw_fields[name] = value
+        field_lines[name] = number
     finish()
     ids = [rfi.rfi_id for rfi in rfis]
     if len(set(ids)) != len(ids):
@@ -428,8 +448,13 @@ def _manifest(rfis: list[ParsedRfi], files: dict[str, bytes], source: str) -> by
     return (json.dumps(manifest, indent=2) + "\n").encode("utf-8")
 
 
+def read_source(root: Path) -> str:
+    data = (root / SOURCE_PATH).read_bytes()
+    return data.decode("utf-8")
+
+
 def check(root: Path) -> list[str]:
-    source = (root / SOURCE_PATH).read_text(encoding="utf-8")
+    source = read_source(root)
     problems: list[str] = []
     for name, data in build(source).items():
         path = root / name
@@ -441,7 +466,7 @@ def check(root: Path) -> list[str]:
 
 
 def write(root: Path) -> None:
-    source = (root / SOURCE_PATH).read_text(encoding="utf-8")
+    source = read_source(root)
     for name, data in build(source).items():
         path = root / name
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -465,6 +490,12 @@ def main(argv: list[str]) -> int:
         write(ROOT)
     except BuildError as error:
         print(f"error: {error}")
+        return 1
+    except FileNotFoundError as error:
+        print(f"error: cannot find {error.filename}")
+        return 1
+    except UnicodeDecodeError as error:
+        print(f"error: the source is not valid UTF-8: {error.reason}")
         return 1
     print("heldout files written")
     return 0
