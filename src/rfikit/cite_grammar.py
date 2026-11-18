@@ -31,7 +31,7 @@ def _rx(pattern: str) -> Pattern[str]:
 _ELEM = "(?:" + "|".join(SIX + OUT) + ")(?![A-Za-z])"
 _SIXALT = "(?:" + "|".join(SIX) + ")(?![A-Za-z])"
 ANCHOR = _rx(rf"(?<![A-Za-z0-9])(?:{_ELEM}/){{0,3}}{_SIXALT}(?:/{_ELEM}){{0,3}}")
-STD = _rx(r"[ \t\r\n]{1,3}Std(?![A-Za-z])\.?")
+STD = _rx(r"[ \t\r\n]{1,6}Std(?![A-Za-z])\.?")
 C2 = _rx(rf"{GAP}C2(?!\d)(?!\.\d)(?:-{BRK}(?P<y>{YEAR})(?!\d))?(?![A-Za-z0-9])")
 NESC_YEAR = _rx(rf"(?:-{BRK}|[ \t]{{1,3}})(?P<y>{YEAR})(?!\d)")
 YEAR_BEFORE = _rx(rf"(?<![A-Za-z0-9.\-:/])(?P<y>{YEAR})[ \t]{{1,3}}\Z")
