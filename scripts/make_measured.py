@@ -46,7 +46,14 @@ def lines(block: Json) -> list[str]:
 
 
 def check(target: Path, compute: Callable[[], Json]) -> int:
-    stored: Json = json.loads(target.read_text(encoding="utf-8"))["ci"]
+    try:
+        stored: Json = json.loads(target.read_text(encoding="utf-8"))["ci"]
+    except (OSError, ValueError, KeyError, TypeError):
+        print(
+            "measured.json is missing or unreadable. "
+            "Rebuild it with: python scripts/make_measured.py"
+        )
+        return 1
     fresh = compute()
     if lines(stored) == lines(fresh):
         print("measured.json ci block is current")

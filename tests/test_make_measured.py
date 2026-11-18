@@ -68,3 +68,14 @@ def test_baselines_are_the_two_prototype_functions() -> None:
     found = make_measured.baselines()
     assert set(found) == {"prototype", "naive"}
     assert found["naive"]("see IEEE 80") == [("IEEE", 4, 11)]
+
+
+@pytest.mark.parametrize("content", [None, "not json", "{}", "[]"])
+def test_check_reports_a_missing_or_bad_file(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str], content: str | None
+) -> None:
+    target = tmp_path / "measured.json"
+    if content is not None:
+        target.write_text(content)
+    assert make_measured.check(target, lambda: {}) == 1
+    assert "missing or unreadable" in capsys.readouterr().out
