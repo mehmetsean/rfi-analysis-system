@@ -382,8 +382,11 @@ def test_plain_cell_unit_separator() -> None:
     assert plain_cell("a\x1fb") == "a\\x1fb"
 
 
-def test_md_cell_uppercase_www() -> None:
+def test_md_cell_line_separator() -> None:
     assert md_cell("a\u2029b") == "a b"
+
+
+def test_md_cell_uppercase_www() -> None:
     assert md_cell("WWW.example.com") == "WWW\\.example.com"
 
 
