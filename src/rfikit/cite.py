@@ -14,7 +14,7 @@ _CLAUSE = re.compile(
     r"|annex|rule)(?![A-Za-z])[ \t]{0,2}"
     r"(?:(?P<num>\d{1,3}(?:[.\-]\d{1,3}){0,3}(?:[A-Za-z]\d?[a-z]?)?)"
     r"|(?P<let>(?-i:[A-Z])(?:\.\d{1,3}){0,2}))"
-    r"(?![A-Za-z0-9])(?![ \t]\d{2}[ \t]\d{2}(?!\d))",
+    r"(?![A-Za-z0-9])(?![.\-]\d)(?![ \t]\d{2}[ \t]\d{2}(?!\d))",
     re.IGNORECASE | re.ASCII,
 )
 _CONNECTOR = re.compile(

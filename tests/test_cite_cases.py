@@ -516,3 +516,16 @@ def test_nesc_on_next_line_is_not_a_list_item() -> None:
 def test_clause_reach_is_forty_characters() -> None:
     assert keys("IEEE 80" + " " * 40 + "Table 3") == ["IEEE 80 Table 3"]
     assert keys("IEEE 80" + " " * 41 + "Table 3") == ["IEEE 80"]
+
+
+def test_clause_number_with_trailing_digits_is_rejected() -> None:
+    assert keys("NESC Table 232-12345") == ["NESC"]
+    assert keys("IEEE 80 Table 3-12345") == ["IEEE 80"]
+
+
+def test_nesc_table_needs_one_or_two_digits_after_the_dash() -> None:
+    assert keys("The NESC governs." + FAR + "Table 232-12") == [
+        "NESC",
+        "NESC Table 232-12",
+    ]
+    assert keys("The NESC governs." + FAR + "Table 232-123") == ["NESC"]
