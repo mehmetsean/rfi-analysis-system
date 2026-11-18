@@ -18,6 +18,7 @@ from keychecks import (
 from rfikit.evaluate import (
     ISSUE_TYPES,
     NEGATIVE_KINDS,
+    RFI_HEADER,
     GoldCitation,
     GoldNegative,
     RfiLabel,
@@ -258,6 +259,12 @@ def test_labels_cover_every_rfi(
         assert EN_DASH not in "".join(row.values())
         assert EM_DASH not in "".join(row.values())
     assert sum(1 for row in inputs.values() if row["response"]) >= len(inputs) // 2
+
+
+def test_label_header_is_the_full_one() -> None:
+    path = HELDOUT / "labels" / "rfis.csv"
+    first = path.read_text(encoding="utf-8").split("\n", 1)[0]
+    assert first == ",".join(RFI_HEADER)
 
 
 def test_issue_types_and_groups(labels: list[RfiLabel]) -> None:

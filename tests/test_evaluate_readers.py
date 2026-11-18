@@ -109,6 +109,14 @@ def test_rfi_labels_still_need_the_core_columns(tmp_path: Path) -> None:
         read_rfi_labels(path)
 
 
+def test_empty_group_id_fails_when_the_column_is_present(tmp_path: Path) -> None:
+    path = write_csv(
+        tmp_path / "r.csv", RFI_HEADER, [["W1", "field_condition", "", "", "written"]]
+    )
+    with pytest.raises(LabelError, match="group_id: value is empty"):
+        read_rfi_labels(path)
+
+
 def test_extra_columns_and_order_are_fine(tmp_path: Path) -> None:
     path = tmp_path / "n.csv"
     path.write_text("kind,end,start,column,rfi_id,note\ndate,8,0,subject,W1,x\n")
