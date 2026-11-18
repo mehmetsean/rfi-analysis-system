@@ -48,7 +48,7 @@ examples/ holds the output for seed 42 and 200 synthetic RFIs; `python scripts/m
 
 Input errors print one line starting with "rfikit:" and exit with 1. A wrong option prints a usage message and exits with 2.
 
-Speed and accuracy next to the two baselines are in [docs/benchmark.md](docs/benchmark.md), written by `python benchmarks/bench.py`. Speed is from one machine; precision and recall are copied from measured.json and are measured on synthetic data.
+Speed and accuracy next to the two baselines are in [docs/benchmark.md](docs/benchmark.md), written by `python benchmarks/bench.py`. Speed is from one machine and was timed on seeds 101 to 103. Precision and recall are copied from measured.json, measured on synthetic data on report seeds 101 to 130.
 
 ## Development quickstart
 
