@@ -1,0 +1,293 @@
+import html as html_lib
+import re
+from html.parser import HTMLParser
+from pathlib import Path
+
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+from rfikit.analyze import analyze
+from rfikit.io import InputError
+from rfikit.notice import DISCLAIMER, LICENSE_LINE
+from rfikit.report import (
+    RATES_TITLE,
+    load_measured,
+    md_cell,
+    rate_rows,
+    render_html,
+    render_markdown,
+    render_readme,
+    write_analysis,
+)
+from rfikit.types import Rfi
+
+DOC = load_measured()
+ROWS = [
+    Rfi("R1", "IEEE 80 and IEEE 80-2013", "ASTM A123", "NEMA TC 2"),
+    Rfi("R2", "IEEE 1547", "ASTM A123", ""),
+    Rfi("R3", "nothing", "", ""),
+]
+ALLOWED_TAGS = {
+    "html",
+    "head",
+    "meta",
+    "title",
+    "style",
+    "body",
+    "main",
+    "h1",
+    "h2",
+    "p",
+    "div",
+    "table",
+    "thead",
+    "tbody",
+    "tr",
+    "th",
+    "td",
+}
+ALLOWED_ATTRS = {
+    "lang",
+    "charset",
+    "http-equiv",
+    "content",
+    "name",
+    "class",
+    "tabindex",
+    "role",
+    "aria-label",
+    "scope",
+}
+
+
+def test_markdown_tables() -> None:
+    text = render_markdown(analyze(ROWS), DOC)
+    assert "| RFIs read | 3 |" in text
+    assert "| Citations found | 6 |" in text
+    assert "| IEEE 80 | 2 |" in text
+    assert "| ASTM A123 | 2 |" in text
+    assert "| IEEE | 3 |" in text
+    assert "| 0 | 1 |" in text
+    assert "| 4 | 1 |" in text
+    assert "| 'R1' | 4 |" in text
+    assert text.index("| ASTM A123 | 2 |") < text.index("| IEEE 80 | 2 |")
+
+
+def test_markdown_rates_and_na() -> None:
+    text = render_markdown(analyze(ROWS), DOC)
+    assert RATES_TITLE == "Extraction rates, measured on synthetic data"
+    assert "## " + RATES_TITLE in text
+    for name in ("Family A, report seeds", "Family B, report seeds", "Written set"):
+        assert name in text
+    naive_full = [line for line in text.splitlines() if "| naive baseline" in line]
+    assert any("| full key | n/a | n/a | n/a |" in line for line in naive_full)
+    assert any("| strict span |" in line and "n/a" not in line for line in naive_full)
+    rfikit = [
+        line for line in text.splitlines() if line.startswith("| rfikit | Family A")
+    ]
+    assert len(rfikit) == 5
+
+
+def test_rates_missing_set_and_level() -> None:
+    doc = {"data": "x", "full": {"sets": {"A": {"methods": {"rfikit": {}}}}}}
+    rows = rate_rows(doc)
+    assert len(rows) == 3 * 3 * 5
+    assert all(row[3:] == ("n/a", "n/a", "n/a") for row in rows)
+
+
+def test_rates_null_value() -> None:
+    levels = {"strict": {"precision": None, "recall": 0.5, "f1": 1.0}}
+    doc = {"full": {"sets": {"A": {"methods": {"rfikit": {"levels": levels}}}}}}
+    row = [
+        r
+        for r in rate_rows(doc)
+        if r[:3] == ("rfikit", "Family A, report seeds", "strict span")
+    ]
+    assert row == [
+        ("rfikit", "Family A, report seeds", "strict span", "n/a", "0.500", "1.000")
+    ]
+
+
+def test_empty_input_text() -> None:
+    result = analyze([])
+    text = render_markdown(result, DOC)
+    assert "| RFIs read | 0 |" in text
+    assert "No citations found." in text
+    page = render_html(result, DOC)
+    assert "No citations found." in page
+    assert "<td>0</td>" in page
+
+
+def test_no_citations_but_rfis() -> None:
+    text = render_markdown(analyze([Rfi("A", "x", "y", "")]), DOC)
+    assert "| 0 | 1 |" in text
+    assert "No citations found." in text
+
+
+def test_notice_and_disclaimer_everywhere() -> None:
+    result = analyze(ROWS)
+    for text in (render_markdown(result, DOC), render_readme(result)):
+        assert md_cell(DISCLAIMER) in text or DISCLAIMER in text
+    page = render_html(result, DOC)
+    assert html_lib.escape(DISCLAIMER, quote=True) in page
+    assert LICENSE_LINE in render_readme(result)
+    assert LICENSE_LINE in html_lib.unescape(page)
+
+
+def test_synthetic_marker() -> None:
+    plain = analyze(ROWS)
+    synth = analyze(ROWS, synthetic=True)
+    assert "synthetic data" not in render_readme(plain).split("License")[0]
+    assert render_readme(synth).startswith("Synthetic data.")
+    assert "The input is synthetic data." in render_markdown(synth, DOC)
+    assert "The input is synthetic data." in render_html(synth, DOC)
+    assert "The input is synthetic data." not in render_markdown(plain, DOC)
+
+
+def test_readme_lists_files() -> None:
+    text = render_readme(analyze(ROWS))
+    for name in ("citations.csv", "analysis.md", "analysis.html"):
+        assert name in text
+
+
+def test_md_cell_escapes() -> None:
+    assert md_cell("a|b") == "a\\|b"
+    assert md_cell("a\\b") == "a\\\\b"
+    assert md_cell("`x`") == "\\`x\\`"
+    assert md_cell("<b>") == "\\<b\\>"
+    assert md_cell("[a](b)") == "\\[a\\](b)"
+    assert md_cell("a\nb\r\nc d") == "a b c d"
+    assert md_cell("&lt;") == "\\&lt;"
+
+
+EVIL = "<script>alert(1)</script>|`[x](http://e)`\n=cmd"
+
+
+def test_markdown_injection() -> None:
+    text = render_markdown(analyze([Rfi(EVIL, "IEEE 80", "", "")]), DOC)
+    assert "<script>" not in text
+    assert "\n=cmd" not in text
+    row = [line for line in text.splitlines() if "script" in line]
+    assert len(row) == 1
+    assert len(re.split(r"(?<!\\)\|", row[0])) == 4
+    assert "[x](" not in row[0]
+
+
+def test_html_injection() -> None:
+    page = render_html(analyze([Rfi(EVIL, "IEEE 80", "", "")]), DOC)
+    assert "<script" not in page
+    assert "&lt;script&gt;" in page
+    assert "&#x27;" in page or "&quot;" in page or "&lt;" in page
+
+
+def test_html_is_static() -> None:
+    page = render_html(analyze(ROWS), DOC)
+    assert "Content-Security-Policy" in page
+    plain = html_lib.unescape(page)
+    assert "default-src 'none'" in plain
+    assert "style-src 'unsafe-inline'" in plain
+    assert "<script" not in page
+    assert not re.search(r"\son\w+\s*=", page)
+    assert "http://" not in page and "src=" not in page and "href=" not in page
+
+
+class Tags(HTMLParser):
+    def __init__(self) -> None:
+        super().__init__()
+        self.tags: set[str] = set()
+        self.attrs: set[str] = set()
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        self.tags.add(tag)
+        self.attrs.update(name for name, _ in attrs)
+
+
+def parsed(page: str) -> Tags:
+    parser = Tags()
+    parser.feed(page)
+    parser.close()
+    return parser
+
+
+TEXTS = st.text(max_size=30) | st.sampled_from([EVIL, "<b>", "'\"&", "a|b", "=1+1"])
+PIECES = st.sampled_from(["IEEE 80", "ASTM A123", "NESC Rule 232", " ", "x"])
+
+
+@settings(max_examples=60)
+@given(st.lists(st.tuples(TEXTS, TEXTS, PIECES), max_size=6))
+def test_input_cannot_add_markup(items: list[tuple[str, str, str]]) -> None:
+    rows = [Rfi(f"{a}{i}", f"{p} {b}", b, "") for i, (a, b, p) in enumerate(items)]
+    result = analyze(rows)
+    found = parsed(render_html(result, DOC))
+    assert found.tags <= ALLOWED_TAGS
+    assert found.attrs <= ALLOWED_ATTRS
+    text = render_markdown(result, DOC)
+    for line in text.splitlines():
+        if line.startswith("|"):
+            cells = re.split(r"(?<!\\)\|", line)
+            assert cells[0] == "" and cells[-1] == ""
+            assert len(cells) in (4, 8)
+            assert not re.search(r"(?<!\\)<", line)
+
+
+def test_write_analysis_files(tmp_path: Path) -> None:
+    write_analysis(tmp_path, analyze(ROWS))
+    names = sorted(p.name for p in tmp_path.iterdir())
+    assert names == ["README.txt", "analysis.html", "analysis.md", "citations.csv"]
+    lines = (tmp_path / "citations.csv").read_text(encoding="utf-8").splitlines()
+    assert lines[0].startswith("rfi_id,column,start,end,text,key,base_key,body")
+    assert len(lines) == 7
+
+
+def test_write_analysis_escapes_formula_cells(tmp_path: Path) -> None:
+    write_analysis(tmp_path, analyze([Rfi("=1+1", "IEEE 80", "", "")]))
+    lines = (tmp_path / "citations.csv").read_text(encoding="utf-8").splitlines()
+    assert lines[1].startswith("'=1+1,subject,")
+
+
+def test_write_analysis_is_byte_stable(tmp_path: Path) -> None:
+    first = tmp_path / "a"
+    second = tmp_path / "b"
+    first.mkdir()
+    second.mkdir()
+    write_analysis(first, analyze(ROWS))
+    write_analysis(second, analyze(ROWS))
+    for path in first.iterdir():
+        assert path.read_bytes() == (second / path.name).read_bytes()
+
+
+def test_write_analysis_refuses_protected_file(tmp_path: Path) -> None:
+    source = tmp_path / "citations.csv"
+    source.write_text("keep", encoding="utf-8")
+    with pytest.raises(InputError, match="same file"):
+        write_analysis(tmp_path, analyze(ROWS), [source])
+    assert source.read_text(encoding="utf-8") == "keep"
+
+
+def test_write_analysis_refuses_symlink_target(tmp_path: Path) -> None:
+    other = tmp_path / "other.txt"
+    other.write_text("keep", encoding="utf-8")
+    out = tmp_path / "out"
+    out.mkdir()
+    (out / "analysis.md").symlink_to(other)
+    with pytest.raises(InputError, match="symbolic link"):
+        write_analysis(out, analyze(ROWS))
+    assert other.read_text(encoding="utf-8") == "keep"
+
+
+def test_write_analysis_refuses_directory_target(tmp_path: Path) -> None:
+    (tmp_path / "README.txt").mkdir()
+    with pytest.raises(InputError, match="not a regular file"):
+        write_analysis(tmp_path, analyze(ROWS))
+
+
+def test_write_analysis_missing_folder(tmp_path: Path) -> None:
+    with pytest.raises(InputError, match="cannot be written"):
+        write_analysis(tmp_path / "missing", analyze(ROWS))
+
+
+def test_write_analysis_replaces_own_files(tmp_path: Path) -> None:
+    (tmp_path / "analysis.md").write_text("old", encoding="utf-8")
+    write_analysis(tmp_path, analyze(ROWS))
+    assert "# rfikit analysis" in (tmp_path / "analysis.md").read_text(encoding="utf-8")
