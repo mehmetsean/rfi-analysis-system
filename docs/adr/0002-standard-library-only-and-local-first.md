@@ -8,7 +8,7 @@ An RFI log holds project questions that a company may not want to send to a serv
 
 ## Decision
 
-The runtime has no dependencies, only the Python standard library (`dependencies = []` in pyproject.toml). The tool makes no network calls and has no server, accounts or upload. Files are read from the machine and results are written to the machine. pytest, hypothesis, ruff and mypy are in the dev extra and are not shipped.
+The runtime has no dependencies, only the Python standard library (`dependencies = []` in pyproject.toml). The tool makes no network calls and has no server, accounts or upload. Files are read from the machine and results are written to the machine. pytest, pytest-cov, hypothesis, ruff and mypy are in the dev extra and are not shipped.
 
 Options considered:
 

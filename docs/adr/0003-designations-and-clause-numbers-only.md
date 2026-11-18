@@ -4,7 +4,7 @@ Status: Accepted
 
 ## Context
 
-Standards are copyrighted by their owners. ASTM's copyright page bars copying its text. A designation such as "IEEE C57.12.00-2015" and a clause number such as "Rule 232B1" are identifiers, not the text of a standard.
+Standards are copyrighted by their owners. A designation such as "IEEE C57.12.00-2015" and a clause number such as "Rule 232B1" are identifiers, not the text of a standard.
 
 ## Decision
 
@@ -14,7 +14,7 @@ Options considered:
 
 - A catalog with titles and summaries. Helpful to readers, but it copies owned text.
 - Lookup of each designation against a list. Misses new standards and needs upkeep.
-- Identifiers only, read by grammar (chosen). Finds standards the author never saw.
+- Identifiers only, read by grammar (chosen). Matches any designation that fits the grammar, including ones that are in no list.
 
 ## Consequences
 

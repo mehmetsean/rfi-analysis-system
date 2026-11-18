@@ -18,4 +18,4 @@ Options considered:
 
 ## Consequences
 
-Strict span scoring and key scoring are separate. Example: in "2017 NESC Rule 232B1" the span is "2017 NESC", the clause is "Rule 232B1", the full key is "NESC 2017 Rule 232B1" and the base key is "NESC Rule 232B1". The demo converts offsets to UTF-16 units at the Pyodide boundary.
+Strict span scoring and key scoring are separate. Example: in "2017 NESC Rule 232B1" the span is "2017 NESC", the clause is "Rule 232B1", the full key is "NESC 2017 Rule 232B1" and the base key is "NESC Rule 232B1". The planned demo will convert offsets to UTF-16 units at the Pyodide boundary.

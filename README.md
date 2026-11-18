@@ -15,6 +15,12 @@ pip install -e ".[dev]"
 pytest
 ```
 
+To run with the coverage gate used in CI:
+
+```
+pytest --cov=rfikit --cov-report=term-missing --cov-fail-under=90
+```
+
 ## Contributions
 
 Outside code contributions are not accepted. Bug reports by issue are fine.
