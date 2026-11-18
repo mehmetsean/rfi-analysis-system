@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from rfikit.cite import extract_rfi
+from rfikit.evaluate import NEGATIVE_KINDS
 from rfikit.synth import GenParams, generate
 from rfikit.synth.model import GeneratedRfi
 
@@ -70,6 +71,8 @@ def test_inferred_flag_and_clause_offsets_agree(rows: list[GeneratedRfi]) -> Non
 
 
 def test_no_prediction_touches_a_hard_negative(rows: list[GeneratedRfi]) -> None:
+    kinds = {n.kind for row in rows for n in row.negatives}
+    assert set(NEGATIVE_KINDS) <= kinds
     for row in rows:
         found = extract_rfi(row.rfi)
         marks = list(row.negatives) + [c for c in row.citations if c.scope == "out"]
