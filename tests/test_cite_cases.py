@@ -538,3 +538,27 @@ def test_clause_word_inside_a_designation_is_not_a_clause() -> None:
 def test_second_nesc_does_not_reuse_the_year_before_the_first() -> None:
     assert keys("NESC 2017 NESC") == ["NESC 2017", "NESC"]
     assert keys("2017 NESC 2018 NESC") == ["NESC 2018", "NESC"]
+
+
+def test_list_continuation_does_not_cross_a_line_break() -> None:
+    assert keys("IEEE C57.12.00,\nC57.12.90") == ["IEEE C57.12.00"]
+
+
+BREAKS = [chr(0x85), chr(0x2028), chr(0x2029)]
+
+
+@pytest.mark.parametrize("brk", BREAKS)
+def test_unicode_break_inside_a_designation(brk: str) -> None:
+    assert keys("IEEE" + brk + "C57.12.00") == ["IEEE C57.12.00"]
+
+
+@pytest.mark.parametrize("brk", BREAKS)
+def test_unicode_break_before_a_clause_connector(brk: str) -> None:
+    assert keys("Table 3" + brk + "of IEEE 80") == ["IEEE 80 Table 3"]
+
+
+def test_longest_designation_needs_the_whole_window() -> None:
+    gap = "-\r\n    123"
+    text = "IEC" + " " * 6 + "Std." + " " * 6 + "TS" + " " * 6 + "12345"
+    text += gap * 4 + ":2011+AMD12:2011"
+    assert keys(text) == ["IEC TS 12345-123-123-123-123:2011+AMD12:2011"]
