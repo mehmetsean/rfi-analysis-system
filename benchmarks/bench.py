@@ -206,7 +206,10 @@ def write_file(out: Path, text: str) -> str:
     except OSError as error:
         if temp:
             Path(temp).unlink(missing_ok=True)
-        return f"cannot write {out.name}: {error.strerror}"
+        return (
+            f"cannot write {out.name}: {error.strerror or error}, "
+            "check that the folder exists and is writable"
+        )
     return ""
 
 
@@ -220,7 +223,7 @@ def parse_args(argv: Sequence[str] | None = None) -> argparse.Namespace:
     parser.add_argument(
         "--quick",
         action="store_true",
-        help="small inputs, print only, exit 1 on a problem",
+        help="small inputs, no file unless --out is set, exit 1 on a problem",
     )
     parser.add_argument("--runs", type=int, default=5, help="timed runs, default 5")
     parser.add_argument("--out", type=Path, default=None, help="write the report here")
