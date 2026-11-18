@@ -26,4 +26,5 @@ _site/
 *.csv
 !labels/*.csv
 !examples/*.csv
-!heldout/*.csv
+!heldout/input/rfis.csv
+!heldout/labels/*.csv

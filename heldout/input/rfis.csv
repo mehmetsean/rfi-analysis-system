@@ -1,0 +1,87 @@
+rfi_id,subject,question,response
+W001,Edition of IEEE C57.12.00 for the substation transformer,"Which edition applies to the substation transformer submittal? The specification lists IEEE C57.12.00-2010, but the vendor quote shows IEEE Std C57.12.00-2015.",EOR: The specification edition stays. The vendor will revise the quote.
+W002,Which year of the transformer standard,Please confirm which year of ieee std c57.12.00 governs the main transformer. The quote and the specification do not match.,OWNER_REP: Use the year in the specification. See RFI-0409.
+W003,Transformer build year,"Our supplier asks whether to build to the 2010 or the 2015 edition of IEEE
+C57.12.00 for project P-0412. Please confirm.",CONTRACTOR_PM: Under Rule 12 of the contract this goes to the OWNER_REP. The test sheet lists IEEE C57.12.90-2015.
+W004,Edition for the 69 kV unit,Is the transformer to be supplied to IEEE C57.12.00-2015 or to the edition named in the project specification?,EOR: Use the edition named in the specification.
+W005,Grounding standard edition conflict,"The specification, Section 26 05 26, cites IEEE Std 80-2000 for the ground grid. The drawing note cites IEEE 80-2013. Which one governs?",EOR: The specification governs. An addendum will follow.
+W006,Ground grid references disagree,"Sheet E-234-1 cites IEEE 80-2013 for the grid, while the general notes cite IEEE 80-2000. Please say which year is meant. The set is printed on ANSI D size sheets.",
+W007,Which year of IEEE 80 governs the grid,"Two project documents name different years for the grid design, 2000 in the specification and 2013 on the drawings. Which year is correct?",
+W008,Grounding standard year mismatch,The specification cites IEEE 80‑2000 and the plan set cites IEEE 80-2013. Please resolve this before bid.,
+W009,Coating substitution for steel brackets,We request approval to supply the steel brackets coated to ASTM A153/A153M in place of ASTM A123/A123M-17. The supplier data sheet is attached.,EOR: Submit the coating data sheet for review.
+W010,Substitute coating for the bracket set,Can the supplier use ASTM A 153/A153M coating for the bracket set instead of the hot-dip coating named in the specification? The bracket is part A153-0040.,
+W011,Request to change the coating reference,Procurement asks to replace the coating called out as ASTM A123/A123M with ASTM A153/A153M-16a for the small hardware. Please advise.,
+W012,Galvanizing alternative,Please approve a shop paint system as an alternate to the zinc coating under ASTM A123/A123M for the bracket set. See drawing 60076-1.,EOR: Not accepted. Keep ASTM A123/A123M as specified.
+W013,Crossing clearance after survey,The survey dated 03-14-2026 shows the span at the road crossing is 12 ft longer than drawn. Does the crossing still work under 2017 NESC Rule 232B1?,EOR: The profile will be rechecked. It will check Table 232-1.
+W014,Longer span at the road crossing,The staked span at the road crossing is longer than the plan shows. Should the clearance be rechecked against NESC-2017 Rule 232B1a? Profile sheet E-232-1 shows the older span.,EOR: Rule 232B1a will be confirmed.
+W015,No edition given for the relay communication standard,The relay specification lists IEC 61850 with no part and no edition. Which parts and which edition should the vendor quote?,EOR: Quote IEC 61850-8-1:2011+AMD1:2020 and IEC 61850-6 with the edition shown in addendum 2.
+W016,Missing part numbers for the relay communication standard,The relay specification lists IEC 61850 but gives no part and no year. Please add them.,EOR: Add IEC 61850-8-1 and IEC 61850-7-4 to the specification.
+W017,Commissioning test clause,Should the commissioning test plan follow Section 5.3 of IEEE 1547-2018 or Annex C of IEEE 1547.1-2020?,
+W018,Which part to follow for commissioning,"Is the commissioning procedure meant to follow IEEE 1547.1-2020 or IEEE 1547-2018, clause 5.3?",EOR: Follow the plan in the specification.
+W019,Voltage range reference,Does ANSI C84.1 apply to the inverter AC terminals or only to the utility service point?,OWNER_REP: To be confirmed with the utility. Their letter cites ANSI C84.1-2016 and UL 1741 for the inverter.
+W020,Which voltage standard year applies,"Please confirm whether ANSI C84.1-2020 is meant for the inverter terminals, the service point, or both.",OWNER_REP: The utility letter lists Annex A of ANSI C84.1-2020.
+W021,Motor standard conflict,The motor specification cites NEMA MG 1-2016 but the data sheet cites IEC 60034-1:2010. Which one governs?,"OWNER_REP: The specification governs, as in RFI-0388."
+W022,Data sheet versus specification on motors,The data sheet lists IEC 60034-1 and the specification lists Nema MG 1. We need one.,
+W023,Control enclosure substitution,We want to replace the NEMA 4X control enclosures with NEMA 12 units. The vendor lists both types under NEMA 250. May we? The new box is rated IP66.,EOR: Submit the data sheet. The finish note cites ANSI Z55.1.
+W024,Alternate enclosure type,Procurement asks to replace the NEMA 3R cabinets with NEMA 4X cabinets in the yard. The catalog sheet cites NEMA 250-2018. Is that acceptable?,
+W025,Different enclosure for the yard,Can the OWNER_REP approve a stainless NEMA 4X box in place of the painted NEMA 3R box? The catalog sheet cites nema 250.,OWNER_REP: Yes if the box is listed under NEMA 250.
+W026,Existing duct bank in the trench,The trench crew found an existing duct bank where the plan shows clear ground. The new duct is called out as NEMA TC 2 conduit. Should the new run be re-routed?,EOR: Pothole first. The new conduit stays NEMA TC 2.
+W027,Unmarked duct bank found,We hit an unmarked duct bank at 3 ft depth. The new run uses NEMA TC 2 and TC 3 fittings. Do we reroute or cross?,
+W028,Conflict with a buried pipe,"A buried pipe sits in the path of the new NEMA
+TC 2 conduit. What should we do?",
+W029,Relay schedule incomplete,The protection schedule gives no device numbers. Which numbers from IEEE C37.2 should be used for the feeder relays?,EOR: Numbers will be added to the schedule. The edition IEEE C37.2-2008 stays.
+W030,Device numbers missing,The one-line diagram shows relays without function numbers and the 80 kVA station service unit. Can the EOR list the numbers according to IEEE Std C37.2-2008?,
+W031,Relay function numbers not listed,Please add the function numbers per ANSI/IEEE C37.2-2008 to the relay schedule.,
+W032,Ground connection test scope,"Does IEEE 837-2014 call for a sample test of the grounding connections on this job, or is the specification silent on it? The grounding plan is drawing 837-2.",
+W033,Testing of grounding connections,What sampling is expected for the connection tests listed under IEEE 837?,
+W034,Ground connection tests,Please clarify the scope of the ground connection tests. The specification lists IEEE Std 837-2014 with no clause.,EOR: A sample test plan will be added. IEEE 837 stays as listed.
+W035,Two NESC editions on the cover sheet and profile,The cover sheet cites IEEE C2-2017 while the profile notes cite ANSI C2-2012. Which edition governs the new crossing?,EOR: The cover sheet governs. Rule 232B1 stays as drawn on the profile.
+W036,NESC edition for the feeder tie,"Does the 2017 NESC apply to the new feeder tie, or the older edition used on phase one?",OWNER_REP: The same edition as phase one.
+W037,Pole height at the rail crossing,The staked pole is 4 ft shorter than drawn because of rock. Is the clearance in Table 232-1 of NESC still met at the rail crossing?,"EOR: Rule 232 will be rechecked with the new pole height. Survey date June 12, 2026."
+W038,Wire clearance basis not stated,"The design report gives wire clearances to buildings but does not name the NESC edition. Please also list the rules used, for example Rule 234B and Table 234-1.",
+W039,Alternate pipe sleeve at the road crossing,The vendor proposes ASTM A53/A53M pipe in place of the rigid steel conduit sleeves at the road crossing. The sleeves are called out under ANSI C80.1. The pipe flanges are ANSI Class 150 and the sleeve steel is A36. May we substitute?,EOR: Submit the pipe data sheet.
+W040,Pad detail reference,"The detail says ""per IEEE C57.12.28"" for the pad but gives no clause. Which clause is meant for the pad dimensions?",EOR: The detail refers to Clause 4.2 of IEEE C57.12.28.
+W041,Surge arrester standard,"Does IEE C62.11 apply to the distribution arresters at the riser pole, or only to station class units? The vendor quotes to IEC 60099-4:2014 instead.",EOR: Both lists will be checked: IEEE C62.11-2020 and C62.22.
+W042,Meter standard not listed,The meter specification gives the accuracy class but names no standard. Should the revenue meters follow ANSI C12.20-2015 and C12.1-2008?,EOR: Revenue meters are listed under ANSI C12.20 in the specification.
+W043,Pad-mount enclosure edition mismatch,"The specification, Section 26 12 19, cites IEEE C57.12.28 without a year. The drawing note cites IEEE C57.12.28-2014. Which edition governs? The set is printed on ANSI D size sheets.",
+W044,Corroded anchor bolts at the old foundation,The anchor bolts at the old foundation are rusty and the zinc is gone. Should the replacement bolts be ASTM F1554 and coated to ASTM A153/A153M? The bolt kit is part F155-4012.,EOR: The bolt kit list also cites ASME B18.2.6. Replace the bolts and add a coating report. The grade of ASTM F1554-20 is to be confirmed.
+W045,Alternate reinforcing bar,The supplier can only deliver ASTM  A615/A615M bars for the pad. The plan shows ASTM A706/A706M. Can we substitute?,EOR: Not without a submittal.
+W046,Concrete reference for the pad,"Does ASMT C94/C94M apply to the transformer pad pour, or is plant mix covered by the specification alone? The cement is listed as ASTM C150/C150M and the compaction test as ASTM D1557-12e1.",EOR: The specification lists ASTM C33/C33M for aggregate.
+W047,Switchgear standards without a year,The switchgear specification says NEMA ICS 6 and ICS 2 with no year. Which editions are meant?,EOR: Use the editions in addendum 3 for NEMA ICS 6 and NEMA ICS 2.
+W048,Starter size reference,What does the specification mean by NEMA Size 2 starters? Does it refer to the sizes in NEMA ICS 2?,EOR: Starter size 2 as shown on the motor schedule.
+W049,Soil moisture at the ground ring,The soil near the tower foundation is wetter than the geotechnical report of 2019-06-12 shows. Does the ground ring design under IEEE 80 and 81 need a retest?,EOR: A new soil test will follow IEEE 81-2012.
+W050,Panel standard conflict,The panel specification cites UL 891. The drawing note cites IEC61439-1:2020. Which one governs?,EOR: The panel list also cites NFPA 70. IEC 61439-1:2020 will be listed on the drawing.
+W051,Alternate medium voltage cable,"The supplier offers cable made to IEC 6O502-2 in place of the cable in the specification, which cites ASTM B8 for the conductor strand. Is that acceptable?",EOR: Please submit the strand data per ASTM B8-11.
+W052,Arc flash label format,"Which format should the arc flash labels follow, ANSI Z535.4-2011 or the label style in NFPA 70E?",EOR: ANSI Z535.4-2011 stays.
+W053,Pipe marking standard missing,"The mechanical room notes give no marking standard. Is ANSI A13.1 expected for the pipe labels, and is ANSI Z535.1 meant for the colors?",EOR: The room list shows ANSI/ASME A13.1 on an older sheet. Add ANSI A13.1 to the notes.
+W054,Eyewash station after demolition,The wall for the eyewash station was removed during demolition. The new location is Room 118. The supply valve is rated ANSI Class 150. Does ANSI Z358.1 still govern the new location?,EOR: The equipment list shows ANSI Z358.1-2014.
+W055,Breaker standard mismatch,The breaker data sheet cites IEEE C37.04‐2019 while the specification cites IEC 62271-100:2021. The breaker feeds a 519 kVA load. Which one governs?,EOR: The data sheet will be revised to IEEE C37.06-2009.
+W056,Harmonic limits at the plant,Does Table 2 of IEEE 519-2022 apply at the plant point of connection?,OWNER_REP: The utility lists IEEE 519-2014 in its interconnection letter.
+W057,Relay test standard unclear,The specification only says IEC 60255 for relay tests. Is IEC/IEEE 60255−118−1:2018 the part meant?,
+W058,Time sync standard,The vendor cites IEEE/IEC 1588-2019 while the specification cites IEEE 1588-2019. Do these name the same document?,
+W059,Nameplate data sheet reference,"Which year should the NEMA Premium motor nameplate data sheet show, ANSI/NEMA MG 1-2016 as in the template, or another?",
+W060,Alternate conduit fittings,May the contractor use fittings made to NEAM FB 1 instead of the ones listed under ANSI/UL 514B?,
+W061,Rust on pole line hardware,"Hardware at the coastal solar plant interconnect shows rust since the install of 2017-06-01. Was ASTM A153/A153M‒16a the right choice, or should the specification call out ASTM A123/A123M? The supplier offers an ASTM B117 test report.",EOR: We will request the coating thickness report for ASTM A153/A153M.
+W062,Cabling reference mismatch,The comm room detail cites ANSI/TIA-568-D and the specification cites ANSI/TIA-568. The switch data sheet cites IEEE 802.3-2018. Please confirm the cabling reference.,
+W063,Relay communication parts not listed,"The specification lists IEC
+61850-6, 61850-7-4 and 61850-8-1 with no year. Which edition of each is meant?",VENDOR_REP: Our data sheet cites EN 61850-8-1 and CSA C22.2 No. 94.
+W064,Factory test clause,"Please point to the clause of IEC 60076-
+1:2011 the factory test plan should follow.",EOR: Use Clause 11 of IEC 60076-1:2011.
+W065,Synchrophasor standard,"Does IEC TR 61850-90-5:2012 apply to the synchrophasor stream, or only IEEE C37.
+118.1-2011?",EOR: IEEE C37.118.2-2011 is also in the specification.
+W066,Pole moved toward a building,The pole was moved 3 ft toward the building because of a buried pipe. Is the clearance still within NESC Rule 234B? See sheet E-234-1.,EOR: The check will use Table 234-1 for the new position.
+W067,Wind loading basis,Which rule of the NESC was used for the wind loading on the pole design? The calculation sheet lists Rule 250B only.,
+W068,Same-support spacing basis missing,"The tower drawing gives wire spacing but no basis. Can the EOR list the rules used, for example NESC Rule 235?",EOR: The list will be added. Table 235-5 will be included.
+W069,NESC edition on the cover and in the notes,The cover sheet cites NESC 2017 but the general notes cite nesc 2012. Which one governs?,EOR: The cover sheet governs. Rule 232 is unchanged.
+W070,Fence grounding,Does Section 9 of the 2017 NESC apply to the substation fence?,
+W071,Pole closer to the building than drawn,The as-staked pole is 2 ft closer to the building than the plan shows. Does ANSI/IEEE C2-2007 Rule 234C still work?,EOR: The check uses Table 234-1.
+W072,Rule 232 for the temporary line,Does Table 232-1 apply to the temporary line over the access road? The vendor also sent a paper from IEEE Transactions.,
+W073,Arc flash label color and format,"Which sign format should the new arc flash labels follow, ANSI
+Z535.4 or the format used on phase one? The panel color is shown as ANSI 61 gray on the drawing.",DOC_CONTROL: Phase one used ansi z535.4-2011.
+W074,Cabinet color conflict,"The painting note calls for ANSI 61 gray cabinets, but the equipment list says ANSI 70 gray. The paint specification cites ASTM D2240-15(2021) for a hardness test. Which color governs?",
+W075,Interconnection note has no edition,"The note cites IEEE 1547, 2500 kVA and 34.5 kV with no edition. Please add the edition.",EOR: The amendment IEEE 1547a-2020 is also listed in the specification.
+W076,Receptacle substitution,The electrician wants to replace the specified NEMA 5-20R receptacles with NEMA 6-20R units. The cut sheet cites NEMA WD 6. May we proceed?,
+W077,Motor and starter substitution,"The supplier offers NEMA Premium motors in place of the standard motors, and NEMA Size 3 starters in enclosures made to ANSI/NEMA 250-2018. Is that acceptable?",
+W078,Cable tray lower than drawn,The cable tray in Room 232 is lower than drawn. The earlier answer in RFI-1547 assumed the higher tray. The new junction boxes are rated IP65 and the data sheet cites IEC 60529. Does the tray need to move?,EOR: The box list also cites ANSI/ISA 12.12.01.
+W079,Plate substitution for base plates,The supplier only has A36 plate in stock. Can it replace the ASTM A572/A572M-21 plate for the base plates? The anchor kit is part A123-4567.,EOR: Not accepted. The plate stays ASTM A572/A572M.
+W080,Test days for the interconnection,"Rule 12 of the contract and the specification disagree on the number of test days. The test plan cites IEEE 1547.1-2020, and a paper from IEEE Transactions suggests a different count. Which source governs?",

@@ -1,0 +1,128 @@
+{
+  "synthetic": true,
+  "source": {
+    "path": "heldout/source.txt",
+    "sha256": "df6a2df1f3e4f7e8c86701f5ee85a08b0146b8d7c4deffedce2aa9f3540f6d38"
+  },
+  "files": {
+    "heldout/README.txt": "97ad645054037edd89d53b8377009e1f29d7f047f7d3a99561710662018c7d57",
+    "heldout/input/rfis.csv": "98ccc70f4fd5d9ddbe432b68840fb64a144d5de56f2274f390a2bef4e36203aa",
+    "heldout/labels/citations.csv": "e87918bb95bf06f722db240c905a36b20a26a14b652ea27abeed63ab2a9dc62a",
+    "heldout/labels/negatives.csv": "7095cda0b6446489983cf442a95e48332af4d2f5f3867eb62ad93339d3d0ca4a",
+    "heldout/labels/rfis.csv": "a263aa6bad1b837ed61ec625a5ce9b928b8163311786848b9124344a352b55d4"
+  },
+  "counts": {
+    "rfis": 80,
+    "citations_in_scope": 160,
+    "citations_out_of_scope": 12,
+    "citations_per_body": {
+      "ANSI": 18,
+      "ASTM": 26,
+      "IEC": 22,
+      "IEEE": 48,
+      "NEMA": 20,
+      "NESC": 26
+    },
+    "citations_inferred": 18,
+    "noise_classes": {
+      "case": 5,
+      "line_break": 6,
+      "list_continuation": 7,
+      "misspelled": 4,
+      "spacing": 5,
+      "unicode_dash": 4
+    },
+    "negatives": 51,
+    "negatives_per_kind": {
+      "ansi_class": 2,
+      "ansi_color": 3,
+      "ansi_sheet": 2,
+      "astm_grade": 2,
+      "bare_nesc_no_context": 2,
+      "bare_rule": 2,
+      "date": 4,
+      "drawing_number": 2,
+      "ieee_transactions": 2,
+      "ip_rating": 2,
+      "kva_rating": 3,
+      "nema_enclosure": 6,
+      "nema_plug": 2,
+      "nema_premium": 2,
+      "nema_size": 2,
+      "part_number": 3,
+      "rfi_number": 3,
+      "room_number": 2,
+      "sheet_number": 3,
+      "spec_section": 2
+    },
+    "issue_types": {
+      "design_clarification": 12,
+      "document_conflict": 14,
+      "field_condition": 13,
+      "missing_information": 13,
+      "standard_applicability": 14,
+      "substitution_request": 14
+    },
+    "recurring_groups": 12
+  },
+  "recurring_groups": {
+    "G01": [
+      "W001",
+      "W002",
+      "W003",
+      "W004"
+    ],
+    "G02": [
+      "W005",
+      "W006",
+      "W007",
+      "W008"
+    ],
+    "G03": [
+      "W009",
+      "W010",
+      "W011",
+      "W012"
+    ],
+    "G04": [
+      "W013",
+      "W014"
+    ],
+    "G05": [
+      "W015",
+      "W016"
+    ],
+    "G06": [
+      "W017",
+      "W018"
+    ],
+    "G07": [
+      "W019",
+      "W020"
+    ],
+    "G08": [
+      "W021",
+      "W022"
+    ],
+    "G09": [
+      "W023",
+      "W024",
+      "W025"
+    ],
+    "G10": [
+      "W026",
+      "W027",
+      "W028"
+    ],
+    "G11": [
+      "W029",
+      "W030",
+      "W031"
+    ],
+    "G12": [
+      "W032",
+      "W033",
+      "W034"
+    ]
+  }
+}
