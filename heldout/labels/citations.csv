@@ -1,0 +1,198 @@
+rfi_id,column,start,end,clause_start,clause_end,key,base_key,scope,inferred,catalog,noise_class
+W001,subject,11,25,,,IEEE C57.12.00,IEEE C57.12.00,in,0,real,
+W001,question,84,103,,,IEEE C57.12.00-2010,IEEE C57.12.00,in,0,real,
+W001,question,107,130,,,IEEE C57.12.00-2015,IEEE C57.12.00,in,0,real,
+W002,question,29,47,,,IEEE C57.12.00,IEEE C57.12.00,in,0,real,case
+W003,question,70,84,,,IEEE C57.12.00,IEEE C57.12.00,in,0,real,line_break
+W003,response,94,113,,,IEEE C57.12.90-2015,IEEE C57.12.90,in,0,real,
+W004,question,37,56,,,IEEE C57.12.00-2015,IEEE C57.12.00,in,0,real,
+W005,question,43,59,,,IEEE 80-2000,IEEE 80,in,0,real,
+W005,question,104,116,,,IEEE 80-2013,IEEE 80,in,0,real,
+W006,question,20,32,,,IEEE 80-2013,IEEE 80,in,0,real,
+W006,question,76,88,,,IEEE 80-2000,IEEE 80,in,0,real,
+W007,subject,14,21,,,IEEE 80,IEEE 80,in,0,real,
+W008,question,24,36,,,IEEE 80-2000,IEEE 80,in,0,real,unicode_dash
+W008,question,60,72,,,IEEE 80-2013,IEEE 80,in,0,real,
+W009,subject,8,23,,,ASTM A123/A123M,ASTM A123/A123M,in,0,real,
+W009,question,59,74,,,ASTM A153/A153M,ASTM A153/A153M,in,0,real,
+W009,question,87,105,,,ASTM A123/A123M-17,ASTM A123/A123M,in,0,real,
+W010,question,21,37,,,ASTM A153/A153M,ASTM A153/A153M,in,0,real,spacing
+W011,question,54,69,,,ASTM A123/A123M,ASTM A123/A123M,in,0,real,
+W011,question,75,94,,,ASTM A153/A153M-16a,ASTM A153/A153M,in,0,real,
+W012,question,15,30,,,ASTM A153/A153M,ASTM A153/A153M,in,0,real,
+W012,question,51,66,,,ASTM A123/A123M,ASTM A123/A123M,in,0,real,
+W012,response,24,39,,,ASTM A123/A123M,ASTM A123/A123M,in,0,real,
+W013,question,127,136,137,147,NESC 2017 Rule 232B1,NESC Rule 232B1,in,0,real,
+W013,response,50,61,50,61,NESC Table 232-1,NESC Table 232-1,in,1,real,
+W014,question,110,119,120,131,NESC 2017 Rule 232B1a,NESC Rule 232B1a,in,0,invented,unicode_dash
+W014,response,5,16,5,16,NESC Rule 232B1a,NESC Rule 232B1a,in,1,invented,
+W015,question,30,39,,,IEC 61850,IEC 61850,in,0,real,
+W015,response,11,39,,,IEC 61850-8-1:2011+AMD1:2020,IEC 61850-8-1,in,0,real,
+W015,response,44,55,,,IEC 61850-6,IEC 61850-6,in,0,real,
+W016,question,30,39,,,IEC 61850,IEC 61850,in,0,real,spacing
+W016,response,9,22,,,IEC 61850-8-1,IEC 61850-8-1,in,0,real,
+W016,response,27,40,,,IEC 61850-7-4,IEC 61850-7-4,in,0,real,
+W017,question,57,71,42,53,IEEE 1547-2018 Clause 5.3,IEEE 1547,in,0,real,
+W017,question,86,102,75,82,IEEE 1547.1-2020 Annex C,IEEE 1547.1,in,0,real,
+W018,question,47,63,,,IEEE 1547.1-2020,IEEE 1547.1,in,0,real,
+W018,question,67,81,83,93,IEEE 1547-2018 Clause 5.3,IEEE 1547,in,0,real,
+W019,question,5,15,,,ANSI C84.1,ANSI C84.1,in,0,real,
+W019,response,64,79,,,ANSI C84.1-2016,ANSI C84.1,in,0,real,
+W019,response,84,91,,,UL 1741,UL 1741,out,0,real,
+W020,question,23,38,,,ANSI C84.1-2020,ANSI C84.1,in,0,real,unicode_dash
+W020,response,47,62,36,43,ANSI C84.1-2020 Annex A,ANSI C84.1,in,0,real,
+W021,question,30,44,,,NEMA MG 1-2016,NEMA MG 1,in,0,real,
+W021,question,70,86,,,IEC 60034-1:2010,IEC 60034-1,in,0,real,
+W022,question,21,32,,,IEC 60034-1,IEC 60034-1,in,0,real,
+W022,question,61,70,,,NEMA MG 1,NEMA MG 1,in,0,real,case
+W023,question,104,112,,,NEMA 250,NEMA 250,in,0,real,
+W023,response,50,60,,,ANSI Z55.1,ANSI Z55.1,in,0,real,
+W024,subject,26,34,,,NEMA 250,NEMA 250,in,0,real,
+W024,question,108,121,,,NEMA 250-2018,NEMA 250,in,0,real,
+W025,question,111,119,,,NEMA 250,NEMA 250,in,0,real,case
+W025,response,68,76,,,NEMA 250,NEMA 250,in,0,real,
+W026,question,109,118,,,NEMA TC 2,NEMA TC 2,in,0,real,
+W026,response,42,51,,,NEMA TC 2,NEMA TC 2,in,0,real,
+W027,question,61,70,,,NEMA TC 2,NEMA TC 2,in,0,real,
+W027,question,75,79,,,NEMA TC 3,NEMA TC 3,in,1,real,list_continuation
+W028,question,42,51,,,NEMA TC 2,NEMA TC 2,in,0,real,line_break
+W029,question,76,86,,,IEEE C37.2,IEEE C37.2,in,0,real,
+W029,response,53,68,,,IEEE C37.2-2008,IEEE C37.2,in,0,real,
+W030,question,122,141,,,IEEE C37.2-2008,IEEE C37.2,in,0,real,
+W031,question,52,72,,,IEEE C37.2-2008,IEEE C37.2,in,0,real,
+W032,question,64,77,,,IEEE 837-2014,IEEE 837,in,0,real,
+W033,question,64,72,,,IEEE 837,IEEE 837,in,0,real,spacing
+W034,question,81,98,,,IEEE 837-2014,IEEE 837,in,0,real,
+W034,response,39,47,,,IEEE 837,IEEE 837,in,0,real,
+W034,response,86,101,,,IEEE 837.9-2011,IEEE 837.9,in,0,invented,
+W035,subject,4,8,,,NESC,NESC,in,0,real,
+W035,question,22,34,,,NESC 2017,NESC,in,0,real,
+W035,question,64,76,,,NESC 2012,NESC,in,0,real,
+W035,response,30,40,30,40,NESC Rule 232B1,NESC Rule 232B1,in,1,real,
+W036,subject,0,4,,,NESC,NESC,in,0,real,
+W036,question,9,18,,,NESC 2017,NESC,in,0,real,line_break
+W037,question,95,99,80,91,NESC Table 232-1,NESC Table 232-1,in,0,real,
+W037,response,5,13,5,13,NESC Rule 232,NESC Rule 232,in,1,real,
+W038,question,75,79,,,NESC,NESC,in,0,real,
+W038,question,134,143,134,143,NESC Rule 234B,NESC Rule 234B,in,1,real,
+W038,question,148,159,148,159,NESC Table 234-1,NESC Table 234-1,in,1,real,
+W039,question,20,33,,,ASTM A53/A53M,ASTM A53/A53M,in,0,real,
+W039,question,124,134,,,ANSI C80.1,ANSI C80.1,in,0,real,misspelled
+W040,question,21,35,,,IEEE C57.12.28,IEEE C57.12.28,in,0,real,
+W040,response,40,54,26,36,IEEE C57.12.28 Clause 4.2,IEEE C57.12.28,in,0,real,
+W041,question,5,15,,,IEEE C62.11,IEEE C62.11,in,0,real,misspelled
+W041,question,101,117,,,IEC 60099-4:2014,IEC 60099-4,in,0,real,
+W041,response,33,49,,,IEEE C62.11-2020,IEEE C62.11,in,0,real,
+W041,response,54,60,,,IEEE C62.22,IEEE C62.22,in,1,real,list_continuation
+W042,question,105,121,,,ANSI C12.20-2015,ANSI C12.20,in,0,real,
+W042,question,126,136,,,ANSI C12.1-2008,ANSI C12.1,in,1,real,list_continuation
+W042,response,37,48,,,ANSI C12.20,ANSI C12.20,in,0,real,
+W043,question,43,57,,,IEEE C57.12.28,IEEE C57.12.28,in,0,real,
+W043,question,97,116,,,IEEE C57.12.28-2014,IEEE C57.12.28,in,0,real,
+W044,question,103,113,,,ASTM F1554,ASTM F1554,in,0,real,
+W044,question,128,143,,,ASTM A153/A153M,ASTM A153/A153M,in,0,real,
+W044,response,34,46,,,ASME B18.2.6,ASME B18.2.6,out,0,real,
+W044,response,105,118,,,ASTM F1554-20,ASTM F1554,in,0,real,
+W045,question,30,46,,,ASTM A615/A615M,ASTM A615/A615M,in,0,real,spacing
+W045,question,80,95,,,ASTM A706/A706M,ASTM A706/A706M,in,0,real,
+W046,question,5,18,,,ASTM C94/C94M,ASTM C94/C94M,in,0,real,misspelled
+W046,question,115,130,,,ASTM C150/C150M,ASTM C150/C150M,in,0,real,
+W046,question,158,173,,,ASTM D1557-12e1,ASTM D1557,in,0,real,
+W046,response,29,42,,,ASTM C33/C33M,ASTM C33/C33M,in,0,real,
+W047,question,34,44,,,NEMA ICS 6,NEMA ICS 6,in,0,real,
+W047,question,49,54,,,NEMA ICS 2,NEMA ICS 2,in,1,real,list_continuation
+W047,response,40,50,,,NEMA ICS 6,NEMA ICS 6,in,0,real,
+W047,response,55,65,,,NEMA ICS 2,NEMA ICS 2,in,0,real,
+W048,question,88,98,,,NEMA ICS 2,NEMA ICS 2,in,0,real,
+W049,question,129,136,,,IEEE 80,IEEE 80,in,0,real,
+W049,question,141,143,,,IEEE 81,IEEE 81,in,1,real,list_continuation
+W049,response,33,45,,,IEEE 81-2012,IEEE 81,in,0,real,
+W050,question,30,36,,,UL 891,UL 891,out,0,real,
+W050,question,61,76,,,IEC 61439-1:2020,IEC 61439-1,in,0,real,spacing
+W050,response,31,38,,,NFPA 70,NFPA 70,out,0,real,
+W050,response,40,56,,,IEC 61439-1:2020,IEC 61439-1,in,0,real,
+W051,question,34,45,,,IEC 60502-2,IEC 60502-2,in,0,real,misspelled
+W051,question,102,109,,,ASTM B8,ASTM B8,in,0,real,
+W051,response,39,49,,,ASTM B8-11,ASTM B8,in,0,real,
+W052,question,43,59,,,ANSI Z535.4-2011,ANSI Z535.4,in,0,real,
+W052,question,82,90,,,NFPA 70E,NFPA 70E,out,0,real,
+W052,response,5,21,,,ANSI Z535.4-2011,ANSI Z535.4,in,0,real,
+W053,question,55,65,,,ANSI A13.1,ANSI A13.1,in,0,real,
+W053,question,102,114,,,ANSI Z535.1,ANSI Z535.1,in,0,real,spacing
+W053,response,25,40,,,ASME A13.1,ASME A13.1,out,0,real,
+W053,response,64,74,,,ANSI A13.1,ANSI A13.1,in,0,real,
+W053,response,117,128,,,ANSI Z535.9,ANSI Z535.9,in,0,invented,
+W054,question,141,152,,,ANSI Z358.1,ANSI Z358.1,in,0,real,
+W054,response,30,46,,,ANSI Z358.1-2014,ANSI Z358.1,in,0,real,
+W054,response,51,57,,,ANSI Z358.7,ANSI Z358.7,in,1,invented,list_continuation
+W055,subject,0,11,,,IEEE C37.04,IEEE C37.04,in,0,real,
+W055,subject,19,32,,,IEC 62271-100,IEC 62271-100,in,0,real,
+W055,question,29,45,,,IEEE C37.04-2019,IEEE C37.04,in,0,real,unicode_dash
+W055,question,76,94,,,IEC 62271-100:2021,IEC 62271-100,in,0,real,
+W055,response,39,55,,,IEEE C37.06-2009,IEEE C37.06,in,0,real,
+W055,response,60,78,,,IEC 62271-999:2021,IEC 62271-999,in,0,invented,
+W056,subject,0,8,,,IEEE 519,IEEE 519,in,0,real,
+W056,question,16,29,5,12,IEEE 519-2022 Table 2,IEEE 519,in,0,real,
+W056,response,29,42,,,IEEE 519-2014,IEEE 519,in,0,real,
+W057,question,28,37,,,IEC 60255,IEC 60255,in,0,real,
+W057,question,58,83,,,IEC 60255-118-1:2018,IEC 60255-118-1,in,0,real,unicode_dash
+W057,question,123,138,,,IEC 60255-190-3,IEC 60255-190-3,in,0,invented,
+W058,question,17,35,,,IEEE 1588-2019,IEEE 1588,in,0,real,
+W058,question,66,80,,,IEEE 1588-2019,IEEE 1588,in,0,real,
+W059,question,5,24,,,NEMA MG 1-2016,NEMA MG 1,in,0,real,
+W060,question,40,49,,,NEMA FB 1,NEMA FB 1,in,0,real,misspelled
+W060,question,83,95,,,UL 514B,UL 514B,out,0,real,
+W061,question,97,116,,,ASTM A153/A153M-16a,ASTM A153/A153M,in,0,real,unicode_dash
+W061,question,172,187,,,ASTM A123/A123M,ASTM A123/A123M,in,0,real,
+W061,question,212,221,,,ASTM B117,ASTM B117,in,0,real,
+W061,response,54,69,,,ASTM A153/A153M,ASTM A153/A153M,in,0,real,
+W062,question,27,41,,,TIA 568-D,TIA 568-D,out,0,real,
+W062,question,70,82,,,TIA 568,TIA 568,out,0,real,
+W062,question,112,127,,,IEEE 802.3-2018,IEEE 802.3,in,0,real,
+W063,question,24,35,,,IEC 61850-6,IEC 61850-6,in,0,real,line_break
+W063,question,37,46,,,IEC 61850-7-4,IEC 61850-7-4,in,1,real,list_continuation
+W063,question,51,60,,,IEC 61850-8-1,IEC 61850-8-1,in,1,real,list_continuation
+W063,response,33,45,,,EN 61850-8-1,EN 61850-8-1,out,0,real,
+W063,response,50,66,,,CSA C22.2 No. 94,CSA C22.2 No. 94,out,0,real,
+W064,question,30,47,,,IEC 60076-1:2011,IEC 60076-1,in,0,real,line_break
+W064,response,22,38,9,18,IEC 60076-1:2011 Clause 11,IEC 60076-1,in,0,real,
+W065,subject,0,17,,,IEC TR 61850-90-5,IEC TR 61850-90-5,in,0,real,
+W065,question,5,27,,,IEC TR 61850-90-5:2012,IEC TR 61850-90-5,in,0,real,
+W065,question,74,94,,,IEEE C37.118.1-2011,IEEE C37.118.1,in,0,real,line_break
+W065,response,5,24,,,IEEE C37.118.2-2011,IEEE C37.118.2,in,0,real,
+W066,question,100,104,105,114,NESC Rule 234B,NESC Rule 234B,in,0,real,
+W066,response,24,35,24,35,NESC Table 234-1,NESC Table 234-1,in,1,real,
+W067,question,18,22,,,NESC,NESC,in,0,real,
+W067,question,101,110,101,110,NESC Rule 250B,NESC Rule 250B,in,1,real,
+W068,question,96,100,101,109,NESC Rule 235,NESC Rule 235,in,0,real,
+W068,response,29,40,29,40,NESC Table 235-5,NESC Table 235-5,in,1,invented,
+W069,subject,0,4,,,NESC,NESC,in,0,real,misspelled
+W069,question,22,31,,,NESC 2017,NESC,in,0,real,
+W069,question,59,68,,,NESC 2012,NESC,in,0,real,case
+W069,response,30,38,30,38,NESC Rule 232,NESC Rule 232,in,1,real,
+W070,question,22,32,5,14,NESC 2017 Section 9,NESC Section 9,in,0,real,spacing
+W071,question,76,93,94,103,NESC 2007 Rule 234C,NESC Rule 234C,in,0,invented,
+W071,response,20,31,20,31,NESC Table 234-1,NESC Table 234-1,in,1,real,
+W073,question,58,69,,,ANSI Z535.4,ANSI Z535.4,in,0,real,line_break
+W073,response,28,44,,,ANSI Z535.4-2011,ANSI Z535.4,in,0,real,case
+W074,question,123,142,,,ASTM D2240-15(2021),ASTM D2240,in,0,invented,
+W075,question,15,24,,,IEEE 1547,IEEE 1547,in,0,real,
+W075,response,19,34,,,IEEE 1547a-2020,IEEE 1547a,in,0,real,
+W076,question,113,121,,,NEMA WD 6,NEMA WD 6,in,0,real,spacing
+W076,response,30,40,,,NEMA WD 99,NEMA WD 99,in,0,invented,
+W077,question,120,138,,,NEMA 250-2018,NEMA 250,in,0,real,
+W078,question,167,176,,,IEC 60529,IEC 60529,in,0,real,
+W078,response,29,46,,,ISA 12.12.01,ISA 12.12.01,out,0,real,
+W079,question,61,79,,,ASTM A572/A572M-21,ASTM A572/A572M,in,0,real,
+W079,response,35,50,,,ASTM A572/A572M,ASTM A572/A572M,in,0,real,
+W080,question,103,119,,,IEEE 1547.1-2020,IEEE 1547.1,in,0,real,
+W081,subject,20,34,,,NEMA TC 2-2020,NEMA TC 2,in,0,real,
+W081,question,28,42,,,NEMA TC 2-2013,NEMA TC 2,in,0,real,
+W081,question,69,83,,,NEMA TC 2-2020,NEMA TC 2,in,0,real,
+W081,question,125,140,,,NEMA TC 14-2021,NEMA TC 14,in,0,invented,
+W082,question,20,34,36,44,NEMA VE 1-2017 Clause 5.2,NEMA VE 1,in,0,real,unicode_dash
+W083,question,40,52,29,36,IEEE 80-2013 Table 3,IEEE 80,in,0,real,case
+W084,question,33,47,21,29,IEEE 1584-2018 Clause 4.1,IEEE 1584,in,0,real,
+W084,question,69,85,87,95,IEC 60076-3:2013 Figure 2,IEC 60076-3,in,0,real,
+W084,question,101,116,122,129,ANSI C84.1-2020 Annex B,ANSI C84.1,in,0,real,
+W085,question,71,91,,,IEEE C57.12.00-2015,IEEE C57.12.00,in,0,real,line_break

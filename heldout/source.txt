@@ -1,0 +1,397 @@
+# Written held-out set for rfikit. Synthetic data, written by hand.
+# Markup is described at the top of scripts/build_heldout.py.
+# Rules for the labels are in docs/annotation_guide.md.
+# Groups G01 to G12 are recurring questions. A dash means a single RFI.
+
+=== W001 | standard_applicability | G01
+subject: Edition of [[c IEEE C57.12.00 | IEEE C57.12.00 | real | IEEE C57.12.00]] for the substation transformer
+question: Which edition applies to the substation transformer submittal? The vendor can quote [[c IEEE C57.12.00-2010 | IEEE C57.12.00 | real | IEEE C57.12.00-2010]] or [[c IEEE C57.12.00-2015 | IEEE C57.12.00 | real | IEEE Std C57.12.00-2015]].
+response: EOR: The specification edition stays. The vendor will revise the quote.
+
+=== W002 | standard_applicability | G01
+subject: Which year of the transformer standard
+question: Please confirm which year of [[c IEEE C57.12.00 | IEEE C57.12.00 | real noise=case | ieee std c57.12.00]] governs the main transformer.
+response: OWNER_REP: Use the year in the specification. See [[n rfi_number | RFI-0409]].
+
+=== W003 | standard_applicability | G01
+subject: Transformer build year
+question: Our supplier asks whether to build to the 2010 or the 2015 edition of [[c IEEE C57.12.00 | IEEE C57.12.00 | real noise=line_break | IEEE\nC57.12.00]] for project P-0412. Please confirm.
+response: CONTRACTOR_PM: Under [[n bare_rule | Rule 12]] of the contract this goes to the OWNER_REP. The test sheet lists [[c IEEE C57.12.90-2015 | IEEE C57.12.90 | real | IEEE C57.12.90-2015]].
+
+=== W004 | standard_applicability | G01
+subject: Edition for the 69 kV unit
+question: Is the transformer to be supplied to [[c IEEE C57.12.00-2015 | IEEE C57.12.00 | real | IEEE C57.12.00-2015]] or to the edition named in the project specification?
+response: EOR: Use the edition named in the specification.
+
+=== W005 | document_conflict | G02
+subject: Grounding standard edition conflict
+question: The specification, [[n spec_section | Section 26 05 26]], cites [[c IEEE 80-2000 | IEEE 80 | real | IEEE Std 80-2000]] for the ground grid. The drawing note cites [[c IEEE 80-2013 | IEEE 80 | real | IEEE 80-2013]]. Which one governs?
+response: EOR: The specification governs. An addendum will follow.
+
+=== W006 | document_conflict | G02
+subject: Ground grid references disagree
+question: Sheet [[n sheet_number | E-234-1]] cites [[c IEEE 80-2013 | IEEE 80 | real | IEEE 80-2013]] for the grid, while the general notes cite [[c IEEE 80-2000 | IEEE 80 | real | IEEE 80-2000]]. Please say which year is meant. The set is printed on [[n ansi_sheet | ANSI D size sheets]].
+
+=== W007 | document_conflict | G02
+subject: Which year of [[c IEEE 80 | IEEE 80 | real | IEEE 80]] governs the grid
+question: Two project documents name different years for the grid design, 2000 in the specification and 2013 on the drawings. Which year is correct?
+
+=== W008 | document_conflict | G02
+subject: Grounding standard year mismatch
+question: The specification cites [[c IEEE 80-2000 | IEEE 80 | real noise=unicode_dash | IEEE 80\u20112000]] and the plan set cites [[c IEEE 80-2013 | IEEE 80 | real | IEEE 80-2013]]. Please resolve this before bid.
+
+=== W009 | substitution_request | G03
+subject: Replace [[c ASTM A123/A123M | ASTM A123/A123M | real | ASTM A123/A123M]] coating on steel brackets
+question: We request approval to supply the steel brackets coated to [[c ASTM A153/A153M | ASTM A153/A153M | real | ASTM A153/A153M]] in place of [[c ASTM A123/A123M-17 | ASTM A123/A123M | real | ASTM A123/A123M-17]]. The supplier data sheet is attached.
+response: EOR: Submit the coating data sheet for review.
+
+=== W010 | substitution_request | G03
+subject: Substitute coating for the bracket set
+question: Can the supplier use [[c ASTM A153/A153M | ASTM A153/A153M | real noise=spacing | ASTM A 153/A153M]] coating for the bracket set instead of the hot-dip coating named in the specification? The bracket is part [[n part_number | A153-0040]].
+
+=== W011 | substitution_request | G03
+subject: Request to change the coating reference
+question: Procurement asks to replace the coating called out as [[c ASTM A123/A123M | ASTM A123/A123M | real | ASTM A123/A123M]] with [[c ASTM A153/A153M-16a | ASTM A153/A153M | real | ASTM A153/A153M-16a]] for the small hardware. Please advise.
+
+=== W012 | substitution_request | G03
+subject: Galvanizing alternative
+question: Please approve [[c ASTM A153/A153M | ASTM A153/A153M | real | ASTM A153/A153M]] coating in place of [[c ASTM A123/A123M | ASTM A123/A123M | real | ASTM A123/A123M]] for the bracket set. See drawing [[n drawing_number | 60076-1]].
+response: EOR: Not accepted. Keep [[c ASTM A123/A123M | ASTM A123/A123M | real | ASTM A123/A123M]] as specified.
+
+=== W013 | field_condition | G04
+subject: Crossing clearance after survey
+question: The survey dated [[n date | 03-14-2026]] shows the span at the road crossing is 12 ft longer than drawn. Does the crossing still work under [[c NESC 2017 Rule 232B1 | NESC Rule 232B1 | real | <s>2017 NESC</s> <k>Rule 232B1</k>]]?
+response: EOR: The profile will be rechecked. It will check [[c NESC Table 232-1 | NESC Table 232-1 | real inferred | <k>Table 232-1</k>]].
+
+=== W014 | field_condition | G04
+subject: Longer span at the road crossing
+question: The staked span at the road crossing is longer than the plan shows. Should the clearance be rechecked against [[c NESC 2017 Rule 232B1a | NESC Rule 232B1a | invented noise=unicode_dash | <s>NESC\u20112017</s> <k>Rule 232B1a</k>]]? Profile sheet [[n sheet_number | E-232-1]] shows the older span.
+response: EOR: [[c NESC Rule 232B1a | NESC Rule 232B1a | invented inferred | <k>Rule 232B1a</k>]] will be confirmed.
+
+=== W015 | missing_information | G05
+subject: No edition given for the relay communication standard
+question: The relay specification lists [[c IEC 61850 | IEC 61850 | real | IEC 61850]] with no part and no edition. Which parts and which edition should the vendor quote?
+response: EOR: Quote [[c IEC 61850-8-1:2011+AMD1:2020 | IEC 61850-8-1 | real | IEC 61850-8-1:2011+AMD1:2020]] and [[c IEC 61850-6 | IEC 61850-6 | real | IEC 61850-6]] with the edition shown in addendum 2.
+
+=== W016 | missing_information | G05
+subject: Missing part numbers for the relay communication standard
+question: The relay specification lists [[c IEC 61850 | IEC 61850 | real noise=spacing | IEC\u00a061850]] but gives no part and no year. Please add them.
+response: EOR: Add [[c IEC 61850-8-1 | IEC 61850-8-1 | real | IEC 61850-8-1]] and [[c IEC 61850-7-4 | IEC 61850-7-4 | real | IEC 61850-7-4]] to the specification.
+
+=== W017 | design_clarification | G06
+subject: Commissioning test clause
+question: Should the commissioning test plan follow [[c IEEE 1547-2018 Clause 5.3 | IEEE 1547 | real | <k>Section 5.3</k> of <s>IEEE 1547-2018</s>]] or [[c IEEE 1547.1-2020 Annex C | IEEE 1547.1 | real | <k>Annex C</k> of <s>IEEE 1547.1-2020</s>]]?
+
+=== W018 | design_clarification | G06
+subject: Which part to follow for commissioning
+question: Is the commissioning procedure meant to follow [[c IEEE 1547.1-2020 | IEEE 1547.1 | real | IEEE 1547.1-2020]] or [[c IEEE 1547-2018 Clause 5.3 | IEEE 1547 | real | <s>IEEE 1547-2018</s>, <k>clause 5.3</k>]]?
+response: EOR: Follow the plan in the specification.
+
+=== W019 | standard_applicability | G07
+subject: Voltage range reference
+question: Does [[c ANSI C84.1 | ANSI C84.1 | real | ANSI C84.1]] apply to the inverter AC terminals or only to the utility service point?
+response: OWNER_REP: To be confirmed with the utility. Their letter cites [[c ANSI C84.1-2016 | ANSI C84.1 | real | ANSI C84.1-2016]] and [[c UL 1741 | UL 1741 | real out | UL 1741]] for the inverter.
+
+=== W020 | standard_applicability | G07
+subject: Which voltage standard year applies
+question: Please confirm whether [[c ANSI C84.1-2020 | ANSI C84.1 | real noise=unicode_dash | ANSI C84.1\u20102020]] is meant for the inverter terminals, the service point, or both.
+response: OWNER_REP: The utility letter lists [[c ANSI C84.1-2020 Annex A | ANSI C84.1 | real | <k>Annex A</k> of <s>ANSI C84.1-2020</s>]].
+
+=== W021 | document_conflict | G08
+subject: Motor standard conflict
+question: The motor specification cites [[c NEMA MG 1-2016 | NEMA MG 1 | real | NEMA MG 1-2016]] but the data sheet cites [[c IEC 60034-1:2010 | IEC 60034-1 | real | IEC 60034-1:2010]]. Which one governs?
+response: OWNER_REP: The specification governs, as in [[n rfi_number | RFI-0388]].
+
+=== W022 | document_conflict | G08
+subject: Data sheet versus specification on motors
+question: The data sheet lists [[c IEC 60034-1 | IEC 60034-1 | real | IEC 60034-1]] and the specification lists [[c NEMA MG 1 | NEMA MG 1 | real noise=case | Nema MG 1]]. We need one.
+
+=== W023 | substitution_request | G09
+subject: Control enclosure substitution
+question: We want to replace the [[n nema_enclosure | NEMA 3R]] control enclosures with [[n nema_enclosure | NEMA 4X]] units. The vendor lists both types under [[c NEMA 250 | NEMA 250 | real | NEMA 250]]. May we? The new box is rated [[n ip_rating | IP66]].
+response: EOR: Submit the data sheet. The finish note cites [[c ANSI Z55.1 | ANSI Z55.1 | real | ANSI Z55.1]].
+
+=== W024 | substitution_request | G09
+subject: Alternate enclosure under [[c NEMA 250 | NEMA 250 | real | NEMA 250]]
+question: Procurement asks to replace the [[n nema_enclosure | NEMA 3R]] cabinets with [[n nema_enclosure | NEMA 4X]] cabinets in the yard. The catalog sheet cites [[c NEMA 250-2018 | NEMA 250 | real | NEMA 250-2018]]. Is that acceptable?
+
+=== W025 | substitution_request | G09
+subject: Different enclosure for the yard
+question: Can the OWNER_REP approve a stainless [[n nema_enclosure | NEMA 4X]] box in place of the painted [[n nema_enclosure | NEMA 3R]] box? The catalog sheet cites [[c NEMA 250 | NEMA 250 | real noise=case | nema 250]].
+response: OWNER_REP: Send the box listing for review. The catalog sheet cites [[c NEMA 250 | NEMA 250 | real | NEMA 250]].
+
+=== W026 | field_condition | G10
+subject: Existing duct bank in the trench
+question: The trench crew found an existing duct bank where the plan shows clear ground. The new duct is called out as [[c NEMA TC 2 | NEMA TC 2 | real | NEMA TC 2]] conduit. Should the new run be re-routed?
+response: EOR: Pothole first. The new conduit stays [[c NEMA TC 2 | NEMA TC 2 | real | NEMA TC 2]].
+
+=== W027 | field_condition | G10
+subject: Unmarked duct bank found
+question: We hit an unmarked duct bank at 3 ft depth. The new run uses [[c NEMA TC 2 | NEMA TC 2 | real | NEMA TC 2]] and [[c NEMA TC 3 | NEMA TC 3 | real inferred noise=list_continuation | TC 3]] fittings. Do we reroute or cross?
+
+=== W028 | field_condition | G10
+subject: Conflict with a buried pipe
+question: A buried pipe sits in the path of the new [[c NEMA TC 2 | NEMA TC 2 | real noise=line_break | NEMA\nTC 2]] conduit. What should we do?
+
+=== W029 | missing_information | G11
+subject: Relay schedule incomplete
+question: The protection schedule leaves the feeder relay tags blank. Which tags from [[c IEEE C37.2 | IEEE C37.2 | real | IEEE C37.2]] should go on them?
+response: EOR: Tags will be added to the schedule. The edition [[c IEEE C37.2-2008 | IEEE C37.2 | real | IEEE C37.2-2008]] stays.
+
+=== W030 | missing_information | G11
+subject: Relay tags missing
+question: The one-line diagram shows relays without tags and the [[n kva_rating | 80 kVA]] station service unit. Can the EOR fill them in according to [[c IEEE C37.2-2008 | IEEE C37.2 | real | IEEE Std C37.2-2008]]?
+
+=== W031 | missing_information | G11
+subject: Relay tags not listed
+question: The relay schedule has no tags. Please add them per [[c IEEE C37.2-2008 | IEEE C37.2 | real | ANSI/IEEE C37.2-2008]].
+
+=== W032 | design_clarification | G12
+subject: Ground connection test scope
+question: Which grounding connections should be sampled for testing under [[c IEEE 837-2014 | IEEE 837 | real | IEEE 837-2014]]? The grounding plan is drawing [[n drawing_number | 837-2]].
+
+=== W033 | design_clarification | G12
+subject: Testing of grounding connections
+question: What sampling is expected for the connection tests listed under [[c IEEE 837 | IEEE 837 | real noise=spacing | IEEE\u202f837]]?
+
+=== W034 | design_clarification | G12
+subject: Ground connection tests
+question: Please clarify the scope of the ground connection tests. The specification lists [[c IEEE 837-2014 | IEEE 837 | real | IEEE Std 837-2014]] for them.
+response: EOR: A sample test plan will be added. [[c IEEE 837 | IEEE 837 | real | IEEE 837]] stays as listed. The older list shows [[c IEEE 837.9-2011 | IEEE 837.9 | invented | IEEE 837.9-2011]].
+
+=== W035 | document_conflict | -
+subject: Two [[c NESC | NESC | real | NESC]] editions on the cover sheet and profile
+question: The cover sheet cites [[c NESC 2017 | NESC | real | IEEE C2-2017]] while the profile notes cite [[c NESC 2012 | NESC | real | ANSI C2-2012]]. Which edition governs the new crossing?
+response: EOR: The cover sheet governs. [[c NESC Rule 232B1 | NESC Rule 232B1 | real inferred | <k>Rule 232B1</k>]] stays as drawn on the profile.
+
+=== W036 | standard_applicability | -
+subject: [[c NESC | NESC | real | NESC]] edition for the feeder tie
+question: Does the [[c NESC 2017 | NESC | real noise=line_break | 2017\nNESC]] apply to the new feeder tie, or the older edition used on phase one?
+response: OWNER_REP: The same edition as phase one.
+
+=== W037 | field_condition | -
+subject: Pole height at the rail crossing
+question: The staked pole is 4 ft shorter than drawn because of rock. Is the clearance in [[c NESC Table 232-1 | NESC Table 232-1 | real | <k>Table 232-1</k> of <s>NESC</s>]] still met at the rail crossing?
+response: EOR: [[c NESC Rule 232 | NESC Rule 232 | real inferred | <k>Rule 232</k>]] will be rechecked with the new pole height. Survey date [[n date | June 12, 2026]].
+
+=== W038 | missing_information | -
+subject: Wire clearance basis not stated
+question: The design report gives wire clearances to buildings but does not name the [[c NESC | NESC | real | NESC]] edition. Please also list the rules used, for example [[c NESC Rule 234B | NESC Rule 234B | real inferred | <k>Rule 234B</k>]] and [[c NESC Table 234-1 | NESC Table 234-1 | real inferred | <k>Table 234-1</k>]].
+
+=== W039 | substitution_request | -
+subject: Alternate pipe sleeve at the road crossing
+question: The vendor proposes [[c ASTM A53/A53M | ASTM A53/A53M | real | ASTM A53/A53M]] pipe in place of the steel sleeves at the road crossing. The sleeves are called out under [[c ANSI C80.1 | ANSI C80.1 | real noise=misspelled | ANIS C80.1]]. The pipe flanges are [[n ansi_class | ANSI Class 150]] and the sleeve steel is [[n astm_grade | A36]]. May we substitute?
+response: EOR: Submit the pipe data sheet.
+
+=== W040 | missing_information | -
+subject: Pad detail reference
+question: The detail says "per [[c IEEE C57.12.28 | IEEE C57.12.28 | real | IEEE C57.12.28]]" for the pad but gives no clause. Which clause is meant for the pad dimensions?
+response: EOR: The detail refers to [[c IEEE C57.12.28 Clause 4.2 | IEEE C57.12.28 | real | <k>Clause 4.2</k> of <s>IEEE C57.12.28</s>]].
+
+=== W041 | standard_applicability | -
+subject: Riser pole protection reference
+question: Does [[c IEEE C62.11 | IEEE C62.11 | real noise=misspelled | IEE C62.11]] apply to the units at the riser pole, or only to station units? The vendor quotes to [[c IEC 60099-4:2014 | IEC 60099-4 | real | IEC 60099-4:2014]] instead.
+response: EOR: Both lists will be checked: [[c IEEE C62.11-2020 | IEEE C62.11 | real | IEEE C62.11-2020]] and [[c IEEE C62.22 | IEEE C62.22 | real inferred noise=list_continuation | C62.22]].
+
+=== W042 | missing_information | -
+subject: Meter standard not listed
+question: The meter specification gives the accuracy class but names no standard. Should the revenue meters follow [[c ANSI C12.20-2015 | ANSI C12.20 | real | ANSI C12.20-2015]] and [[c ANSI C12.1-2008 | ANSI C12.1 | real inferred noise=list_continuation | C12.1-2008]]?
+response: EOR: Revenue meters are listed under [[c ANSI C12.20 | ANSI C12.20 | real | ANSI C12.20]] in the specification.
+
+=== W043 | document_conflict | -
+subject: Pad-mount enclosure edition mismatch
+question: The specification, [[n spec_section | Section 26 12 19]], cites [[c IEEE C57.12.28 | IEEE C57.12.28 | real | IEEE C57.12.28]] without a year. The drawing note cites [[c IEEE C57.12.28-2014 | IEEE C57.12.28 | real | IEEE C57.12.28-2014]]. Which edition governs? The set is printed on [[n ansi_sheet | ANSI D size sheets]].
+
+=== W044 | field_condition | -
+subject: Corroded anchor bolts at the old foundation
+question: The anchor bolts at the old foundation are rusty and the zinc is gone. Should the replacement bolts be [[c ASTM F1554 | ASTM F1554 | real | ASTM F1554]] and coated to [[c ASTM A153/A153M | ASTM A153/A153M | real | ASTM A153/A153M]]? The bolt kit is part [[n part_number | F155-4012]].
+response: EOR: The bolt kit list also cites [[c ASME B18.2.6 | ASME B18.2.6 | real out | ASME B18.2.6]]. Replace the bolts and add a coating report. The grade of [[c ASTM F1554-20 | ASTM F1554 | real | ASTM F1554-20]] is to be confirmed.
+
+=== W045 | substitution_request | -
+subject: Alternate reinforcing bar
+question: The supplier can only deliver [[c ASTM A615/A615M | ASTM A615/A615M | real noise=spacing | ASTM  A615/A615M]] bars for the pad. The plan shows [[c ASTM A706/A706M | ASTM A706/A706M | real | ASTM A706/A706M]]. Can we substitute?
+response: EOR: Not without a submittal.
+
+=== W046 | standard_applicability | -
+subject: Concrete reference for the pad
+question: Does [[c ASTM C94/C94M | ASTM C94/C94M | real noise=misspelled | ASMT C94/C94M]] apply to the transformer pad pour, or does the specification cover it alone? The mix list shows [[c ASTM C150/C150M | ASTM C150/C150M | real | ASTM C150/C150M]] and the compaction test as [[c ASTM D1557-12e1 | ASTM D1557 | real | ASTM D1557-12e1]].
+response: EOR: The specification lists [[c ASTM C33/C33M | ASTM C33/C33M | real | ASTM C33/C33M]] for aggregate.
+
+=== W047 | missing_information | -
+subject: Switchgear standards without a year
+question: The switchgear specification says [[c NEMA ICS 6 | NEMA ICS 6 | real | NEMA ICS 6]] and [[c NEMA ICS 2 | NEMA ICS 2 | real inferred noise=list_continuation | ICS 2]] with no year. Which editions are meant?
+response: EOR: Use the editions in addendum 3 for [[c NEMA ICS 6 | NEMA ICS 6 | real | NEMA ICS 6]] and [[c NEMA ICS 2 | NEMA ICS 2 | real | NEMA ICS 2]].
+
+=== W048 | design_clarification | -
+subject: Starter size reference
+question: What does the specification mean by [[n nema_size | NEMA Size 2]] starters? Does it refer to the sizes in [[c NEMA ICS 2 | NEMA ICS 2 | real | NEMA ICS 2]]?
+response: EOR: Starter size 2 as shown on the motor schedule.
+
+=== W049 | field_condition | -
+subject: Soil moisture at the ground ring
+question: The soil near the tower foundation is wetter than the geotechnical report of [[n date | 2019-06-12]] shows. Does the ground ring design under [[c IEEE 80 | IEEE 80 | real | IEEE 80]] and [[c IEEE 81 | IEEE 81 | real inferred noise=list_continuation | 81]] need a retest?
+response: EOR: A new soil test will follow [[c IEEE 81-2012 | IEEE 81 | real | IEEE 81-2012]].
+
+=== W050 | document_conflict | -
+subject: Panel standard conflict
+question: The panel specification cites [[c UL 891 | UL 891 | real out | UL 891]]. The drawing note cites [[c IEC 61439-1:2020 | IEC 61439-1 | real noise=spacing | IEC61439-1:2020]]. Which one governs?
+response: EOR: The panel list also cites [[c NFPA 70 | NFPA 70 | real out | NFPA 70]]. [[c IEC 61439-1:2020 | IEC 61439-1 | real | IEC 61439-1:2020]] will be listed on the drawing.
+
+=== W051 | substitution_request | -
+subject: Alternate medium voltage cable
+question: The supplier offers cable made to [[c IEC 60502-2 | IEC 60502-2 | real noise=misspelled | IEC 6O502-2]] in place of the cable in the specification, which cites [[c ASTM B8 | ASTM B8 | real | ASTM B8]] for the conductor strand. Is that acceptable?
+response: EOR: Please submit the strand data per [[c ASTM B8-11 | ASTM B8 | real | ASTM B8-11]].
+
+=== W052 | design_clarification | -
+subject: Label format
+question: Which format should the new labels follow, [[c ANSI Z535.4-2011 | ANSI Z535.4 | real | ANSI Z535.4-2011]] or the label style in [[c NFPA 70E | NFPA 70E | real out | NFPA 70E]]?
+response: EOR: [[c ANSI Z535.4-2011 | ANSI Z535.4 | real | ANSI Z535.4-2011]] stays.
+
+=== W053 | missing_information | -
+subject: Marking standard missing
+question: The mechanical room notes give no marking standard. Is [[c ANSI A13.1 | ANSI A13.1 | real | ANSI A13.1]] expected for the room notes, and is [[c ANSI Z535.1 | ANSI Z535.1 | real noise=spacing | ANSI  Z535.1]] meant for the colors?
+response: EOR: The room list shows [[c ASME A13.1 | ASME A13.1 | real out | ANSI/ASME A13.1]] on an older sheet. Add [[c ANSI A13.1 | ANSI A13.1 | real | ANSI A13.1]] to the notes. The vendor sheet also lists [[c ANSI Z535.9 | ANSI Z535.9 | invented | ANSI Z535.9]].
+
+=== W054 | field_condition | -
+subject: Wash fixture after demolition
+question: The wall behind the wash fixture was removed during demolition. The new location is [[n room_number | Room 118]]. The supply valve is rated [[n ansi_class | ANSI Class 150]]. Does [[c ANSI Z358.1 | ANSI Z358.1 | real | ANSI Z358.1]] still govern the new location?
+response: EOR: The equipment list shows [[c ANSI Z358.1-2014 | ANSI Z358.1 | real | ANSI Z358.1-2014]] and [[c ANSI Z358.7 | ANSI Z358.7 | invented inferred noise=list_continuation | Z358.7]].
+
+=== W055 | document_conflict | -
+subject: [[c IEEE C37.04 | IEEE C37.04 | real | IEEE C37.04]] versus [[c IEC 62271-100 | IEC 62271-100 | real | IEC 62271-100]] on the breaker
+question: The breaker data sheet cites [[c IEEE C37.04-2019 | IEEE C37.04 | real noise=unicode_dash | IEEE C37.04\u20102019]] while the specification cites [[c IEC 62271-100:2021 | IEC 62271-100 | real | IEC 62271-100:2021]]. The breaker feeds a [[n kva_rating | 519 kVA]] load. Which one governs?
+response: EOR: The data sheet will be revised to [[c IEEE C37.06-2009 | IEEE C37.06 | real | IEEE C37.06-2009]] and [[c IEC 62271-999:2021 | IEC 62271-999 | invented | IEC 62271-999:2021]].
+
+=== W056 | standard_applicability | -
+subject: [[c IEEE 519 | IEEE 519 | real | IEEE 519]] at the plant connection
+question: Does [[c IEEE 519-2022 Table 2 | IEEE 519 | real | <k>Table 2</k> of <s>IEEE 519-2022</s>]] apply at the plant point of connection?
+response: OWNER_REP: The utility lists [[c IEEE 519-2014 | IEEE 519 | real | IEEE 519-2014]] in its interconnection letter.
+
+=== W057 | missing_information | -
+subject: Relay test standard unclear
+question: The specification only says [[c IEC 60255 | IEC 60255 | real | IEC 60255]] for relay tests. Is [[c IEC 60255-118-1:2018 | IEC 60255-118-1 | real noise=unicode_dash | IEC/IEEE 60255\u2212118\u22121:2018]] the part meant? The vendor sheet lists [[c IEC 60255-190-3 | IEC 60255-190-3 | invented | IEC 60255-190-3]].
+
+=== W058 | design_clarification | -
+subject: Clock reference
+question: The vendor cites [[c IEEE 1588-2019 | IEEE 1588 | real | IEEE/IEC 1588-2019]] while the specification cites [[c IEEE 1588-2019 | IEEE 1588 | real | IEEE 1588-2019]]. Do these name the same document?
+
+=== W059 | standard_applicability | -
+subject: Nameplate data sheet reference
+question: Does [[c NEMA MG 1-2016 | NEMA MG 1 | real | ANSI/NEMA MG 1-2016]], as in the template, apply to the nameplate data sheet of the [[n nema_premium | NEMA Premium]] motor, or does another year apply?
+
+=== W060 | substitution_request | -
+subject: Alternate conduit fittings
+question: May the contractor use fittings made to [[c NEMA FB 1 | NEMA FB 1 | real noise=misspelled | NEAM FB 1]] instead of the ones listed under [[c UL 514B | UL 514B | real out | ANSI/UL 514B]]?
+
+=== W061 | field_condition | -
+subject: Rust on pole line hardware
+question: Hardware at the coastal solar plant interconnect shows rust since the install of [[n date | 2017-06-01]]. Was [[c ASTM A153/A153M-16a | ASTM A153/A153M | real noise=unicode_dash | ASTM A153/A153M\u201216a]] the right choice, or should the specification call out [[c ASTM A123/A123M | ASTM A123/A123M | real | ASTM A123/A123M]]? The supplier offers an [[c ASTM B117 | ASTM B117 | real | ASTM B117]] test report.
+response: EOR: We will request the coating thickness report for [[c ASTM A153/A153M | ASTM A153/A153M | real | ASTM A153/A153M]].
+
+=== W062 | document_conflict | -
+subject: Cabling reference mismatch
+question: The comm room detail cites [[c TIA 568-D | TIA 568-D | real out | ANSI/TIA-568-D]] and the specification cites [[c TIA 568 | TIA 568 | real out | ANSI/TIA-568]]. The switch data sheet cites [[c IEEE 802.3-2018 | IEEE 802.3 | real | IEEE 802.3-2018]]. Please confirm the cabling reference.
+
+=== W063 | missing_information | -
+subject: Relay communication parts not listed
+question: The specification lists [[c IEC 61850-6 | IEC 61850-6 | real noise=line_break | IEC\n61850-6]], [[c IEC 61850-7-4 | IEC 61850-7-4 | real inferred noise=list_continuation | 61850-7-4]] and [[c IEC 61850-8-1 | IEC 61850-8-1 | real inferred noise=list_continuation | 61850-8-1]] with no year. Which edition of each is meant?
+response: VENDOR_REP: Our data sheet cites [[c EN 61850-8-1 | EN 61850-8-1 | real out | EN 61850-8-1]] and [[c CSA C22.2 No. 94 | CSA C22.2 No. 94 | real out | CSA C22.2 No. 94]].
+
+=== W064 | design_clarification | -
+subject: Factory test clause
+question: Please point to the clause of [[c IEC 60076-1:2011 | IEC 60076-1 | real noise=line_break | IEC 60076-\n1:2011]] the factory test plan should follow.
+response: EOR: Use [[c IEC 60076-1:2011 Clause 11 | IEC 60076-1 | real | <k>Clause 11</k> of <s>IEC 60076-1:2011</s>]].
+
+=== W065 | standard_applicability | -
+subject: [[c IEC TR 61850-90-5 | IEC TR 61850-90-5 | real | IEC TR 61850-90-5]] for the data stream
+question: Does [[c IEC TR 61850-90-5:2012 | IEC TR 61850-90-5 | real | IEC TR 61850-90-5:2012]] apply to the time-tagged data stream, or only [[c IEEE C37.118.1-2011 | IEEE C37.118.1 | real noise=line_break | IEEE C37.\n118.1-2011]]?
+response: EOR: [[c IEEE C37.118.2-2011 | IEEE C37.118.2 | real | IEEE C37.118.2-2011]] is also in the specification.
+
+=== W066 | field_condition | -
+subject: Pole moved toward a building
+question: The pole was moved 3 ft toward the building because of a buried pipe. Is the clearance still within [[c NESC Rule 234B | NESC Rule 234B | real | <s>NESC</s> <k>Rule 234B</k>]]? See sheet [[n sheet_number | E-234-1]].
+response: EOR: The check will use [[c NESC Table 234-1 | NESC Table 234-1 | real inferred | <k>Table 234-1</k>]] for the new position.
+
+=== W067 | design_clarification | -
+subject: Wind loading basis
+question: Which rule of the [[c NESC | NESC | real | NESC]] was used for the wind loading on the pole design? The calculation sheet lists [[c NESC Rule 250B | NESC Rule 250B | real inferred | <k>Rule 250B</k>]].
+
+=== W068 | missing_information | -
+subject: Same-support spacing basis missing
+question: The tower drawing gives wire spacing but no basis. Can the EOR list the rules used, for example [[c NESC Rule 235 | NESC Rule 235 | real | <s>NESC</s> <k>Rule 235</k>]]?
+response: EOR: The list will be added. [[c NESC Table 235-5 | NESC Table 235-5 | invented inferred | <k>Table 235-5</k>]] will be included.
+
+=== W069 | document_conflict | -
+subject: [[c NESC | NESC | real noise=misspelled | NSEC]] edition on the cover and in the notes
+question: The cover sheet cites [[c NESC 2017 | NESC | real | NESC 2017]] but the general notes cite [[c NESC 2012 | NESC | real noise=case | nesc 2012]]. Which one governs?
+response: EOR: The cover sheet governs. [[c NESC Rule 232 | NESC Rule 232 | real inferred | <k>Rule 232</k>]] is unchanged.
+
+=== W070 | standard_applicability | -
+subject: Fence grounding
+question: Does [[c NESC 2017 Section 9 | NESC Section 9 | real noise=spacing | <k>Section 9</k> of the <s>2017  NESC</s>]] apply to the substation fence?
+
+=== W071 | field_condition | -
+subject: Pole closer to the building than drawn
+question: The as-staked pole is 2 ft closer to the building than the plan shows. Does [[c NESC 2007 Rule 234C | NESC Rule 234C | invented | <s>ANSI/IEEE C2-2007</s> <k>Rule 234C</k>]] still work?
+response: EOR: The check uses [[c NESC Table 234-1 | NESC Table 234-1 | real inferred | <k>Table 234-1</k>]].
+
+=== W072 | standard_applicability | -
+subject: [[n bare_nesc_no_context | Rule 232]] for the temporary line
+question: Does [[n bare_nesc_no_context | Table 232-1]] apply to the temporary line over the access road? The vendor also sent a paper from [[n ieee_transactions | IEEE Transactions]].
+
+=== W073 | design_clarification | -
+subject: Arc flash label color and format
+question: Which sign format should the new arc flash labels follow, [[c ANSI Z535.4 | ANSI Z535.4 | real noise=line_break | ANSI\nZ535.4]] or the format used on phase one? The panel color is shown as [[n ansi_color | ANSI 61 gray]] on the drawing.
+response: DOC_CONTROL: Phase one used [[c ANSI Z535.4-2011 | ANSI Z535.4 | real noise=case | ansi z535.4-2011]].
+
+=== W074 | document_conflict | -
+subject: Cabinet color conflict
+question: The painting note calls for [[n ansi_color | ANSI 61 gray]] cabinets, but the equipment list says [[n ansi_color | ANSI 70 gray]]. The paint specification cites [[c ASTM D2240-15(2021) | ASTM D2240 | invented | ASTM D2240-15(2021)]] for a hardness test. Which color governs?
+
+=== W075 | missing_information | -
+subject: Interconnection note has no edition
+question: The note cites [[c IEEE 1547 | IEEE 1547 | real | IEEE 1547]], [[n kva_rating | 2500 kVA]] and 34.5 kV with no edition. Please add the edition.
+response: EOR: The amendment [[c IEEE 1547a-2020 | IEEE 1547a | real | IEEE 1547a-2020]] is also listed in the specification.
+
+=== W076 | substitution_request | -
+subject: Receptacle substitution
+question: The electrician wants to replace the specified [[n nema_plug | NEMA 5-20R]] receptacles with [[n nema_plug | NEMA 6-20R]] units. The cut sheet cites [[c NEMA WD 6 | NEMA WD 6 | real noise=spacing | NEMA WD6]]. May we proceed?
+response: EOR: The cut sheet also lists [[c NEMA WD 99 | NEMA WD 99 | invented | NEMA WD 99]].
+
+=== W077 | substitution_request | -
+subject: Motor and starter substitution
+question: The supplier offers [[n nema_premium | NEMA Premium]] motors in place of the standard motors, and [[n nema_size | NEMA Size 3]] starters in enclosures made to [[c NEMA 250-2018 | NEMA 250 | real | ANSI/NEMA 250-2018]]. Is that acceptable?
+
+=== W078 | field_condition | -
+subject: Cable tray lower than drawn
+question: The cable tray in [[n room_number | Room 232]] is lower than drawn. The earlier answer in [[n rfi_number | RFI-1547]] assumed the higher tray. The new junction boxes are rated [[n ip_rating | IP65]] and the data sheet cites [[c IEC 60529 | IEC 60529 | real | IEC 60529]]. Does the tray need to move?
+response: EOR: The box list also cites [[c ISA 12.12.01 | ISA 12.12.01 | real out | ANSI/ISA 12.12.01]].
+
+=== W079 | substitution_request | -
+subject: Plate substitution for base plates
+question: The supplier only has [[n astm_grade | A36]] plate in stock. Can it replace the [[c ASTM A572/A572M-21 | ASTM A572/A572M | real | ASTM A572/A572M-21]] plate for the base plates? The anchor kit is part [[n part_number | A123-4567]].
+response: EOR: Not accepted. The plate stays [[c ASTM A572/A572M | ASTM A572/A572M | real | ASTM A572/A572M]].
+
+=== W080 | document_conflict | -
+subject: Test days for the interconnection
+question: [[n bare_rule | Rule 12]] of the contract and the specification disagree on the number of test days. The test plan cites [[c IEEE 1547.1-2020 | IEEE 1547.1 | real | IEEE 1547.1-2020]], and a paper from [[n ieee_transactions | IEEE Transactions]] suggests a different count. Which source governs?
+
+=== W081 | document_conflict | -
+subject: Duct standard year, [[c NEMA TC 2-2020 | NEMA TC 2 | real | NEMA TC 2-2020]] or phase one
+question: The phase one drawings cite [[c NEMA TC 2-2013 | NEMA TC 2 | real | NEMA TC 2-2013]] and the new package cites [[c NEMA TC 2-2020 | NEMA TC 2 | real | NEMA TC 2-2020]] for the same duct. The fitting list adds [[c NEMA TC 14-2021 | NEMA TC 14 | invented | NEMA TC 14-2021]]. Which package governs?
+
+=== W082 | missing_information | -
+subject: Tray load class not given
+question: The tray note cites [[c NEMA VE 1-2017 Clause 5.2 | NEMA VE 1 | real noise=unicode_dash | <s>NEMA VE 1\u20112017</s>, <k>Sec. 5.2</k>]] but gives no load class. Please add it.
+
+=== W083 | standard_applicability | -
+subject: Fence ground detail
+question: The grounding note points to [[c IEEE 80-2013 Table 3 | IEEE 80 | real noise=case | <k>Table 3</k> in <s>ieee 80-2013</s>]]. Does the same table apply to the substation fence?
+
+=== W084 | design_clarification | -
+subject: Detail references
+question: Which detail follows [[c IEEE 1584-2018 Clause 4.1 | IEEE 1584 | real | <k>para 4.1</k> of <s>IEEE 1584-2018</s>]]? The note also reads [[c IEC 60076-3:2013 Figure 2 | IEC 60076-3 | real | <s>IEC 60076-3:2013</s> (<k>Figure 2</k>)]] and [[c ANSI C84.1-2020 Annex B | ANSI C84.1 | real | <s>ANSI C84.1-2020</s> (see <k>Annex B</k>)]].
+
+=== W085 | standard_applicability | -
+subject: Unit nameplate and standard year
+question: The voltage pasted from the calculation sheet shows as \U0001d449 = 69 kV. Does [[c IEEE C57.12.00-2015 | IEEE C57.12.00 | real noise=line_break | IEEE\r\nC57.12.00-2015]] still apply to the unit?
