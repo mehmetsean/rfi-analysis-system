@@ -6,3 +6,4 @@
 - [0004 One span convention for citations](0004-one-span-convention.md)
 - [0005 Only the evaluate module reads labels](0005-only-evaluate-reads-labels.md)
 - [0006 Generated rfis.csv grows in two steps](0006-generator-labels-grow-in-two-steps.md)
+- [0007 Clause binding stops at and or or, and the grammar skips only line breaks](0007-clause-binding-and-list-items.md)
