@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Any
 
 from rfikit import __version__
+from rfikit.analyze import analyze
 from rfikit.cite import extract, extract_rfi
 from rfikit.evaluate import EvalPlan, LabelError, evaluate
 from rfikit.io import (
@@ -21,7 +22,13 @@ from rfikit.io import (
     shown,
 )
 from rfikit.measured import HEAD_LEVELS, summarize
-from rfikit.report import CITATION_HEADER, citation_row, csv_batches, csv_chunk
+from rfikit.report import (
+    CITATION_HEADER,
+    citation_row,
+    csv_batches,
+    csv_chunk,
+    write_analysis,
+)
 from rfikit.synth import GenParams, generate, write_corpus
 from rfikit.synth.files import UnsafeOutput
 from rfikit.types import Rfi
@@ -220,13 +227,39 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def check_analysis_folder(out: Path) -> None:
+    if out.is_symlink():
+        raise InputError(
+            f"{shown(out)}: output is a symbolic link, pick a plain folder"
+        )
+    if out.exists() and not out.is_dir():
+        raise InputError(f"{shown(out)}: output is not a folder, pick a new folder")
+    check_folder(out)
+
+
 def cmd_analyze(args: argparse.Namespace) -> int:
+    path = Path(args.file)
+    if path.suffix.lower() != ".csv":
+        raise InputError(
+            f"{shown(path)}: analyze reads a .csv file, "
+            "save the RFI export as CSV and pass that file"
+        )
+    check_analysis_folder(args.out)
+    names = read_column_map(args.column_map) if args.column_map else None
+    result = analyze(iter_rfis(path, names), args.synthetic)
+    try:
+        args.out.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        raise InputError(
+            f"{shown(args.out)}: folder cannot be written, {WRITE_HINT}"
+        ) from None
+    protected = [path] if args.column_map is None else [path, args.column_map]
+    write_analysis(args.out, result, protected)
     print(
-        "rfikit: the command analyze is not built yet, "
-        "use extract, generate or evaluate",
-        file=sys.stderr,
+        f"Analyzed {result.rfis_read} RFIs, {len(result.citations)} citations, "
+        f"wrote 4 files to {shown(args.out)}"
     )
-    return 1
+    return 0
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -248,8 +281,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--written", type=Path)
     p.add_argument("--json", type=Path)
     p.set_defaults(run=cmd_evaluate)
-    p = sub.add_parser("analyze", help="not built yet")
-    p.add_argument("rest", nargs="*")
+    p = sub.add_parser("analyze", help="write citations and an analysis of an export")
+    p.add_argument("file", type=Path)
+    p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--column-map", type=Path)
+    p.add_argument("--synthetic", action="store_true")
     p.set_defaults(run=cmd_analyze)
     return parser
 
@@ -265,8 +301,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.command is None:
         print(f"rfikit {__version__}")
-        print("Commands: extract, generate, evaluate.")
-        print("The command analyze is not built yet.")
+        print("Commands: extract, generate, evaluate, analyze.")
         return 0
     try:
         code: int = args.run(args)

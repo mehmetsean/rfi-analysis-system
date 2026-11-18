@@ -24,17 +24,7 @@ def test_no_command(capsys: pytest.CaptureFixture[str]) -> None:
     assert main([]) == 0
     out = capsys.readouterr().out
     assert __version__ in out
-    assert "analyze is not built yet" in out
-
-
-def test_analyze_stub(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["analyze", "x"]) == 1
-    captured = capsys.readouterr()
-    assert captured.err == (
-        "rfikit: the command analyze is not built yet, "
-        "use extract, generate or evaluate\n"
-    )
-    assert captured.out == ""
+    assert "Commands: extract, generate, evaluate, analyze." in out
 
 
 def test_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:

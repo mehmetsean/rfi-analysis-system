@@ -12,6 +12,7 @@ from rfikit.io import InputError
 from rfikit.notice import DISCLAIMER, LICENSE_LINE
 from rfikit.report import (
     RATES_TITLE,
+    csv_batches,
     load_measured,
     md_cell,
     rate_rows,
@@ -291,3 +292,9 @@ def test_write_analysis_replaces_own_files(tmp_path: Path) -> None:
     (tmp_path / "analysis.md").write_text("old", encoding="utf-8")
     write_analysis(tmp_path, analyze(ROWS))
     assert "# rfikit analysis" in (tmp_path / "analysis.md").read_text(encoding="utf-8")
+
+
+def test_csv_batches_split_rows(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("rfikit.report.BATCH", 2)
+    chunks = list(csv_batches([["a"], ["b"], ["c"]]))
+    assert chunks == ["a\nb\n", "c\n"]
