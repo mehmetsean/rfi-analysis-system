@@ -1,5 +1,6 @@
 import csv
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -8,7 +9,13 @@ from hypothesis import strategies as st
 
 from rfikit import io as rio
 from rfikit.cite import extract_rfi
-from rfikit.io import InputError, read_column_map, read_rfis, read_text
+from rfikit.io import (
+    InputError,
+    atomic_text,
+    read_column_map,
+    read_rfis,
+    read_text,
+)
 from rfikit.report import csv_text, escape_cell
 from rfikit.types import Rfi
 
@@ -58,7 +65,9 @@ def test_symlink(tmp_path: Path) -> None:
 
 
 def test_missing_and_not_regular(tmp_path: Path) -> None:
-    with pytest.raises(InputError, match="nope.csv: missing or not a regular"):
+    with pytest.raises(
+        InputError, match="nope.csv: file is missing or is not a regular file"
+    ):
         read_rfis(tmp_path / "nope.csv")
     with pytest.raises(InputError, match="not a regular"):
         read_text(tmp_path)
@@ -75,11 +84,34 @@ def test_unreadable(tmp_path: Path) -> None:
 
 
 def test_over_cap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(rio, "MAX_BYTES", 10)
+    monkeypatch.setattr(rio, "MAX_TEXT_BYTES", 10)
     path = write(tmp_path / "a.txt", "x" * 11)
-    with pytest.raises(InputError, match="over the limit of 10 bytes"):
+    with pytest.raises(InputError, match="file is over .* MiB, split it"):
         read_text(path)
     assert read_text(write(tmp_path / "b.txt", "x" * 10)) == "x" * 10
+
+
+def test_csv_cap_is_separate(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(rio, "MAX_BYTES", 30)
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nR1,S,Q\n")
+    with pytest.raises(InputError, match="over .* MiB"):
+        read_rfis(path)
+    assert rio.MAX_TEXT_BYTES == 4 * rio.MIB
+    assert rio.MAX_BYTES != rio.MAX_TEXT_BYTES
+
+
+def test_fifo_is_refused(tmp_path: Path) -> None:
+    fifo = tmp_path / "pipe"
+    os.mkfifo(fifo)
+    with pytest.raises(InputError, match="not a regular file"):
+        read_text(fifo)
+
+
+def test_descriptor_check(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    path = write(tmp_path / "a.txt", "x")
+    monkeypatch.setattr("rfikit.io.os.fstat", lambda fd: os.stat(tmp_path))
+    with pytest.raises(InputError, match="not a regular file"):
+        read_text(path)
 
 
 def test_not_utf8(tmp_path: Path) -> None:
@@ -181,12 +213,156 @@ def test_column_map_errors(tmp_path: Path, body: str, message: str) -> None:
         read_column_map(write(tmp_path / "m.json", body))
 
 
-def test_escape_cell() -> None:
-    for start in "=+-@\t\r":
-        assert escape_cell(start + "x") == "'" + start + "x"
-    assert escape_cell("plain") == "plain"
-    assert escape_cell("") == ""
-    assert csv_text(["a"], [["=1+1"]]) == "a\n'=1+1\n"
+ESCAPED = [
+    "=1",
+    "+1",
+    "-1",
+    "@a",
+    "\t1",
+    "\r1",
+    "\n1",
+    " =1",
+    "\n=1",
+    "\ufeff=1",
+    " \ufeff =1",
+    "\uff1d1",
+    "\uff0b1",
+    "\uff0d1",
+    "\uff20a",
+]
+
+
+@pytest.mark.parametrize("value", ESCAPED)
+def test_escape_cell(value: str) -> None:
+    assert escape_cell(value) == "'" + value
+
+
+@pytest.mark.parametrize("value", ["plain", "", "a=b", "1-2", " x", "\ufeffx"])
+def test_escape_cell_leaves_plain(value: str) -> None:
+    assert escape_cell(value) == value
+
+
+def test_csv_text_escapes_header_and_rows() -> None:
+    assert csv_text(["=a"], [["=1+1"]]) == "'=a\n'=1+1\n"
+
+
+def test_unused_duplicate_column_is_fine(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,x,subject,question,x\nR1,1,S,Q,2\n")
+    assert read_rfis(path) == [Rfi("R1", "S", "Q", "")]
+
+
+def test_all_empty_rows_skipped(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nR1,S,Q\n,,\n,,\n")
+    assert len(read_rfis(path)) == 1
+
+
+def test_two_fields_one_column(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,Body\nR1,Q\n")
+    names = {"subject": "Body", "question": "Body"}
+    with pytest.raises(InputError, match="column 'Body' is used for both"):
+        read_rfis(path, names)
+
+
+def test_mapped_field_lands_on_default_name(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question,response\nR1,S,Q,A\n")
+    with pytest.raises(InputError, match="used for both"):
+        read_rfis(path, {"subject": "response"})
+
+
+def test_long_values_are_clipped(tmp_path: Path) -> None:
+    long = "R" * 100
+    path = write(
+        tmp_path / "a.csv", f"rfi_id,subject,question\n{long},S,Q\n{long},S,Q\n"
+    )
+    with pytest.raises(InputError) as caught:
+        read_rfis(path)
+    assert long not in str(caught.value)
+    assert "R" * 40 + "..." in str(caught.value)
+    with pytest.raises(InputError) as caught:
+        read_column_map(write(tmp_path / "m.json", json.dumps({long: "x"})))
+    assert long not in str(caught.value)
+
+
+def test_csv_field_limit_message(tmp_path: Path) -> None:
+    big = "x" * 140_000
+    path = write(tmp_path / "a.csv", f"rfi_id,subject,question,other\nR1,S,Q,{big}\n")
+    with pytest.raises(InputError, match="a value is over 100000 characters"):
+        read_rfis(path)
+
+
+def test_field_cap_names_the_column(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(rio, "MAX_FIELD", 3)
+    path = write(tmp_path / "a.csv", "No,Title,Body\n1,S,12345\n")
+    names = {"rfi_id": "No", "subject": "Title", "question": "Body"}
+    with pytest.raises(InputError, match="column Body: value is over 3 characters"):
+        read_rfis(path, names)
+
+
+def test_atomic_text_writes_and_replaces(tmp_path: Path) -> None:
+    target = tmp_path / "out.csv"
+    target.write_text("old", encoding="utf-8")
+    with atomic_text(target) as handle:
+        handle.write("new\n")
+    assert target.read_text(encoding="utf-8") == "new\n"
+    assert [p.name for p in tmp_path.iterdir()] == ["out.csv"]
+
+
+def test_atomic_text_failure_keeps_old_file(tmp_path: Path) -> None:
+    target = tmp_path / "out.csv"
+    target.write_text("old", encoding="utf-8")
+    with pytest.raises(InputError, match="boom"), atomic_text(target) as handle:
+        handle.write("half")
+        raise InputError("boom")
+    assert target.read_text(encoding="utf-8") == "old"
+    assert [p.name for p in tmp_path.iterdir()] == ["out.csv"]
+
+
+def test_atomic_text_refusals(tmp_path: Path) -> None:
+    real = write(tmp_path / "real.txt", "x")
+    link = tmp_path / "link.txt"
+    link.symlink_to(real)
+    with pytest.raises(InputError, match="symbolic link"), atomic_text(link):
+        pass
+    with pytest.raises(InputError, match="not a regular file"), atomic_text(tmp_path):
+        pass
+    with (
+        pytest.raises(InputError, match="same file as the input"),
+        atomic_text(real, real),
+    ):
+        pass
+    hard = tmp_path / "hard.txt"
+    os.link(real, hard)
+    with (
+        pytest.raises(InputError, match="same file as the input"),
+        atomic_text(hard, real),
+    ):
+        pass
+    assert real.read_text(encoding="utf-8") == "x"
+
+
+def test_atomic_text_missing_folder(tmp_path: Path) -> None:
+    with (
+        pytest.raises(InputError, match="file cannot be written, check that"),
+        atomic_text(tmp_path / "none" / "o.csv"),
+    ):
+        pass
+
+
+def test_atomic_text_write_error(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    target = tmp_path / "o.csv"
+
+    def fail(src: str, dst: Path) -> None:
+        raise OSError("disk")
+
+    monkeypatch.setattr("rfikit.io.os.replace", fail)
+    with pytest.raises(InputError, match="file cannot be written"):
+        with atomic_text(target) as handle:
+            handle.write("x")
+    assert list(tmp_path.iterdir()) == []
 
 
 PIECES = st.one_of(

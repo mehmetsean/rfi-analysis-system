@@ -1,19 +1,28 @@
 import argparse
 import json
+import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from pathlib import Path
 from typing import Any
 
 from rfikit import __version__
 from rfikit.cite import extract, extract_rfi
 from rfikit.evaluate import EvalPlan, LabelError, evaluate
-from rfikit.io import InputError, read_column_map, read_rfis, read_text
+from rfikit.io import (
+    WRITE_HINT,
+    InputError,
+    atomic_text,
+    iter_rfis,
+    read_column_map,
+    read_text,
+    shown,
+)
 from rfikit.measured import HEAD_LEVELS, summarize
-from rfikit.report import csv_text
+from rfikit.report import csv_chunk
 from rfikit.synth import GenParams, generate, write_corpus
 from rfikit.synth.files import UnsafeOutput
-from rfikit.types import Citation
+from rfikit.types import Citation, Rfi
 
 EXTRACT_HEADER = (
     "rfi_id",
@@ -29,7 +38,9 @@ EXTRACT_HEADER = (
     "inferred",
 )
 MAX_N = 20_000
+BATCH = 1000
 SYNTHETIC_LINE = "Measured on synthetic data."
+OTHER_LINE = "Scored on the labeled folders given."
 
 Json = dict[str, Any]
 
@@ -55,46 +66,112 @@ def _row(rfi_id: str, c: Citation) -> list[str]:
     ]
 
 
-def extract_rows(path: Path, column_map: Path | None) -> list[list[str]]:
-    rows: list[list[str]] = []
+def _batches(rows: Iterable[list[str]]) -> Iterator[str]:
+    batch: list[list[str]] = []
+    for row in rows:
+        batch.append(row)
+        if len(batch) >= BATCH:
+            yield csv_chunk(batch)
+            batch = []
+    if batch:
+        yield csv_chunk(batch)
+
+
+def extract_chunks(path: Path, column_map: Path | None) -> Iterator[str]:
     if path.suffix.lower() == ".csv":
         names = read_column_map(column_map) if column_map else None
-        for rfi in read_rfis(path, names):
-            rows.extend(_row(rfi.rfi_id, c) for c in extract_rfi(rfi))
-    else:
-        rows.extend(_row("", c) for c in extract(read_text(path), "text"))
-    return rows
+        rfis = iter_rfis(path, names)
+        return _chunks(_csv_rows(rfis))
+    text = read_text(path)
+    return _chunks(_row("", c) for c in extract(text, "text"))
 
 
-def write_output(path: Path, text: str) -> None:
-    if path.is_symlink():
-        raise InputError(f"{path.name}: output is a symbolic link, pick another file")
+def _csv_rows(rfis: Iterable[Rfi]) -> Iterator[list[str]]:
+    for rfi in rfis:
+        for c in extract_rfi(rfi):
+            yield _row(rfi.rfi_id, c)
+
+
+def _chunks(rows: Iterable[list[str]]) -> Iterator[str]:
+    yield csv_chunk([list(EXTRACT_HEADER)])
+    yield from _batches(rows)
+
+
+def _quiet_stdout() -> None:
     try:
-        with path.open("w", encoding="utf-8", newline="") as handle:
-            handle.write(text)
-    except OSError:
-        raise InputError(f"{path.name}: file cannot be written") from None
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+    except (OSError, ValueError, AttributeError):
+        pass
 
 
-def cmd_extract(args: argparse.Namespace) -> int:
-    rows = extract_rows(Path(args.file), args.column_map)
-    text = csv_text(EXTRACT_HEADER, rows)
-    if args.out is None:
-        sys.stdout.write(text)
-    else:
-        write_output(args.out, text)
+def stream_stdout(chunks: Iterable[str]) -> int:
+    try:
+        out = sys.stdout.buffer
+        for chunk in chunks:
+            out.write(chunk.encode("utf-8"))
+        out.flush()
+    except BrokenPipeError:
+        _quiet_stdout()
+        return 1
     return 0
 
 
+def cmd_extract(args: argparse.Namespace) -> int:
+    path = Path(args.file)
+    chunks = extract_chunks(path, args.column_map)
+    if args.out is None:
+        return stream_stdout(chunks)
+    with atomic_text(args.out, path) as handle:
+        for chunk in chunks:
+            handle.write(chunk)
+    return 0
+
+
+def read_manifest(folder: Path) -> Json | None:
+    try:
+        data = json.loads(read_text(folder / "manifest.json"))
+    except (InputError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def is_synthetic(folder: Path) -> bool:
+    manifest = read_manifest(folder)
+    return manifest is not None and manifest.get("synthetic") is True
+
+
+def is_corpus(folder: Path) -> bool:
+    manifest = read_manifest(folder)
+    return is_synthetic(folder) and manifest is not None and "generator" in manifest
+
+
+def check_folder(out: Path) -> None:
+    if out.is_symlink() or not out.is_dir():
+        return
+    if any(out.iterdir()) and not is_corpus(out):
+        raise InputError(
+            f"{shown(out)}: folder is not empty and holds no rfikit corpus, "
+            "pick an empty folder"
+        )
+
+
 def cmd_generate(args: argparse.Namespace) -> int:
+    if args.seed < 0:
+        raise InputError("--seed must not be negative")
     if not 1 <= args.n <= MAX_N:
         raise InputError(f"--n must be between 1 and {MAX_N}")
+    check_folder(args.out)
     corpus = generate(args.seed, args.n, GenParams())
     try:
         write_corpus(corpus, args.out)
     except OSError:
-        raise InputError(f"{args.out.name}: folder cannot be written") from None
-    print(f"Wrote {len(corpus.rfis)} synthetic RFIs (seed {args.seed}) to {args.out}")
+        raise InputError(
+            f"{shown(args.out)}: folder cannot be written, {WRITE_HINT}"
+        ) from None
+    print(
+        f"Wrote {len(corpus.rfis)} synthetic RFIs (seed {args.seed}) "
+        f"to {shown(args.out)}"
+    )
     return 0
 
 
@@ -102,10 +179,16 @@ def _fmt(value: float | None) -> str:
     return "n/a" if value is None else f"{value:.3f}"
 
 
-def render_summary(summary: Json) -> str:
+def render_summary(summary: Json, synthetic: bool = True) -> str:
     lines: list[str] = []
     leak = summary["leak"]
     for set_name, block in summary["sets"].items():
+        if block["methods"]["rfikit"]["rfis"] == 0:
+            lines.append(
+                f"Set {set_name}: no RFIs to score (none left after the leak check)"
+            )
+            lines.append("")
+            continue
         lines.append(f"Set {set_name}")
         lines.append(
             f"{'method':<12}{'level':<9}{'precision':>10}{'recall':>8}{'F1':>8}"
@@ -125,21 +208,33 @@ def render_summary(summary: Json) -> str:
                 f"{name} dropped {leak[name]['dropped']} of {leak[name]['rfis']}"
             )
     lines.append("Leak check: " + ", ".join(parts))
-    lines.append(SYNTHETIC_LINE)
+    lines.append(SYNTHETIC_LINE if synthetic else OTHER_LINE)
     return "\n".join(lines) + "\n"
 
 
+def need_folder(path: Path) -> None:
+    if not path.is_dir():
+        raise InputError(f"{shown(path)}: not a folder, check the path")
+
+
 def cmd_evaluate(args: argparse.Namespace) -> int:
+    folders = [args.data]
+    if args.written is not None:
+        folders.append(args.written)
+    for folder in folders:
+        need_folder(folder)
     report = evaluate(args.data, args.written, EvalPlan())
     summary = summarize(report)
-    sys.stdout.write(render_summary(summary))
+    synthetic = all(is_synthetic(folder) for folder in folders)
+    sys.stdout.write(render_summary(summary, synthetic))
     if args.json is not None:
-        write_output(args.json, json.dumps(summary, sort_keys=True, indent=1) + "\n")
+        with atomic_text(args.json) as handle:
+            handle.write(json.dumps(summary, sort_keys=True, indent=1) + "\n")
     return 0
 
 
 def cmd_analyze(args: argparse.Namespace) -> int:
-    print("The command analyze is not built yet.", file=sys.stderr)
+    print("rfikit: the command analyze is not built yet", file=sys.stderr)
     return 1
 
 

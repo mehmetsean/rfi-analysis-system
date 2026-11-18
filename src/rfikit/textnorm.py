@@ -22,3 +22,12 @@ def clean(text: str) -> str:
 def word_at(text: str, pos: int) -> str:
     match = _WORD.match(text, pos)
     return match.group(1).lower() if match else ""
+
+
+MAX_SHOWN = 40
+
+
+def clip(value: str) -> str:
+    if len(value) <= MAX_SHOWN:
+        return value
+    return value[:MAX_SHOWN] + "..."
