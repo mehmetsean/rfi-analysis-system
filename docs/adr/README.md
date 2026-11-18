@@ -10,3 +10,4 @@
 - [0008 Scoring rules for extraction](0008-scoring-rules.md)
 - [0009 Input reader and command line](0009-input-reader-and-cli.md)
 - [0010 The analyze output folder](0010-analyze-output-folder.md)
+- [0011 Benchmark inputs and timing](0011-benchmark-inputs-and-timing.md)
