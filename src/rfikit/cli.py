@@ -237,7 +237,7 @@ LINK_HINT = "replace the link with a real file"
 
 
 def label_hint(message: str) -> str:
-    return LINK_HINT if "symbolic link" in message else LABEL_HINT
+    return LINK_HINT if message.endswith("symbolic links are not read") else LABEL_HINT
 
 
 def run_evaluate(folders: list[Path], written: Path | None) -> Json:

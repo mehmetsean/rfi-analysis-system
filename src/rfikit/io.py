@@ -221,6 +221,13 @@ def _umask() -> int:
     return old
 
 
+def _same(first: Path, second: Path) -> bool:
+    try:
+        return os.path.samefile(first, second)
+    except OSError:
+        return False
+
+
 def check_output(path: Path, protected: Sequence[Path] = ()) -> None:
     name = shown(path)
     if path.is_symlink():
@@ -229,7 +236,7 @@ def check_output(path: Path, protected: Sequence[Path] = ()) -> None:
         if not path.is_file():
             raise InputError(f"{name}: output is not a regular file, pick another file")
         for other in protected:
-            if other.exists() and os.path.samefile(path, other):
+            if other.exists() and _same(path, other):
                 raise InputError(
                     f"{name}: output is the same file as {shown(other)}, "
                     "pick another file"
@@ -242,11 +249,7 @@ def check_outside(path: Path, folders: Sequence[Path]) -> None:
             if not item.exists():
                 continue
             for folder in folders:
-                try:
-                    same = os.path.samefile(item, folder)
-                except OSError:
-                    continue
-                if same:
+                if _same(item, folder):
                     raise InputError(
                         f"{shown(path)}: output is inside the input folder "
                         f"{shown(folder)}, pick a path outside it"

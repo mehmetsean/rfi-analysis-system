@@ -12,6 +12,7 @@ from rfikit.cite import extract_rfi
 from rfikit.io import (
     InputError,
     atomic_text,
+    check_output,
     check_outside,
     read_column_map,
     read_rfis,
@@ -512,3 +513,18 @@ def test_open_flags(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     assert read_text(path) == "x"
     assert seen[0] & os.O_NOFOLLOW
     assert seen[0] & os.O_NONBLOCK
+
+
+def test_samefile_errors_are_skipped(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    folder = tmp_path / "data"
+    folder.mkdir()
+    target = write(tmp_path / "out.json", "x")
+
+    def broken(first: object, second: object) -> bool:
+        raise OSError("gone")
+
+    monkeypatch.setattr("rfikit.io.os.path.samefile", broken)
+    check_outside(folder / "out.json", [folder])
+    check_output(target, [folder / "missing", target])
