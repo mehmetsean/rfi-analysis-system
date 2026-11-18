@@ -1,9 +1,12 @@
 import json
+from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
 
-from rfikit.cli import main
+from rfikit.cli import clean_up, main, make_folders
+from rfikit.io import InputError
+from rfikit.types import Rfi
 
 CSV = (
     "rfi_id,subject,question,response\n"
@@ -230,3 +233,144 @@ def test_analyze_streams_in_batches(
     assert main(["analyze", str(source), "--out", str(out)]) == 0
     lines = (out / "citations.csv").read_text(encoding="utf-8").splitlines()
     assert len(lines) == 5
+
+
+def test_failure_removes_only_what_this_run_made(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    source = write(tmp_path / "rfis.csv", CSV)
+    out = tmp_path / "fresh"
+
+    def fail(
+        folder: Path, rfis: object, synthetic: bool, protected: object, written: object
+    ) -> None:
+        (folder / "other.txt").write_text("not ours", encoding="utf-8")
+        raise InputError("boom, try again")
+
+    monkeypatch.setattr("rfikit.cli.analyze_to", fail)
+    assert main(["analyze", str(source), "--out", str(out)]) == 1
+    assert "boom" in capsys.readouterr().err
+    assert names(out) == ["other.txt"]
+
+
+def test_interrupt_removes_the_fresh_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = write(tmp_path / "rfis.csv", CSV)
+    out = tmp_path / "fresh"
+
+    def interrupted(path: Path, names: object) -> Iterator[Rfi]:
+        yield Rfi("R1", "IEEE 80", "", "")
+        raise KeyboardInterrupt
+
+    monkeypatch.setattr("rfikit.cli.iter_rfis", interrupted)
+    with pytest.raises(KeyboardInterrupt):
+        main(["analyze", str(source), "--out", str(out)])
+    assert not out.exists()
+
+
+def test_bad_row_removes_every_folder_made(tmp_path: Path) -> None:
+    text = "rfi_id,subject,question\nR1,IEEE 80,\nR2,x\n"
+    source = write(tmp_path / "rfis.csv", text)
+    assert main(["analyze", str(source), "--out", str(tmp_path / "a/b/c/d")]) == 1
+    assert not (tmp_path / "a").exists()
+
+
+def test_existing_parents_are_kept(tmp_path: Path) -> None:
+    text = "rfi_id,subject,question\nR1,IEEE 80,\nR2,x\n"
+    source = write(tmp_path / "rfis.csv", text)
+    (tmp_path / "a").mkdir()
+    assert main(["analyze", str(source), "--out", str(tmp_path / "a/b/c")]) == 1
+    assert (tmp_path / "a").is_dir()
+    assert not (tmp_path / "a" / "b").exists()
+
+
+def test_late_failure_removes_written_files_from_empty_folder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = write(tmp_path / "rfis.csv", CSV)
+    out = tmp_path / "empty"
+    out.mkdir()
+
+    def fail(*args: object, **kwargs: object) -> None:
+        raise InputError("late failure, try again")
+
+    monkeypatch.setattr("rfikit.report.write_analysis", fail)
+    assert main(["analyze", str(source), "--out", str(out)]) == 1
+    assert names(out) == []
+
+
+def test_failure_in_the_last_file_removes_all_written(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = write(tmp_path / "rfis.csv", CSV)
+    out = tmp_path / "fresh"
+    monkeypatch.setattr("rfikit.report.render_readme", lambda result: 1 / 0)
+    with pytest.raises(ZeroDivisionError):
+        main(["analyze", str(source), "--out", str(out)])
+    assert not out.exists()
+
+
+def test_folder_made_by_another_process_is_not_ours(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "a" / "b"
+    real = Path.mkdir
+
+    def racing(self: Path, *args: object, **kwargs: object) -> None:
+        if self == out:
+            real(self)
+        real(self)
+
+    monkeypatch.setattr(Path, "mkdir", racing)
+    created = make_folders(out)
+    assert created == [tmp_path / "a"]
+    assert out.is_dir()
+    clean_up([], created)
+    assert out.exists()
+
+
+def test_make_folders_refuses_a_file_made_in_between(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "a" / "b"
+    real = Path.mkdir
+
+    def racing(self: Path, *args: object, **kwargs: object) -> None:
+        if self == out:
+            out.write_text("x", encoding="utf-8")
+        real(self)
+
+    monkeypatch.setattr(Path, "mkdir", racing)
+    with pytest.raises(InputError, match="not a folder"):
+        make_folders(out)
+    assert out.is_file()
+
+
+def test_make_folders_unwritable(tmp_path: Path) -> None:
+    blocker = write(tmp_path / "blocker", "x")
+    with pytest.raises(InputError, match="cannot be written"):
+        make_folders(blocker / "sub" / "deep")
+
+
+def test_clean_up_ignores_missing_paths(tmp_path: Path) -> None:
+    clean_up([tmp_path / "gone.txt"], [tmp_path / "gone"])
+
+
+def test_make_folders_refuses_a_folder_filled_in_between(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    out = tmp_path / "a" / "b"
+    real = Path.mkdir
+
+    def racing(self: Path, *args: object, **kwargs: object) -> None:
+        real(self)
+        if self == out:
+            (out / "x.txt").write_text("x", encoding="utf-8")
+
+    monkeypatch.setattr(Path, "mkdir", racing)
+    with pytest.raises(InputError, match="not empty"):
+        make_folders(out)
+    assert (out / "x.txt").exists()

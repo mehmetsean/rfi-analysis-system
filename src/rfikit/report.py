@@ -144,13 +144,14 @@ CSP = (
 )
 MD_SPECIAL = re.compile(r"([\\|`<>\[\]*_&!~])")
 SCHEME = re.compile(r"\b(https?|ftp):", re.IGNORECASE)
-WWW = re.compile(r"\bwww\.", re.IGNORECASE)
+WWW = re.compile(r"\b(www)\.", re.IGNORECASE)
 HIDDEN = ("Cc", "Cf", "Zl", "Zp")
 BARE_NESC = "NESC"
 BARE_NESC_LABEL = "NESC (no rule given)"
 BARE_NESC_NOTE = (
-    "NESC (no rule given) counts mentions of NESC with no rule, table or section, "
-    "such as an edition alone. It is not a count of one rule."
+    "NESC (no rule given) counts citations to the NESC, also written as ANSI C2 "
+    "or IEEE C2, that give no rule, table or section, such as an edition alone. "
+    "It is not a count of one rule."
 )
 LINE_BREAKS = re.compile(r"[\r\n\x0b\x0c\x85\u2028\u2029]+")
 
@@ -167,7 +168,7 @@ class Section:
 def md_cell(text: str) -> str:
     text = MD_SPECIAL.sub(r"\\\1", LINE_BREAKS.sub(" ", text))
     text = SCHEME.sub(r"\1\\:", text)
-    return WWW.sub(r"www\\.", text)
+    return WWW.sub(r"\1\\.", text)
 
 
 def short_cell(value: str) -> str:
@@ -216,9 +217,9 @@ def build_sections(result: AnalysisResult, doc: Json) -> list[Section]:
             ("RFIs with at least one citation", str(with_cites)),
         ),
     )
+    shown_keys = result.key_counts[:TOP_KEYS]
     top = tuple(
-        (BARE_NESC_LABEL if k == BARE_NESC else k, str(n))
-        for k, n in result.key_counts[:TOP_KEYS]
+        (BARE_NESC_LABEL if k == BARE_NESC else k, str(n)) for k, n in shown_keys
     )
     bodies = tuple((b, str(n)) for b, n in result.body_counts)
     sizes = tuple((str(n), str(m)) for n, m in result.per_rfi)
@@ -233,7 +234,7 @@ def build_sections(result: AnalysisResult, doc: Json) -> list[Section]:
         summary,
         Section(
             f"Top base keys (up to {TOP_KEYS})",
-            BARE_NESC_NOTE if BARE_NESC in dict(result.key_counts) else "",
+            BARE_NESC_NOTE if any(k == BARE_NESC for k, _ in shown_keys) else "",
             ("Base key", "Citations"),
             top,
         ),
@@ -276,8 +277,8 @@ def render_markdown(result: AnalysisResult, doc: Json) -> str:
         if section.note:
             lines += [md_cell(section.note), ""]
         lines += _md_table(section)
-    lines += ["## License", "", md_cell(LICENSE_LINE), ""]
-    lines += ["## Disclaimer", "", md_cell(DISCLAIMER), "", md_cell(OWNERS), ""]
+    lines += ["## License", "", LICENSE_LINE, ""]
+    lines += ["## Disclaimer", "", DISCLAIMER, "", OWNERS, ""]
     return "\n".join(lines)
 
 
@@ -342,12 +343,15 @@ def render_readme(result: AnalysisResult) -> str:
         lines += ["Synthetic data. The input of this analysis is synthetic data.", ""]
     lines += ["rfikit analysis files", "", "Files"]
     lines += [f"- {text}" for text in FILES]
-    lines += ["", "License", LICENSE_LINE, "", "Disclaimer", DISCLAIMER, OWNERS, ""]
+    lines += ["", "License", LICENSE_LINE, "", "Disclaimer", DISCLAIMER, "", OWNERS, ""]
     return "\n".join(lines)
 
 
 def write_analysis(
-    out: Path, result: AnalysisResult, protected: Sequence[Path] = ()
+    out: Path,
+    result: AnalysisResult,
+    protected: Sequence[Path] = (),
+    written: list[Path] | None = None,
 ) -> None:
     doc = load_measured()
     texts = (
@@ -358,6 +362,8 @@ def write_analysis(
     for name, text in texts:
         with atomic_text(out / name, protected) as handle:
             handle.write(text)
+        if written is not None:
+            written.append(out / name)
 
 
 def analyze_to(
@@ -365,6 +371,7 @@ def analyze_to(
     rfis: Iterable[Rfi],
     synthetic: bool = False,
     protected: Sequence[Path] = (),
+    written: list[Path] | None = None,
 ) -> AnalysisResult:
     batch: list[list[str]] = []
     with atomic_text(out / "citations.csv", protected) as handle:
@@ -379,5 +386,7 @@ def analyze_to(
         result = analyze(rfis, synthetic, add)
         if batch:
             handle.write(csv_chunk(batch))
-    write_analysis(out, result, protected)
+    if written is not None:
+        written.append(out / "citations.csv")
+    write_analysis(out, result, protected, written)
     return result

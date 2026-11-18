@@ -245,19 +245,15 @@ def cmd_analyze(args: argparse.Namespace) -> int:
         )
     check_analysis_folder(args.out)
     names = read_column_map(args.column_map) if args.column_map else None
-    fresh = not args.out.exists()
-    try:
-        args.out.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        raise InputError(
-            f"{shown(args.out)}: folder cannot be written, {WRITE_HINT}"
-        ) from None
+    created = make_folders(args.out)
     protected = [path] if args.column_map is None else [path, args.column_map]
+    written: list[Path] = []
     try:
-        result = analyze_to(args.out, iter_rfis(path, names), args.synthetic, protected)
+        result = analyze_to(
+            args.out, iter_rfis(path, names), args.synthetic, protected, written
+        )
     except BaseException:
-        if fresh:
-            _drop_empty(args.out)
+        clean_up(written, created)
         raise
     print(
         f"Analyzed {result.rfis_read} RFIs, {result.citation_total} citations, "
@@ -266,11 +262,47 @@ def cmd_analyze(args: argparse.Namespace) -> int:
     return 0
 
 
-def _drop_empty(folder: Path) -> None:
+def clean_up(written: list[Path], created: list[Path]) -> None:
+    for path in written:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+    for folder in reversed(created):
+        try:
+            folder.rmdir()
+        except OSError:
+            pass
+
+
+def make_folders(out: Path) -> list[Path]:
+    missing: list[Path] = []
+    here = out
+    while not os.path.lexists(here) and here.parent != here:
+        missing.append(here)
+        here = here.parent
+    created: list[Path] = []
+    for folder in reversed(missing):
+        try:
+            folder.mkdir()
+            created.append(folder)
+        except FileExistsError:
+            if folder.is_symlink() or not folder.is_dir():
+                clean_up([], created)
+                raise InputError(
+                    f"{shown(folder)}: output is not a folder, pick a new folder"
+                ) from None
+        except OSError:
+            clean_up([], created)
+            raise InputError(
+                f"{shown(out)}: folder cannot be written, {WRITE_HINT}"
+            ) from None
     try:
-        folder.rmdir()
-    except OSError:
-        pass
+        check_analysis_folder(out)
+    except InputError:
+        clean_up([], created)
+        raise
+    return created
 
 
 def build_parser() -> argparse.ArgumentParser:

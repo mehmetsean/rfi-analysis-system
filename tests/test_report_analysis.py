@@ -9,7 +9,7 @@ from hypothesis import strategies as st
 
 from rfikit.analyze import analyze
 from rfikit.io import InputError
-from rfikit.notice import DISCLAIMER, LICENSE_LINE
+from rfikit.notice import DISCLAIMER, LICENSE_LINE, OWNERS
 from rfikit.report import (
     RATES_TITLE,
     analyze_to,
@@ -132,7 +132,7 @@ def test_no_citations_but_rfis() -> None:
 def test_notice_and_disclaimer_everywhere() -> None:
     result = analyze(ROWS)
     for text in (render_markdown(result, DOC), render_readme(result)):
-        assert md_cell(DISCLAIMER) in text or DISCLAIMER in text
+        assert DISCLAIMER in text
     page = render_html(result, DOC)
     assert html_lib.escape(DISCLAIMER, quote=True) in page
     assert LICENSE_LINE in render_readme(result)
@@ -372,3 +372,41 @@ def test_rate_ignores_booleans() -> None:
     doc = {"full": {"sets": {"A": {"methods": {"rfikit": {"levels": levels}}}}}}
     row = [r for r in rate_rows(doc) if r[:3][2] == "strict span" and r[0] == "rfikit"]
     assert row[0][3:] == ("n/a", "0.500", "n/a")
+
+
+def test_short_cell_line_separators() -> None:
+    assert short_cell("a b") == "a b"
+
+
+def test_plain_cell_unit_separator() -> None:
+    assert plain_cell("a\x1fb") == "a\\x1fb"
+
+
+def test_md_cell_uppercase_www() -> None:
+    assert md_cell("WWW.example.com") == "WWW\\.example.com"
+
+
+def test_nesc_note_text_and_condition(monkeypatch: pytest.MonkeyPatch) -> None:
+    rows = [Rfi("A", "IEEE 80 and 2002 NESC", "IEEE 80", "")]
+    result = analyze(rows)
+    note = (
+        "NESC (no rule given) counts citations to the NESC, also written as ANSI "
+        "C2 or IEEE C2, that give no rule, table or section, such as an edition "
+        "alone. It is not a count of one rule."
+    )
+    assert note in render_markdown(result, DOC)
+    assert note in render_html(result, DOC)
+    monkeypatch.setattr("rfikit.report.TOP_KEYS", 1)
+    assert note not in render_markdown(result, DOC)
+    assert "NESC (no rule given)" not in render_html(result, DOC)
+
+
+def test_markdown_notice_lines_are_not_escaped() -> None:
+    text = render_markdown(analyze(ROWS), DOC)
+    assert LICENSE_LINE in text
+    assert DISCLAIMER in text
+    assert OWNERS in text
+
+
+def test_readme_blank_line_before_owners() -> None:
+    assert f"{DISCLAIMER}\n\n{OWNERS}" in render_readme(analyze(ROWS))
