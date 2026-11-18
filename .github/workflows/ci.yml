@@ -28,6 +28,7 @@ jobs:
       - run: ruff format --check .
       - run: mypy --strict src tests
       - run: pytest --cov=rfikit --cov-report=term-missing --cov-fail-under=90
+      - run: python scripts/build_heldout.py --check
 
   ci:
     name: ci
