@@ -1,6 +1,8 @@
 import json
+import os
 from pathlib import Path
 
+import bench
 import pytest
 from bench import (
     Row,
@@ -8,13 +10,20 @@ from bench import (
     adversarial_text,
     check_quick,
     main,
+    method_work,
     parse_args,
     rates,
     ratio,
     render,
+    seed_label,
+    size_label,
     summarize,
     time_runs,
+    write_file,
+    written_texts,
 )
+
+from rfikit.evaluate import read_inputs
 
 MEASURED = {
     "full": {
@@ -40,6 +49,7 @@ def row(method: str = "naive", name: str = "x", chars: int = 100, hits: int = 3)
 
 def test_summarize_uses_the_median() -> None:
     assert summarize([3.0, 1.0, 2.0]) == Timing(2.0, 1.0, 3.0)
+    assert summarize([1.0, 1.0, 10.0]) == Timing(1.0, 1.0, 10.0)
     assert summarize([4.0, 1.0, 3.0, 2.0]) == Timing(2.5, 1.0, 4.0)
 
 
@@ -62,7 +72,7 @@ def test_time_runs_warms_up_once() -> None:
     assert len(calls) == 4
 
 
-def test_ratio_and_zero() -> None:
+def test_ratio_rejects_zero() -> None:
     assert ratio(2.0, 5.0) == 2.5
     with pytest.raises(ValueError):
         ratio(0.0, 1.0)
@@ -155,3 +165,84 @@ def test_measured_file_has_the_levels() -> None:
     path = Path(__file__).resolve().parent.parent / "src" / "rfikit" / "measured.json"
     doc = json.loads(path.read_text(encoding="utf-8"))
     assert rates(doc, "rfikit", "written")["strict.precision"] is not None
+
+
+def test_check_quick_one_empty_rfikit_row() -> None:
+    rows = [row("naive"), row("prototype"), row("rfikit"), row("rfikit", hits=0)]
+    found = check_quick(rows, 1.0, 5.0)
+    assert found == ["rfikit found no citations"]
+
+
+def test_main_quick_fails_on_a_tight_bound(
+    capsys: pytest.CaptureFixture[str], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(bench, "QUICK_BOUND", 0.0)
+    assert main(["--quick", "--runs", "1"]) == 1
+    assert "ratio" in capsys.readouterr().err
+
+
+def test_quick_bound_catches_a_quadratic_method() -> None:
+    assert bench.QUICK_BOUND < 4.0
+
+
+def test_methods_differ_on_a_text() -> None:
+    text = "per IEEE 1547 and ANSI C84.1 here"
+    naive = method_work("naive", [text])()
+    proto = method_work("prototype", [text])()
+    assert naive == 2
+    assert proto == 2
+    assert method_work("naive", ["per IEEE alone"])() == 1
+    assert method_work("prototype", ["per IEEE alone"])() == 0
+
+
+def test_written_texts_are_three_per_rfi() -> None:
+    texts = written_texts()
+    rows = read_inputs(bench.WRITTEN)
+    assert len(texts) == 3 * len(rows)
+    assert texts[0] == rows[0].subject
+
+
+def test_seeds_and_label() -> None:
+    assert bench.SEEDS == (101, 102, 103)
+    label = seed_label(bench.SEEDS, 600)
+    assert "timed on seeds 101 to 103" in label
+    assert "600 RFIs per seed" in label
+    assert "P and R from seeds 101 to 130" in label
+
+
+def test_size_labels() -> None:
+    assert size_label(1024 * 1024) == "1 MiB"
+    assert size_label(2 * 1024 * 1024) == "2 MiB"
+    assert size_label(128 * 1024) == "128 KiB"
+
+
+def test_render_uses_the_run_count() -> None:
+    assert "median of 3 runs" in render([row()], MEASURED, {}, 1.0, "c", 3)
+
+
+def test_write_file_replaces_atomically(tmp_path: Path) -> None:
+    target = tmp_path / "b.md"
+    assert write_file(target, "one") == ""
+    assert write_file(target, "two") == ""
+    assert target.read_text(encoding="utf-8") == "two"
+    assert [p.name for p in tmp_path.iterdir()] == ["b.md"]
+
+
+def test_write_file_refuses_a_symlink(tmp_path: Path) -> None:
+    real = tmp_path / "real.md"
+    real.write_text("keep", encoding="utf-8")
+    link = tmp_path / "link.md"
+    os.symlink(real, link)
+    assert "symbolic link" in write_file(link, "x")
+    assert real.read_text(encoding="utf-8") == "keep"
+
+
+def test_write_file_refuses_a_folder(tmp_path: Path) -> None:
+    assert "not a regular file" in write_file(tmp_path, "x")
+
+
+def test_main_reports_a_bad_out(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    assert main(["--quick", "--runs", "1", "--out", str(tmp_path)]) == 1
+    assert capsys.readouterr().err.startswith("bench: ")
