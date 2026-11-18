@@ -20,7 +20,7 @@ from rfikit.measured import (
     render,
     summarize,
 )
-from rfikit.synth.files import LICENSE_LINE
+from rfikit.notice import LICENSE_LINE
 
 ROOT = Path(__file__).resolve().parent.parent
 SHIPPED = ROOT / "src" / "rfikit" / "measured.json"

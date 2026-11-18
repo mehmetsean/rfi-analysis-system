@@ -30,6 +30,7 @@ jobs:
       - run: pytest --cov=rfikit --cov-report=term-missing --cov-fail-under=90
       - run: python scripts/build_heldout.py --check
       - run: python scripts/make_measured.py --check
+      - run: python scripts/make_examples.py --check
 
   ci:
     name: ci

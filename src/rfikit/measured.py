@@ -20,7 +20,7 @@ from rfikit.metrics import (
     ratio,
     wilson,
 )
-from rfikit.synth.files import LICENSE_LINE
+from rfikit.notice import LICENSE_LINE
 
 Json = dict[str, Any]
 Interval = tuple[float, float] | None

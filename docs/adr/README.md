@@ -9,3 +9,4 @@
 - [0007 Clause binding stops at and or or, and the grammar skips only line breaks](0007-clause-binding-and-list-items.md)
 - [0008 Scoring rules for extraction](0008-scoring-rules.md)
 - [0009 Input reader and command line](0009-input-reader-and-cli.md)
+- [0010 The analyze output folder](0010-analyze-output-folder.md)

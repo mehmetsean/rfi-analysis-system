@@ -276,7 +276,16 @@ def test_boundary_check_allows_other_imports(tmp_path: Path) -> None:
 
 
 def test_only_allowed_modules_import_evaluate_or_synth() -> None:
-    for name in ("types", "textnorm", "cite", "classify", "group", "io"):
+    for name in (
+        "types",
+        "textnorm",
+        "cite",
+        "classify",
+        "group",
+        "io",
+        "analyze",
+        "notice",
+    ):
         path = SRC / f"{name}.py"
         if path.exists():
             assert blocked_imports(path) == set(), name

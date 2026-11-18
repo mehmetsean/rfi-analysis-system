@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src &#x27;none&#x27;; style-src &#x27;unsafe-inline&#x27;; base-uri &#x27;none&#x27;; form-action &#x27;none&#x27;">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>rfikit analysis</title>
+<style>body{font-family:sans-serif;margin:1rem;line-height:1.4}main{max-width:60rem;margin:0 auto}.scroll{overflow-x:auto}table{border-collapse:collapse}th,td{border:1px solid #767676;padding:0.25rem 0.5rem;text-align:left}th{background:#eeeeee}</style>
+</head>
+<body>
+<main>
+<h1>rfikit analysis</h1>
+<p>The input is synthetic data.</p>
+<h2>Summary</h2>
+<div class="scroll" tabindex="0" role="region" aria-label="Summary">
+<table>
+<thead><tr><th scope="col">Item</th><th scope="col">Count</th></tr></thead>
+<tbody>
+<tr><td>RFIs read</td><td>200</td></tr>
+<tr><td>Citations found</td><td>324</td></tr>
+<tr><td>RFIs with at least one citation</td><td>191</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Top base keys (up to 20)</h2>
+<p>NESC (no rule given) counts citations to the NESC, also written as ANSI C2 or IEEE C2, that give no rule, table or section, such as an edition alone. It is not a count of one rule.</p>
+<div class="scroll" tabindex="0" role="region" aria-label="Top base keys (up to 20)">
+<table>
+<thead><tr><th scope="col">Base key</th><th scope="col">Citations</th></tr></thead>
+<tbody>
+<tr><td>NESC (no rule given)</td><td>64</td></tr>
+<tr><td>NESC Rule 238</td><td>7</td></tr>
+<tr><td>ANSI C84.1</td><td>6</td></tr>
+<tr><td>ASTM A153/A153M</td><td>6</td></tr>
+<tr><td>NESC Rule 250B</td><td>6</td></tr>
+<tr><td>IEC 62271-1</td><td>5</td></tr>
+<tr><td>ANSI C12.1</td><td>4</td></tr>
+<tr><td>ANSI C12.20</td><td>4</td></tr>
+<tr><td>ANSI C63.4</td><td>4</td></tr>
+<tr><td>IEC 61850-8-1</td><td>4</td></tr>
+<tr><td>IEEE 1547.1</td><td>4</td></tr>
+<tr><td>IEEE C57.12.00</td><td>4</td></tr>
+<tr><td>IEEE C57.12.90</td><td>4</td></tr>
+<tr><td>NEMA FB 1</td><td>4</td></tr>
+<tr><td>NEMA MG 1</td><td>4</td></tr>
+<tr><td>NEMA VE 1</td><td>4</td></tr>
+<tr><td>NESC Rule 234B</td><td>4</td></tr>
+<tr><td>ANSI O5.1</td><td>3</td></tr>
+<tr><td>ASTM A123/A123M</td><td>3</td></tr>
+<tr><td>ASTM D257</td><td>3</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Citations per body</h2>
+<div class="scroll" tabindex="0" role="region" aria-label="Citations per body">
+<table>
+<thead><tr><th scope="col">Body</th><th scope="col">Citations</th></tr></thead>
+<tbody>
+<tr><td>NESC</td><td>107</td></tr>
+<tr><td>IEEE</td><td>68</td></tr>
+<tr><td>NEMA</td><td>43</td></tr>
+<tr><td>ASTM</td><td>39</td></tr>
+<tr><td>ANSI</td><td>34</td></tr>
+<tr><td>IEC</td><td>33</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Citations per RFI</h2>
+<p>How many RFIs have each number of citations.</p>
+<div class="scroll" tabindex="0" role="region" aria-label="Citations per RFI">
+<table>
+<thead><tr><th scope="col">Citations</th><th scope="col">RFIs</th></tr></thead>
+<tbody>
+<tr><td>0</td><td>9</td></tr>
+<tr><td>1</td><td>80</td></tr>
+<tr><td>2</td><td>98</td></tr>
+<tr><td>3</td><td>4</td></tr>
+<tr><td>4</td><td>9</td></tr>
+</tbody>
+</table>
+</div>
+<h2>RFIs with the most citations (up to 10)</h2>
+<div class="scroll" tabindex="0" role="region" aria-label="RFIs with the most citations (up to 10)">
+<table>
+<thead><tr><th scope="col">RFI id</th><th scope="col">Citations</th></tr></thead>
+<tbody>
+<tr><td>R0044</td><td>4</td></tr>
+<tr><td>R0047</td><td>4</td></tr>
+<tr><td>R0068</td><td>4</td></tr>
+<tr><td>R0071</td><td>4</td></tr>
+<tr><td>R0075</td><td>4</td></tr>
+<tr><td>R0087</td><td>4</td></tr>
+<tr><td>R0109</td><td>4</td></tr>
+<tr><td>R0141</td><td>4</td></tr>
+<tr><td>R0168</td><td>4</td></tr>
+<tr><td>R0003</td><td>3</td></tr>
+</tbody>
+</table>
+</div>
+<h2>Extraction rates, measured on synthetic data</h2>
+<p>Measured on synthetic data: generated sets A and B from rfikit.synth and the written set in heldout/.</p>
+<div class="scroll" tabindex="0" role="region" aria-label="Extraction rates, measured on synthetic data">
+<table>
+<thead><tr><th scope="col">Method</th><th scope="col">Set</th><th scope="col">Level</th><th scope="col">Precision</th><th scope="col">Recall</th><th scope="col">F1</th></tr></thead>
+<tbody>
+<tr><td>rfikit</td><td>Family A, report seeds</td><td>strict span</td><td>0.995</td><td>0.948</td><td>0.971</td></tr>
+<tr><td>rfikit</td><td>Family A, report seeds</td><td>overlap span</td><td>1.000</td><td>0.952</td><td>0.976</td></tr>
+<tr><td>rfikit</td><td>Family A, report seeds</td><td>full key</td><td>0.995</td><td>0.948</td><td>0.971</td></tr>
+<tr><td>rfikit</td><td>Family A, report seeds</td><td>base key</td><td>0.999</td><td>0.952</td><td>0.975</td></tr>
+<tr><td>rfikit</td><td>Family A, report seeds</td><td>clause</td><td>1.000</td><td>0.968</td><td>0.984</td></tr>
+<tr><td>naive baseline</td><td>Family A, report seeds</td><td>strict span</td><td>0.362</td><td>0.385</td><td>0.373</td></tr>
+<tr><td>naive baseline</td><td>Family A, report seeds</td><td>overlap span</td><td>0.688</td><td>0.732</td><td>0.709</td></tr>
+<tr><td>naive baseline</td><td>Family A, report seeds</td><td>full key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>naive baseline</td><td>Family A, report seeds</td><td>base key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>naive baseline</td><td>Family A, report seeds</td><td>clause</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Family A, report seeds</td><td>strict span</td><td>0.529</td><td>0.289</td><td>0.374</td></tr>
+<tr><td>prototype regexes</td><td>Family A, report seeds</td><td>overlap span</td><td>0.870</td><td>0.475</td><td>0.615</td></tr>
+<tr><td>prototype regexes</td><td>Family A, report seeds</td><td>full key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Family A, report seeds</td><td>base key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Family A, report seeds</td><td>clause</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>rfikit</td><td>Family B, report seeds</td><td>strict span</td><td>0.992</td><td>0.919</td><td>0.954</td></tr>
+<tr><td>rfikit</td><td>Family B, report seeds</td><td>overlap span</td><td>1.000</td><td>0.926</td><td>0.962</td></tr>
+<tr><td>rfikit</td><td>Family B, report seeds</td><td>full key</td><td>0.991</td><td>0.918</td><td>0.953</td></tr>
+<tr><td>rfikit</td><td>Family B, report seeds</td><td>base key</td><td>0.998</td><td>0.925</td><td>0.960</td></tr>
+<tr><td>rfikit</td><td>Family B, report seeds</td><td>clause</td><td>1.000</td><td>0.932</td><td>0.965</td></tr>
+<tr><td>naive baseline</td><td>Family B, report seeds</td><td>strict span</td><td>0.366</td><td>0.502</td><td>0.423</td></tr>
+<tr><td>naive baseline</td><td>Family B, report seeds</td><td>overlap span</td><td>0.682</td><td>0.936</td><td>0.789</td></tr>
+<tr><td>naive baseline</td><td>Family B, report seeds</td><td>full key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>naive baseline</td><td>Family B, report seeds</td><td>base key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>naive baseline</td><td>Family B, report seeds</td><td>clause</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Family B, report seeds</td><td>strict span</td><td>0.481</td><td>0.319</td><td>0.383</td></tr>
+<tr><td>prototype regexes</td><td>Family B, report seeds</td><td>overlap span</td><td>0.880</td><td>0.583</td><td>0.702</td></tr>
+<tr><td>prototype regexes</td><td>Family B, report seeds</td><td>full key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Family B, report seeds</td><td>base key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Family B, report seeds</td><td>clause</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>rfikit</td><td>Written set</td><td>strict span</td><td>0.994</td><td>0.957</td><td>0.975</td></tr>
+<tr><td>rfikit</td><td>Written set</td><td>overlap span</td><td>1.000</td><td>0.962</td><td>0.981</td></tr>
+<tr><td>rfikit</td><td>Written set</td><td>full key</td><td>0.994</td><td>0.957</td><td>0.975</td></tr>
+<tr><td>rfikit</td><td>Written set</td><td>base key</td><td>1.000</td><td>0.962</td><td>0.981</td></tr>
+<tr><td>rfikit</td><td>Written set</td><td>clause</td><td>1.000</td><td>1.000</td><td>1.000</td></tr>
+<tr><td>naive baseline</td><td>Written set</td><td>strict span</td><td>0.585</td><td>0.611</td><td>0.598</td></tr>
+<tr><td>naive baseline</td><td>Written set</td><td>overlap span</td><td>0.834</td><td>0.870</td><td>0.852</td></tr>
+<tr><td>naive baseline</td><td>Written set</td><td>full key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>naive baseline</td><td>Written set</td><td>base key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>naive baseline</td><td>Written set</td><td>clause</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Written set</td><td>strict span</td><td>0.553</td><td>0.395</td><td>0.461</td></tr>
+<tr><td>prototype regexes</td><td>Written set</td><td>overlap span</td><td>0.955</td><td>0.681</td><td>0.795</td></tr>
+<tr><td>prototype regexes</td><td>Written set</td><td>full key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Written set</td><td>base key</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+<tr><td>prototype regexes</td><td>Written set</td><td>clause</td><td>n/a</td><td>n/a</td><td>n/a</td></tr>
+</tbody>
+</table>
+</div>
+<h2>License</h2>
+<p>All rights reserved. You may view the code and run it to evaluate it. Commercial use needs a paid license from Mehmet Tuzunkan: https://www.linkedin.com/in/mstuzunkan</p>
+<h2>Disclaimer</h2>
+<p>Decision support only, not legal, engineering, tax, accounting or assurance advice. No guarantee of compliance. rfikit does not say whether a standard applies or what it requires; check every citation against the official standard. False positives and misses are expected; the measured rates are shown.</p>
+<p>Body names such as IEEE, NESC, IEC, ANSI, ASTM, NEMA, NFPA, UL, ASME, ISA, TIA, CSA and EN are used only to identify their documents. The names belong to their owners. This project has no affiliation with or endorsement from any of them.</p>
+</main>
+</body>
+</html>

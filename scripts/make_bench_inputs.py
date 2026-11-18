@@ -1,4 +1,4 @@
-"""Write the two worst-case input files used for the memory numbers in ADR 9.
+"""Write the two worst-case input files used for the extract memory numbers in ADR 9.
 
 python scripts/make_bench_inputs.py OUTDIR [--text-bytes N] [--csv-bytes N]
 """

@@ -21,62 +21,22 @@ from rfikit.io import (
     shown,
 )
 from rfikit.measured import HEAD_LEVELS, summarize
-from rfikit.report import csv_chunk
+from rfikit.report import (
+    CITATION_HEADER,
+    analyze_to,
+    citation_row,
+    csv_batches,
+    csv_chunk,
+)
 from rfikit.synth import GenParams, generate, write_corpus
 from rfikit.synth.files import UnsafeOutput
-from rfikit.types import Citation, Rfi
+from rfikit.types import Rfi
 
-EXTRACT_HEADER = (
-    "rfi_id",
-    "column",
-    "start",
-    "end",
-    "text",
-    "key",
-    "base_key",
-    "body",
-    "clause_start",
-    "clause_end",
-    "inferred",
-)
 MAX_N = 20_000
-BATCH = 1000
 SYNTHETIC_LINE = "Measured on synthetic data."
 OTHER_LINE = "Scored on the labeled folders given."
 
 Json = dict[str, Any]
-
-
-def _number(value: int | None) -> str:
-    return "" if value is None else str(value)
-
-
-def _row(rfi_id: str, c: Citation) -> list[str]:
-    d = c.designation
-    return [
-        rfi_id,
-        c.column,
-        str(c.start),
-        str(c.end),
-        c.text,
-        d.key(),
-        d.base_key(),
-        d.body,
-        _number(c.clause_start),
-        _number(c.clause_end),
-        "1" if c.inferred else "0",
-    ]
-
-
-def _batches(rows: Iterable[list[str]]) -> Iterator[str]:
-    batch: list[list[str]] = []
-    for row in rows:
-        batch.append(row)
-        if len(batch) >= BATCH:
-            yield csv_chunk(batch)
-            batch = []
-    if batch:
-        yield csv_chunk(batch)
 
 
 def extract_chunks(path: Path, column_map: Path | None) -> Iterator[str]:
@@ -89,18 +49,18 @@ def extract_chunks(path: Path, column_map: Path | None) -> Iterator[str]:
         rfis = iter_rfis(path, names)
         return _chunks(_csv_rows(rfis))
     text = read_text(path)
-    return _chunks(_row("", c) for c in extract(text, "text"))
+    return _chunks(citation_row("", c) for c in extract(text, "text"))
 
 
 def _csv_rows(rfis: Iterable[Rfi]) -> Iterator[list[str]]:
     for rfi in rfis:
         for c in extract_rfi(rfi):
-            yield _row(rfi.rfi_id, c)
+            yield citation_row(rfi.rfi_id, c)
 
 
 def _chunks(rows: Iterable[list[str]]) -> Iterator[str]:
-    yield csv_chunk([list(EXTRACT_HEADER)])
-    yield from _batches(rows)
+    yield csv_chunk([list(CITATION_HEADER)])
+    yield from csv_batches(rows)
 
 
 def _quiet_stdout() -> None:
@@ -266,13 +226,83 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     return 0
 
 
+def check_analysis_folder(out: Path) -> None:
+    if out.is_symlink():
+        raise InputError(
+            f"{shown(out)}: output is a symbolic link, pick a plain folder"
+        )
+    if out.exists() and not out.is_dir():
+        raise InputError(f"{shown(out)}: output is not a folder, pick a new folder")
+    check_folder(out)
+
+
 def cmd_analyze(args: argparse.Namespace) -> int:
+    path = Path(args.file)
+    if path.suffix.lower() != ".csv":
+        raise InputError(
+            f"{shown(path)}: analyze reads a .csv file, "
+            "save the RFI export as CSV and pass that file"
+        )
+    check_analysis_folder(args.out)
+    names = read_column_map(args.column_map) if args.column_map else None
+    created = make_folders(args.out)
+    protected = [path] if args.column_map is None else [path, args.column_map]
+    written: list[Path] = []
+    try:
+        result = analyze_to(
+            args.out, iter_rfis(path, names), args.synthetic, protected, written
+        )
+    except BaseException:
+        clean_up(written, created)
+        raise
     print(
-        "rfikit: the command analyze is not built yet, "
-        "use extract, generate or evaluate",
-        file=sys.stderr,
+        f"Analyzed {result.rfis_read} RFIs, {result.citation_total} citations, "
+        f"wrote 4 files to {shown(args.out)}"
     )
-    return 1
+    return 0
+
+
+def clean_up(written: list[Path], created: list[Path]) -> None:
+    for path in written:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+    for folder in reversed(created):
+        try:
+            folder.rmdir()
+        except OSError:
+            pass
+
+
+def make_folders(out: Path) -> list[Path]:
+    missing: list[Path] = []
+    here = out
+    while not os.path.lexists(here) and here.parent != here:
+        missing.append(here)
+        here = here.parent
+    created: list[Path] = []
+    for folder in reversed(missing):
+        try:
+            folder.mkdir()
+            created.append(folder)
+        except FileExistsError:
+            if folder.is_symlink() or not folder.is_dir():
+                clean_up([], created)
+                raise InputError(
+                    f"{shown(folder)}: output is not a folder, pick a new folder"
+                ) from None
+        except OSError:
+            clean_up([], created)
+            raise InputError(
+                f"{shown(out)}: folder cannot be written, {WRITE_HINT}"
+            ) from None
+    try:
+        check_analysis_folder(out)
+    except InputError:
+        clean_up([], created)
+        raise
+    return created
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -294,8 +324,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--written", type=Path)
     p.add_argument("--json", type=Path)
     p.set_defaults(run=cmd_evaluate)
-    p = sub.add_parser("analyze", help="not built yet")
-    p.add_argument("rest", nargs="*")
+    p = sub.add_parser("analyze", help="write citations and an analysis of an export")
+    p.add_argument("file", type=Path)
+    p.add_argument("--out", type=Path, required=True)
+    p.add_argument("--column-map", type=Path)
+    p.add_argument("--synthetic", action="store_true")
     p.set_defaults(run=cmd_analyze)
     return parser
 
@@ -311,8 +344,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         return 0
     if args.command is None:
         print(f"rfikit {__version__}")
-        print("Commands: extract, generate, evaluate.")
-        print("The command analyze is not built yet.")
+        print("Commands: extract, generate, evaluate, analyze.")
         return 0
     try:
         code: int = args.run(args)
