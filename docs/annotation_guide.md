@@ -1,8 +1,8 @@
 # Annotation guide for the written held-out set
 
-This guide is the rulebook for labeling the RFIs in heldout/. One annotator follows it. The same layout of label files is used by the generator, so the rules below also describe what generated labels mean.
+This guide is the rulebook for labeling the RFIs in heldout/. One annotator follows it. A later synthetic data generator is planned to write labels in this same layout. Until it exists, these rules describe only the written set.
 
-All data is synthetic. Only designations and clause numbers appear, never titles or standard text (see ADR 0003).
+This is synthetic data, written by hand. Only designations and clause numbers appear, never titles or standard text (see ADR 0003).
 
 ## Files and columns
 
@@ -16,7 +16,7 @@ All data is synthetic. Only designations and clause numbers appear, never titles
 
 ## What is a citation
 
-A citation is a written reference to a document of one of six bodies: IEEE, NESC, IEC, ANSI, ASTM, NEMA. Label it when a reader could look the document up from the text alone. A body name alone ("the NESC edition") is a citation of the body with no number. A number with no body is not a citation, except a list continuation or a bare NESC rule or table (below).
+A citation is a written reference to a document of one of six bodies: IEEE, NESC, IEC, ANSI, ASTM, NEMA. Label it when a reader could look the document up from the text alone. Only the NESC has a key form for the body name alone ("the NESC edition" is a citation with key "NESC"). The name of any other body alone is not a citation. A number with no body is not a citation, except a list continuation or a bare NESC rule or table (below).
 
 ## Span convention (ADR 0004)
 
@@ -27,14 +27,14 @@ A citation is a written reference to a document of one of six bodies: IEEE, NESC
 - "IEEE Std" is part of the body token: the span of "IEEE Std 80-2013" starts at "IEEE".
 - A clause has its own clause_start and clause_end. The clause range covers the keyword and the id ("Rule 232B1", "Section 5.3"). A clause never counts in the span.
 - An inferred bare NESC rule or table has no designation text, so its clause offsets are its span.
-- A line break or spaces inside a designation are inside the span.
+- A line break (\n or \r\n) or spaces inside a designation are inside the span.
 - The span never starts or ends with a space.
 
 Example: in "2017 NESC Rule 232B1" the span is "2017 NESC", the clause is "Rule 232B1", the key is "NESC 2017 Rule 232B1" and the base key is "NESC Rule 232B1".
 
 ## Keys
 
-Keys are written by hand exactly as rfikit.types.Designation.key() and base_key() would print them. They never include co-bodies, and they are the same for every written style of one document.
+Keys are written by hand in the style that rfikit.types.Designation.key() and base_key() print. No parser produced them. tests/test_heldout_set.py checks that each key agrees with the labeled text (test_key_matches_slice), that each base key follows the stated rule (test_base_key_rule) and that clause keywords match (test_clause_matches_key). Keys never include co-bodies.
 
 | Body | Key | Base key |
 |---|---|---|
@@ -84,8 +84,9 @@ The span of a joint form covers the whole joint token, from the first body chara
 
 ## The inferred flag
 
-inferred is 1 for:
+inferred is 1 for the two cases below and 0 otherwise.
 - A list continuation item. In "IEEE C57.12.00, C57.12.90 and C57.91" the second and third items inherit the body when their number fits the body's form. The noise_class of such an item is list_continuation.
+- A number followed by a unit (kVA, kV, A, ft and so on) is never a list continuation item. In "IEEE 1547, 2500 kVA and 34.5 kV" only IEEE 1547 is a citation, and "2500 kVA" is a negative of kind kva_rating.
 - A bare NESC Rule or Table when NESC is cited elsewhere in the same RFI (subject, question or response count as one RFI). It takes its clause offsets as its span. Its noise_class is empty and its key has no edition.
 
 A bare "Rule 232" or "Table 232-1" in an RFI that never cites NESC is not a citation. Label it as a negative of kind bare_nesc_no_context.
@@ -129,7 +130,7 @@ Each in-scope citation has at most one noise class. When more than one applies, 
 
 1. misspelled: the body is misspelled ("IEE 1547", "ASMT A36") or a letter O is written for zero. The label stays in scope with the key of the intended document. For v0.1 these are expected misses.
 2. list_continuation: an inferred list item.
-3. line_break: a line break inside the designation, between body and number or after "." or "-" inside a number.
+3. line_break: a line break (\n or \r\n) inside the designation, between body and number or after "." or "-" inside a number.
 4. unicode_dash: a Unicode dash in place of a hyphen. The set uses only U+2010, U+2011, U+2012 and U+2212. The characters U+2013 and U+2014 are never used in this repository, so they are not part of this noise class.
 5. spacing: missing or extra spaces ("IEC60076-1", "ASTM A 123", two spaces) and no-break spaces (U+00A0, U+202F).
 6. case: the body or the letters of the number are not in the usual case ("ieee 1547", "Nema MG 1").
@@ -145,24 +146,16 @@ For this set the catalog value describes the document, not the edition.
 
 ## Issue types
 
-One type per RFI, chosen from the subject and question (a response never decides it). If two types fit, use the tie-break.
+One type per RFI, chosen from the subject and question (a response never decides it). Apply the rules in this order and stop at the first that fits. Each RFI has exactly one answer.
 
-| Type | One-line definition |
-|---|---|
-| design_clarification | Asks what the design intends or which of several designed options to follow. |
-| missing_information | Says that a needed item (edition, part, rating, list) is absent and asks for it. |
-| document_conflict | Says that two project documents disagree and asks which governs. |
-| substitution_request | Asks approval to replace a specified item or reference with another. |
-| field_condition | Reports a condition found on site that differs from the documents and asks what to do. |
-| standard_applicability | Asks whether, or in which edition, a standard applies to something. |
+1. substitution_request: the RFI asks approval to replace a specified item or reference with another.
+2. field_condition: the RFI reports a condition found on site that differs from the documents.
+3. document_conflict: the RFI says that two project documents or sources disagree and asks which governs.
+4. missing_information: the RFI says that a needed item (edition, part, number, rating, clause, list) is absent and asks for it. This holds even when the RFI words the request as "which" or "should X apply".
+5. standard_applicability: the RFI asks whether a standard applies to something, or which edition of one standard applies, and says nothing is absent or in conflict.
+6. design_clarification: anything else, for example a choice between options or between different standards, or the meaning of a design note.
 
-Tie-breaks, first match wins:
-1. The RFI asks approval to replace something: substitution_request.
-2. The RFI reports a site condition: field_condition.
-3. The RFI says two documents disagree: document_conflict.
-4. The RFI asks whether or which edition of a standard applies: standard_applicability.
-5. The RFI says something is absent: missing_information.
-6. Anything else: design_clarification.
+Two documents that cite different editions are a conflict (rule 3). One document that cites a standard with no edition is missing information (rule 4). A question about which of two named standards to follow is design_clarification.
 
 ## Recurring groups
 
