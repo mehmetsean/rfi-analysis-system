@@ -55,10 +55,11 @@ def check_key_matches_slice(c: GoldCitation, piece: str) -> bool:
                 or (c.noise_class == "misspelled")
             ), c
         return False
-    if c.noise_class == "misspelled":
-        return False
     rest = norm(piece)
     core = norm(key_core(c.key))
+    if c.noise_class == "misspelled":
+        assert rest.replace("O", "0").endswith(core.replace("O", "0")), (c, piece)
+        return False
     assert rest.endswith(core), (c, piece)
     prefix = rest[: len(rest) - len(core)]
     assert PREFIX.fullmatch(prefix), (c, piece)
