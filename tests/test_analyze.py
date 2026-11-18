@@ -1,3 +1,6 @@
+import subprocess
+import sys
+
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -85,3 +88,14 @@ def test_totals_agree(texts: list[str]) -> None:
     assert sum(n for _, n in result.key_counts) == total
     assert sum(n * m for n, m in result.per_rfi) == total
     assert sum(m for _, m in result.per_rfi) == len(rows)
+
+
+def test_analyze_does_not_import_synth_or_evaluate() -> None:
+    code = (
+        "import sys, rfikit.analyze\n"
+        "bad = [m for m in sys.modules if m.startswith(('rfikit.synth',"
+        " 'rfikit.evaluate'))]\n"
+        "sys.exit(1 if bad else 0)\n"
+    )
+    done = subprocess.run([sys.executable, "-c", code], check=False)
+    assert done.returncode == 0
