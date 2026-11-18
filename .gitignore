@@ -28,3 +28,4 @@ _site/
 !examples/*.csv
 !heldout/input/rfis.csv
 !heldout/labels/*.csv
+.hypothesis/
