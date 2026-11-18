@@ -104,6 +104,16 @@ def test_pairs_name_one_document_with_two_editions() -> None:
         assert a.key() != b.key()
 
 
+def test_pairs_end_when_every_number_is_invented() -> None:
+    params = GenParams(invented_rate=1.0)
+    for seed in range(100):
+        first, second = cites.make_pair(Rng(seed), params)
+        a = first.rendered.designation
+        b = second.rendered.designation
+        assert a.base_key() == b.base_key()
+        assert a.key() != b.key()
+
+
 def test_lists_inherit_the_body() -> None:
     params = GenParams()
     for seed in range(100):
