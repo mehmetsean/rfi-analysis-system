@@ -21,62 +21,16 @@ from rfikit.io import (
     shown,
 )
 from rfikit.measured import HEAD_LEVELS, summarize
-from rfikit.report import csv_chunk
+from rfikit.report import CITATION_HEADER, citation_row, csv_batches, csv_chunk
 from rfikit.synth import GenParams, generate, write_corpus
 from rfikit.synth.files import UnsafeOutput
-from rfikit.types import Citation, Rfi
+from rfikit.types import Rfi
 
-EXTRACT_HEADER = (
-    "rfi_id",
-    "column",
-    "start",
-    "end",
-    "text",
-    "key",
-    "base_key",
-    "body",
-    "clause_start",
-    "clause_end",
-    "inferred",
-)
 MAX_N = 20_000
-BATCH = 1000
 SYNTHETIC_LINE = "Measured on synthetic data."
 OTHER_LINE = "Scored on the labeled folders given."
 
 Json = dict[str, Any]
-
-
-def _number(value: int | None) -> str:
-    return "" if value is None else str(value)
-
-
-def _row(rfi_id: str, c: Citation) -> list[str]:
-    d = c.designation
-    return [
-        rfi_id,
-        c.column,
-        str(c.start),
-        str(c.end),
-        c.text,
-        d.key(),
-        d.base_key(),
-        d.body,
-        _number(c.clause_start),
-        _number(c.clause_end),
-        "1" if c.inferred else "0",
-    ]
-
-
-def _batches(rows: Iterable[list[str]]) -> Iterator[str]:
-    batch: list[list[str]] = []
-    for row in rows:
-        batch.append(row)
-        if len(batch) >= BATCH:
-            yield csv_chunk(batch)
-            batch = []
-    if batch:
-        yield csv_chunk(batch)
 
 
 def extract_chunks(path: Path, column_map: Path | None) -> Iterator[str]:
@@ -89,18 +43,18 @@ def extract_chunks(path: Path, column_map: Path | None) -> Iterator[str]:
         rfis = iter_rfis(path, names)
         return _chunks(_csv_rows(rfis))
     text = read_text(path)
-    return _chunks(_row("", c) for c in extract(text, "text"))
+    return _chunks(citation_row("", c) for c in extract(text, "text"))
 
 
 def _csv_rows(rfis: Iterable[Rfi]) -> Iterator[list[str]]:
     for rfi in rfis:
         for c in extract_rfi(rfi):
-            yield _row(rfi.rfi_id, c)
+            yield citation_row(rfi.rfi_id, c)
 
 
 def _chunks(rows: Iterable[list[str]]) -> Iterator[str]:
-    yield csv_chunk([list(EXTRACT_HEADER)])
-    yield from _batches(rows)
+    yield csv_chunk([list(CITATION_HEADER)])
+    yield from csv_batches(rows)
 
 
 def _quiet_stdout() -> None:

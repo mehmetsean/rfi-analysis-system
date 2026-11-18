@@ -10,9 +10,10 @@ import pytest
 from prototype_baseline import naive_spans, prototype_spans
 
 from rfikit import __version__, cli
-from rfikit.cli import EXTRACT_HEADER, MAX_N, main, render_summary
+from rfikit.cli import MAX_N, main, render_summary
 from rfikit.evaluate import EvalPlan, evaluate_seeds
 from rfikit.measured import summarize
+from rfikit.report import CITATION_HEADER
 from rfikit.synth import generate, render_files
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -56,7 +57,7 @@ def test_extract_text(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> Non
     path.write_text("See IEEE Std 1584-2018 for this.", encoding="utf-8")
     assert main(["extract", str(path)]) == 0
     lines = capsys.readouterr().out.splitlines()
-    assert lines[0] == ",".join(EXTRACT_HEADER)
+    assert lines[0] == ",".join(CITATION_HEADER)
     assert lines[1].startswith(",text,4,")
     assert "IEEE 1584-2018" in lines[1]
     assert len(lines) == 2
@@ -219,7 +220,7 @@ def test_extract_clause_and_inferred(
     path.write_text("IEEE C57.12.00, C57.12.90 clause 5.3", encoding="utf-8")
     assert main(["extract", str(path)]) == 0
     rows = parse(capsys.readouterr().out)
-    assert rows[0] == list(EXTRACT_HEADER)
+    assert rows[0] == list(CITATION_HEADER)
     assert rows[1:] == [
         ["", "text", "0", "14", "IEEE C57.12.00", "IEEE C57.12.00"]
         + ["IEEE C57.12.00", "IEEE", "", "", "0"],

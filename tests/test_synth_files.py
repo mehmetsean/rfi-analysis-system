@@ -13,11 +13,12 @@ from rfikit.evaluate import (
     read_negatives,
     read_rfi_labels,
 )
+from rfikit.notice import OWNERS
 from rfikit.synth import Corpus, GenParams, generate, render_files, write_corpus
 from rfikit.synth.files import CITATION_HEADER as OUT_CITATION_HEADER
 from rfikit.synth.files import NEGATIVE_HEADER as OUT_NEGATIVE_HEADER
-from rfikit.synth.files import OWNERS, ROOT_README, UnsafeOutput, sha256
 from rfikit.synth.files import RFI_HEADER as OUT_RFI_HEADER
+from rfikit.synth.files import ROOT_README, UnsafeOutput, sha256
 from synth_helpers import BOM, EM_DASH, EN_DASH, NBSP, column_text, to_gold
 
 
