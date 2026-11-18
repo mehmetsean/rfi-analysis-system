@@ -157,7 +157,8 @@ def _fits(body: str, m: Match[str]) -> bool:
     if body in ("ANSI", "ASTM"):
         return _group(m, "sp") == ""
     if body == "NEMA":
-        return bool(_group(m, "let"))
+        letters = _group(m, "let")
+        return bool(letters) and letters.upper() not in OUT
     return True
 
 

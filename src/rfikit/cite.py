@@ -21,6 +21,7 @@ _CONNECTOR = re.compile(
     r"[ \t\r\n]{1,4}(?:of|in)[ \t\r\n]{1,4}(?:the[ \t\r\n]{1,4})?",
     re.IGNORECASE | re.ASCII,
 )
+_JOINER = re.compile(r"\b(?:and|or)\b", re.IGNORECASE | re.ASCII)
 _NESC_RULE = re.compile(r"\d{3}(?:[A-Za-z]\d?[a-z]?)?\Z")
 _NESC_TABLE = re.compile(r"\d{3}-\d{1,2}\Z")
 _WORDS = {
@@ -99,19 +100,24 @@ def _clause_key(body: str, clause: _Clause) -> str:
     return word + " " + clause.ident
 
 
-def _bind(norm: str, hits: list[_Hit], clauses: list[_Clause]) -> dict[int, int]:
+def _bind(
+    norm: str, hits: list[_Hit], clauses: list[_Clause], forward: set[int]
+) -> dict[int, int]:
     starts = [h.start for h in hits]
     ends = [h.end for h in hits]
     bound: dict[int, int] = {}
     for ci, clause in enumerate(clauses):
         link = _CONNECTOR.match(norm, clause.end)
         if link:
+            forward.add(ci)
             j = bisect_left(starts, link.end())
             if j < len(hits) and starts[j] == link.end() and j not in bound:
                 bound[j] = ci
             continue
         k = bisect_right(ends, clause.start) - 1
-        if k >= 0 and clause.start - ends[k] <= REACH and k not in bound:
+        if k < 0 or k in bound or clause.start - ends[k] > REACH:
+            continue
+        if _JOINER.search(norm, ends[k], clause.start) is None:
             bound[k] = ci
     return bound
 
@@ -128,8 +134,9 @@ def _finish(
     text: str, norm: str, column: str, hits: list[_Hit], nesc: bool
 ) -> list[Citation]:
     clauses = _clauses(norm, hits)
-    bound = _bind(norm, hits, clauses)
-    taken = set(bound.values())
+    forward: set[int] = set()
+    bound = _bind(norm, hits, clauses, forward)
+    taken = set(bound.values()) | forward
     found: list[Citation] = []
     for i, hit in enumerate(hits):
         design = hit.designation

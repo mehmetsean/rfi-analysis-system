@@ -453,3 +453,26 @@ def test_extract_orders_by_start() -> None:
     text = "Rule 232B1 of the NESC and IEEE 80 and Table 232-1"
     starts = [c.start for c in extract(text)]
     assert starts == sorted(starts)
+
+
+def test_and_or_between_starts_a_new_item() -> None:
+    text = "The list has NESC and Rule 232B2 next."
+    cites = extract(text)
+    assert [c.designation.key() for c in cites] == ["NESC", "NESC Rule 232B2"]
+    assert [c.inferred for c in cites] == [False, True]
+    assert keys("IEEE 80 or Table 3 here") == ["IEEE 80"]
+
+
+def test_out_of_scope_body_is_not_a_nema_list_item() -> None:
+    assert keys("NEMA MG 1 and UL 489") == ["NEMA MG 1"]
+    assert keys("NEMA MG 1, EN 50160") == ["NEMA MG 1"]
+
+
+def test_clause_of_something_else_is_not_bare_nesc() -> None:
+    text = "The NESC governs." + FAR + "Rule 232B1 of the design."
+    assert keys(text) == ["NESC"]
+
+
+def test_misspelled_neighbor_can_take_a_clause() -> None:
+    text = "IEEE 80-2013 with IEE 81, Table 7"
+    assert keys(text) == ["IEEE 80-2013 Table 7"]
