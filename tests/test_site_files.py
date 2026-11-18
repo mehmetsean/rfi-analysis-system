@@ -30,9 +30,9 @@ def test_footer_has_the_exact_notices(page: str) -> None:
 def test_page_has_the_exact_csp_and_no_inline_code(page: str) -> None:
     html = (SITE / page).read_text("utf-8")
     assert f'content="{CSP}"' in html
-    for tag in re.findall(r"<script[^>]*>", html):
+    for tag in re.findall(r"<script[^>]*>", html, re.IGNORECASE):
         assert "src=" in tag
-    assert "<style" not in html
+    assert "<style" not in html.lower()
     assert not re.search(r"\sstyle=|\son[a-z]+=", html)
 
 

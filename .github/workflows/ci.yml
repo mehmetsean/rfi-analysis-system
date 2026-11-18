@@ -50,7 +50,7 @@ jobs:
       - run: |
           python -m http.server 8000 --bind 127.0.0.1 --directory _site &
           curl --silent --fail --retry 10 --retry-connrefused --retry-delay 1 http://127.0.0.1:8000/ > /dev/null
-          pytest tests_browser --no-cov
+          pytest tests_browser
         env:
           RFIKIT_DEMO_URL: http://127.0.0.1:8000/
 

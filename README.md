@@ -20,7 +20,7 @@ python -m http.server 8000 --bind 127.0.0.1 --directory _site
 In a second terminal:
 
 ```
-RFIKIT_DEMO_URL=http://127.0.0.1:8000/ pytest tests_browser --no-cov
+RFIKIT_DEMO_URL=http://127.0.0.1:8000/ pytest tests_browser
 ```
 
 The build downloads the Pyodide core archive (about 13 MB) once and checks it against pinned hashes. Details are in [ADR 12](docs/adr/0012-in-browser-demo.md).
