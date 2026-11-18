@@ -99,7 +99,7 @@ def read_column_map(path: Path) -> dict[str, str]:
         if key not in FIELDS:
             raise InputError(
                 f"{name}: unknown key {clip(str(key))}, "
-                f"allowed keys: {', '.join(FIELDS)}"
+                f"remove it or use only these keys: {', '.join(FIELDS)}"
             )
         if not isinstance(value, str) or value == "":
             raise InputError(
@@ -237,13 +237,16 @@ def check_output(path: Path, protected: Sequence[Path] = ()) -> None:
 
 
 def check_outside(path: Path, folders: Sequence[Path]) -> None:
-    target = Path(os.path.realpath(path))
-    for folder in folders:
-        if target.is_relative_to(Path(os.path.realpath(folder))):
-            raise InputError(
-                f"{shown(path)}: output is inside the input folder {shown(folder)}, "
-                "pick a path outside it"
-            )
+    for start in (Path(os.path.abspath(path)), Path(os.path.realpath(path))):
+        for item in [start, *start.parents]:
+            if not item.exists():
+                continue
+            for folder in folders:
+                if os.path.samefile(item, folder):
+                    raise InputError(
+                        f"{shown(path)}: output is inside the input folder "
+                        f"{shown(folder)}, pick a path outside it"
+                    )
 
 
 @contextmanager

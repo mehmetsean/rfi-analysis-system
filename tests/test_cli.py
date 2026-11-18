@@ -364,30 +364,19 @@ def test_generate_n_boundary(
     assert "between 1 and 5" in capsys.readouterr().err
 
 
-def test_generate_folder_rules(
+def test_generate_empty_folder_is_fine(
     tmp_path: Path, capsys: pytest.CaptureFixture[str]
 ) -> None:
-    out = tmp_path / "data"
-    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(out)]) == 0
-    assert main(["generate", "--seed", "2", "--n", "3", "--out", str(out)]) == 0
+    empty = tmp_path / "empty"
+    empty.mkdir()
+    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(empty)]) == 0
     other = tmp_path / "other"
     other.mkdir()
     (other / "keep.txt").write_text("x", encoding="utf-8")
     capsys.readouterr()
     assert main(["generate", "--seed", "1", "--n", "3", "--out", str(other)]) == 1
     assert "not empty" in capsys.readouterr().err
-    assert (other / "keep.txt").exists()
-    fake = tmp_path / "fake"
-    fake.mkdir()
-    (fake / "manifest.json").write_text('{"synthetic": true}', encoding="utf-8")
-    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(fake)]) == 1
-    empty = tmp_path / "empty"
-    empty.mkdir()
-    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(empty)]) == 0
-    held = tmp_path / "held"
-    held.mkdir()
-    (held / "manifest.json").write_text("not json", encoding="utf-8")
-    assert main(["generate", "--seed", "1", "--n", "3", "--out", str(held)]) == 1
+    assert (other / "keep.txt").read_text(encoding="utf-8") == "x"
 
 
 def test_evaluate_not_a_folder(
@@ -491,61 +480,18 @@ def make_corpus(folder: Path, capsys: pytest.CaptureFixture[str]) -> Path:
     return folder
 
 
-def edit_manifest(folder: Path, changes: dict[str, object]) -> None:
-    path = folder / "manifest.json"
-    manifest = json.loads(path.read_text(encoding="utf-8"))
-    manifest.update(changes)
-    path.write_text(json.dumps(manifest), encoding="utf-8")
-
-
-def refused(folder: Path, capsys: pytest.CaptureFixture[str]) -> bool:
+def test_generate_refuses_any_nonempty_folder(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    folder = make_corpus(tmp_path / "c", capsys)
     argv = ["generate", "--seed", "4", "--n", "5", "--out", str(folder)]
-    code = main(argv)
-    err = capsys.readouterr().err
-    if code == 1:
-        assert "not empty" in err
-    return code == 1
-
-
-def test_generate_accepts_a_real_corpus(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    folder = make_corpus(tmp_path / "c", capsys)
-    assert not refused(folder, capsys)
-
-
-@pytest.mark.parametrize(
-    "changes",
-    [
-        {"generator": 1},
-        {"generator": {"seed": "3", "n": 5}},
-        {"generator": {"seed": True, "n": 5}},
-        {"generator": {"seed": 3}},
-        {"synthetic": "yes"},
-        {"synthetic": 1},
-        {"files": {}},
-        {"files": {"../x.txt": "0"}},
-        {"files": {"input/missing.csv": "0"}},
-        {"files": []},
-    ],
-)
-def test_generate_refuses_crafted_manifest(
-    changes: dict[str, object],
-    tmp_path: Path,
-    capsys: pytest.CaptureFixture[str],
-) -> None:
-    folder = make_corpus(tmp_path / "c", capsys)
-    edit_manifest(folder, changes)
-    assert refused(folder, capsys)
-
-
-def test_generate_refuses_edited_file(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
-    folder = make_corpus(tmp_path / "c", capsys)
-    with (folder / "input" / "rfis.csv").open("a", encoding="utf-8") as handle:
-        handle.write("extra\n")
-    assert refused(folder, capsys)
+    assert main(argv) == 1
+    assert capsys.readouterr().err == (
+        "rfikit: c: folder is not empty, pick an empty or new folder\n"
+    )
+    assert (
+        main(["generate", "--seed", "4", "--n", "5", "--out", str(tmp_path / "n")]) == 0
+    )
 
 
 def test_synthetic_must_be_exactly_true(tmp_path: Path) -> None:
@@ -674,3 +620,28 @@ def test_real_cli_into_head(tmp_path: Path) -> None:
     run.stderr.close()
     assert first.startswith(b"rfi_id,column,")
     assert err == b""
+
+
+def test_json_case_variant_path_is_refused(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "data", capsys)
+    variant = tmp_path / "DATA" / "labels" / "rfis.csv"
+    if not variant.exists():
+        pytest.skip("case-sensitive filesystem")
+    target = data / "labels" / "rfis.csv"
+    before = target.read_bytes()
+    assert main(["evaluate", str(data), "--json", str(variant)]) == 1
+    assert "inside the input folder" in capsys.readouterr().err
+    assert target.read_bytes() == before
+
+
+def test_folder_name_with_newline_is_one_line(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    data = make_corpus(tmp_path / "da\nta", capsys)
+    (data / "input" / "rfis.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+    assert main(["evaluate", str(data)]) == 1
+    err = capsys.readouterr().err
+    assert len(err.splitlines()) == 1
+    assert "da\\nta" in err

@@ -385,10 +385,7 @@ def _check_unique(folder: Path, name: str, ids: list[str]) -> None:
     seen: set[str] = set()
     for rfi_id in ids:
         if rfi_id in seen:
-            raise LabelError(
-                f"{folder.name}: {name} repeats rfi_id {clip(rfi_id)}, "
-                "make each rfi_id unique in that file"
-            )
+            raise LabelError(f"{name} repeats rfi_id {clip(rfi_id)}")
         seen.add(rfi_id)
 
 
@@ -409,19 +406,13 @@ def items_from_folder(folder: Path) -> list[Item]:
         by_neg.setdefault(n.rfi_id, []).append(n)
     for rfi_id in [*families, *by_cite, *by_neg]:
         if rfi_id not in known:
-            raise LabelError(
-                f"{folder.name}: label for unknown rfi_id {clip(rfi_id)}, "
-                "remove the label or add the RFI to the file"
-            )
+            raise LabelError(f"label for unknown rfi_id {clip(rfi_id)}")
     for rfi_id, found in by_cite.items():
         _check_disjoint(folder, rfi_id, found)
     items: list[Item] = []
     for rfi in rfis:
         if rfi.rfi_id not in families:
-            raise LabelError(
-                f"{folder.name}: no family label for {clip(rfi.rfi_id)}, "
-                "add its family label to the labels file"
-            )
+            raise LabelError(f"no family label for {clip(rfi.rfi_id)}")
         items.append(
             Item(
                 rfi,
@@ -437,10 +428,7 @@ def _check_disjoint(folder: Path, rfi_id: str, cites: list[GoldCitation]) -> Non
     last: dict[str, int] = {}
     for c in sorted((c for c in cites if c.scope == "in"), key=lambda c: c.start):
         if c.start < last.get(c.column, 0):
-            raise LabelError(
-                f"{folder.name}: in-scope labels of {clip(rfi_id)} "
-                f"overlap in {c.column}, fix the spans in the labels file"
-            )
+            raise LabelError(f"in-scope labels of {clip(rfi_id)} overlap in {c.column}")
         last[c.column] = max(last.get(c.column, 0), c.end)
 
 
@@ -680,9 +668,8 @@ def evaluate(
     for i in items:
         if i.family not in FAMILIES:
             raise LabelError(
-                f"{data.name}/labels/rfis.csv: family {i.family!r} for "
-                f"{clip(i.rfi.rfi_id)} is not A or B, "
-                "set its family to A or B in the labels file"
+                f"labels/rfis.csv: family {clip(i.family)} for "
+                f"{clip(i.rfi.rfi_id)} is not A or B"
             )
     generated = {
         family: [[i for i in items if i.family == family]] for family in FAMILIES

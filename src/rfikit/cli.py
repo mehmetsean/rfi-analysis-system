@@ -10,7 +10,6 @@ from rfikit import __version__
 from rfikit.cite import extract, extract_rfi
 from rfikit.evaluate import EvalPlan, LabelError, evaluate
 from rfikit.io import (
-    MAX_BYTES,
     WRITE_HINT,
     InputError,
     atomic_text,
@@ -24,7 +23,7 @@ from rfikit.io import (
 from rfikit.measured import HEAD_LEVELS, summarize
 from rfikit.report import csv_chunk
 from rfikit.synth import GenParams, generate, write_corpus
-from rfikit.synth.files import UnsafeOutput, sha256
+from rfikit.synth.files import UnsafeOutput
 from rfikit.types import Citation, Rfi
 
 EXTRACT_HEADER = (
@@ -149,43 +148,12 @@ def is_synthetic(folder: Path) -> bool:
     return manifest is not None and manifest.get("synthetic") is True
 
 
-def _is_int(value: object) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool)
-
-
-def _files_match(folder: Path, files: object) -> bool:
-    if not isinstance(files, dict) or not files:
-        return False
-    root = Path(os.path.realpath(folder))
-    for name, digest in files.items():
-        path = folder / str(name)
-        inside = Path(os.path.realpath(path)).is_relative_to(root)
-        if not inside or path.is_symlink() or not path.is_file():
-            return False
-        if path.stat().st_size > MAX_BYTES or sha256(path.read_bytes()) != digest:
-            return False
-    return True
-
-
-def is_corpus(folder: Path) -> bool:
-    manifest = read_manifest(folder)
-    if manifest is None or manifest.get("synthetic") is not True:
-        return False
-    made = manifest.get("generator")
-    if not isinstance(made, dict):
-        return False
-    if not (_is_int(made.get("seed")) and _is_int(made.get("n"))):
-        return False
-    return _files_match(folder, manifest.get("files"))
-
-
 def check_folder(out: Path) -> None:
     if out.is_symlink() or not out.is_dir():
         return
-    if any(out.iterdir()) and not is_corpus(out):
+    if any(out.iterdir()):
         raise InputError(
-            f"{shown(out)}: folder is not empty and holds no rfikit corpus, "
-            "pick an empty folder"
+            f"{shown(out)}: folder is not empty, pick an empty or new folder"
         )
 
 

@@ -5,6 +5,7 @@ python scripts/make_bench_inputs.py OUTDIR [--text-bytes N] [--csv-bytes N]
 
 import argparse
 import csv
+import sys
 from pathlib import Path
 
 MIB = 1024 * 1024
@@ -29,17 +30,25 @@ def write_csv(path: Path, size: int) -> int:
     return rows
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("outdir", type=Path)
     parser.add_argument("--text-bytes", type=int, default=4 * MIB)
     parser.add_argument("--csv-bytes", type=int, default=32 * MIB)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
+    for name in ("worst.txt", "dense.csv"):
+        if (args.outdir / name).exists():
+            print(
+                f"{name} already exists in {args.outdir.name}, pick a new folder",
+                file=sys.stderr,
+            )
+            return 1
     args.outdir.mkdir(parents=True, exist_ok=True)
     write_text(args.outdir / "worst.txt", args.text_bytes)
     rows = write_csv(args.outdir / "dense.csv", args.csv_bytes)
     print(f"Wrote worst.txt and dense.csv ({rows} rows) to {args.outdir.name}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

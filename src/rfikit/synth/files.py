@@ -211,8 +211,7 @@ def _refuse_symlinks(out: Path, names: Iterable[str]) -> None:
         if path.is_symlink():
             raise UnsafeOutput(
                 f"{path.name or 'the output folder'} is a symbolic link. "
-                "Pick a plain folder for the output "
-                "or replace the link with a real folder or file, then run again."
+                "Pick a plain folder for the output, then run again."
             )
 
 
