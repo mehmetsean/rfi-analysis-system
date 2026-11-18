@@ -85,7 +85,7 @@ def test_readme_and_changes_exist() -> None:
     assert "All rights reserved." in readme
     assert "Decision support only" in readme
     changes = (HELDOUT / "CHANGES.md").read_text(encoding="utf-8")
-    assert "No changes yet." in changes
+    assert changes.startswith("# Changes to the written held-out set")
 
 
 def test_no_forbidden_dashes() -> None:

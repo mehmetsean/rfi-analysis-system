@@ -1,4 +1,5 @@
 import csv
+import io
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -151,8 +152,14 @@ class _Row:
 
 
 def _read_rows(path: Path, header: tuple[str, ...]) -> list[_Row]:
-    with path.open(encoding="utf-8", newline="") as handle:
-        reader = csv.reader(handle)
+    try:
+        text = path.read_text(encoding="utf-8", newline="")
+    except UnicodeDecodeError:
+        raise LabelError(f"{path.name}: file is not valid UTF-8") from None
+    if text.startswith("\ufeff"):
+        raise LabelError(f"{path.name}: file starts with a BOM, save it without one")
+    reader = csv.reader(io.StringIO(text, newline=""), strict=True)
+    try:
         first = next(reader, None)
         if first is None:
             raise LabelError(f"{path.name}: file is empty")
@@ -168,7 +175,9 @@ def _read_rows(path: Path, header: tuple[str, ...]) -> list[_Row]:
                     f"got {len(cells)}"
                 )
             rows.append(_Row(path, line, dict(zip(first, cells, strict=True))))
-        return rows
+    except csv.Error as error:
+        raise LabelError(f"{path.name}: bad CSV: {error}") from None
+    return rows
 
 
 def read_citations(path: Path) -> list[GoldCitation]:

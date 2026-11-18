@@ -160,24 +160,96 @@ def test_short_row(tmp_path: Path) -> None:
         read_negatives(path)
 
 
+def test_bom_file(tmp_path: Path) -> None:
+    path = tmp_path / "n.csv"
+    path.write_bytes(b"\xef\xbb\xbfrfi_id,column,start,end,kind\n")
+    with pytest.raises(LabelError, match="BOM"):
+        read_negatives(path)
+
+
+def test_bad_utf8(tmp_path: Path) -> None:
+    path = tmp_path / "n.csv"
+    path.write_bytes(b"rfi_id,column,start,end,kind\n\xff\xfe\n")
+    with pytest.raises(LabelError, match="not valid UTF-8"):
+        read_negatives(path)
+
+
+def test_bad_csv_syntax(tmp_path: Path) -> None:
+    path = tmp_path / "n.csv"
+    path.write_text('rfi_id,column,start,end,kind\nW1,"sub"x,0,4,date\n')
+    with pytest.raises(LabelError, match="bad CSV"):
+        read_negatives(path)
+
+
+BLOCKED = {"rfikit.evaluate", "rfikit.synth"}
+
+
 def imported_modules(path: Path) -> set[str]:
     names: set[str] = set()
-    for node in ast.walk(ast.parse(path.read_text())):
+    tree = ast.parse(path.read_text())
+    for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             names.update(alias.name for alias in node.names)
         elif isinstance(node, ast.ImportFrom):
             base = node.module or ""
+            if node.level:
+                base = "rfikit" + ("." + base if base else "")
             names.add(base)
             names.update(f"{base}.{alias.name}" for alias in node.names)
+        elif isinstance(node, ast.Call):
+            func = node.func
+            called = func.attr if isinstance(func, ast.Attribute) else ""
+            if isinstance(func, ast.Name):
+                called = func.id
+            if called in ("import_module", "__import__") and node.args:
+                arg = node.args[0]
+                if isinstance(arg, ast.Constant) and isinstance(arg.value, str):
+                    names.add(arg.value)
     return names
 
 
+def blocked_imports(path: Path) -> set[str]:
+    found: set[str] = set()
+    for name in imported_modules(path):
+        for blocked in BLOCKED:
+            if name == blocked or name.startswith(blocked + "."):
+                found.add(name)
+        if name in ("evaluate", "synth"):
+            found.add(name)
+    return found
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "import rfikit.evaluate",
+        "from rfikit import evaluate",
+        "from rfikit.evaluate import read_citations",
+        "from . import evaluate",
+        "from .evaluate import read_citations",
+        "from . import synth",
+        "import importlib\nimportlib.import_module('rfikit.evaluate')",
+        "from importlib import import_module\nimport_module('rfikit.synth')",
+        "__import__('rfikit.evaluate')",
+    ],
+)
+def test_boundary_check_catches_every_form(tmp_path: Path, line: str) -> None:
+    path = tmp_path / "bad.py"
+    path.write_text(line + "\n")
+    assert blocked_imports(path)
+
+
+def test_boundary_check_allows_other_imports(tmp_path: Path) -> None:
+    path = tmp_path / "good.py"
+    path.write_text("from . import types\nimport re\nfrom .types import Rfi\n")
+    assert blocked_imports(path) == set()
+
+
 def test_only_allowed_modules_import_evaluate_or_synth() -> None:
-    blocked = {"rfikit.evaluate", "rfikit.synth", "evaluate", "synth"}
     for name in ("types", "textnorm", "cite", "classify", "group", "io"):
         path = SRC / f"{name}.py"
         if path.exists():
-            assert not imported_modules(path) & blocked, name
+            assert blocked_imports(path) == set(), name
 
 
 def test_evaluate_imports_only_the_standard_library() -> None:
