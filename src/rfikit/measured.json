@@ -8287,6 +8287,44 @@
           "pred_hit": 24807,
           "recall": 0.918744
          }
+        },
+        "inferred": {
+         "key": {
+          "ci": {
+           "precision": null,
+           "recall": null
+          },
+          "gold": 0,
+          "gold_hit": 0,
+          "precision": 0.0,
+          "pred": 4,
+          "pred_hit": 0,
+          "recall": null
+         },
+         "overlap": {
+          "ci": {
+           "precision": null,
+           "recall": null
+          },
+          "gold": 0,
+          "gold_hit": 0,
+          "precision": 0.0,
+          "pred": 4,
+          "pred_hit": 0,
+          "recall": null
+         },
+         "strict": {
+          "ci": {
+           "precision": null,
+           "recall": null
+          },
+          "gold": 0,
+          "gold_hit": 0,
+          "precision": 0.0,
+          "pred": 4,
+          "pred_hit": 0,
+          "recall": null
+         }
         }
        },
        "noise": {
@@ -8848,51 +8886,51 @@
        "inferred": {
         "key": {
          "f1": {
-          "skipped": 0,
+          "skipped": 1,
           "used": 1,
           "value": 0.953205
          },
          "precision": {
           "skipped": 0,
-          "used": 1,
-          "value": 0.991085
+          "used": 2,
+          "value": 0.495542
          },
          "recall": {
-          "skipped": 0,
+          "skipped": 1,
           "used": 1,
           "value": 0.918114
          }
         },
         "overlap": {
          "f1": {
-          "skipped": 0,
+          "skipped": 1,
           "used": 1,
           "value": 0.961779
          },
          "precision": {
           "skipped": 0,
-          "used": 1,
-          "value": 1.0
+          "used": 2,
+          "value": 0.5
          },
          "recall": {
-          "skipped": 0,
+          "skipped": 1,
           "used": 1,
           "value": 0.926373
          }
         },
         "strict": {
          "f1": {
-          "skipped": 0,
+          "skipped": 1,
           "used": 1,
           "value": 0.953859
          },
          "precision": {
           "skipped": 0,
-          "used": 1,
-          "value": 0.991764
+          "used": 2,
+          "value": 0.495882
          },
          "recall": {
-          "skipped": 0,
+          "skipped": 1,
           "used": 1,
           "value": 0.918744
          }
