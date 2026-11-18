@@ -1,5 +1,6 @@
 import json
 import os
+import tempfile
 from pathlib import Path
 
 import bench
@@ -181,8 +182,10 @@ def test_main_quick_fails_on_a_tight_bound(
     assert "ratio" in capsys.readouterr().err
 
 
-def test_quick_bound_catches_a_quadratic_method() -> None:
-    assert bench.QUICK_BOUND < 4.0
+def test_quick_bound_rejects_a_quadratic_ratio() -> None:
+    rows = [row("naive"), row("prototype"), row("rfikit")]
+    assert check_quick(rows, 4.0, bench.QUICK_BOUND) != []
+    assert check_quick(rows, 2.1, bench.QUICK_BOUND) == []
 
 
 def test_methods_differ_on_a_text() -> None:
@@ -246,3 +249,51 @@ def test_main_reports_a_bad_out(
 ) -> None:
     assert main(["--quick", "--runs", "1", "--out", str(tmp_path)]) == 1
     assert capsys.readouterr().err.startswith("bench: ")
+
+
+def test_write_file_missing_folder(tmp_path: Path) -> None:
+    assert write_file(tmp_path / "nope" / "x.md", "x").startswith("cannot write")
+
+
+def test_main_missing_folder(
+    capsys: pytest.CaptureFixture[str], tmp_path: Path
+) -> None:
+    out = tmp_path / "nope" / "x.md"
+    assert main(["--quick", "--runs", "1", "--out", str(out)]) == 1
+    assert capsys.readouterr().err.startswith("bench: ")
+
+
+def test_temp_file_is_next_to_the_target_and_removed(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    made: list[str] = []
+    real = tempfile.mkstemp
+
+    def spy(*, dir: Path, prefix: str) -> tuple[int, str]:
+        fd, name = real(dir=dir, prefix=prefix)
+        made.append(name)
+        return fd, name
+
+    def boom(src: str, dst: Path) -> None:
+        raise OSError("no")
+
+    monkeypatch.setattr(tempfile, "mkstemp", spy)
+    monkeypatch.setattr(os, "replace", boom)
+    assert write_file(tmp_path / "x.md", "x").startswith("cannot write")
+    assert Path(made[0]).parent == tmp_path
+    assert list(tmp_path.iterdir()) == []
+
+
+def test_render_names_the_sizes() -> None:
+    text = render([row()], MEASURED, {}, 2.0, "c", 5, ("128 KiB", "256 KiB"))
+    assert "256 KiB over 128 KiB" in text
+
+
+def test_seed_texts_count() -> None:
+    assert len(bench.seed_texts((101,), 5)) == 15
+
+
+def test_main_writes_the_run_count(tmp_path: Path) -> None:
+    out = tmp_path / "b.md"
+    assert main(["--quick", "--runs", "2", "--out", str(out)]) == 0
+    assert "median of 2 runs" in out.read_text(encoding="utf-8")
