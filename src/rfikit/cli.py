@@ -1,27 +1,322 @@
 import argparse
+import json
+import os
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Iterator, Sequence
+from pathlib import Path
+from typing import Any
 
 from rfikit import __version__
+from rfikit.cite import extract, extract_rfi
+from rfikit.evaluate import EvalPlan, LabelError, evaluate
+from rfikit.io import (
+    WRITE_HINT,
+    InputError,
+    atomic_text,
+    check_output,
+    check_outside,
+    iter_rfis,
+    read_column_map,
+    read_text,
+    shown,
+)
+from rfikit.measured import HEAD_LEVELS, summarize
+from rfikit.report import csv_chunk
+from rfikit.synth import GenParams, generate, write_corpus
+from rfikit.synth.files import UnsafeOutput
+from rfikit.types import Citation, Rfi
 
-COMMANDS = ("extract", "analyze", "generate", "evaluate")
+EXTRACT_HEADER = (
+    "rfi_id",
+    "column",
+    "start",
+    "end",
+    "text",
+    "key",
+    "base_key",
+    "body",
+    "clause_start",
+    "clause_end",
+    "inferred",
+)
+MAX_N = 20_000
+BATCH = 1000
+SYNTHETIC_LINE = "Measured on synthetic data."
+OTHER_LINE = "Scored on the labeled folders given."
+
+Json = dict[str, Any]
+
+
+def _number(value: int | None) -> str:
+    return "" if value is None else str(value)
+
+
+def _row(rfi_id: str, c: Citation) -> list[str]:
+    d = c.designation
+    return [
+        rfi_id,
+        c.column,
+        str(c.start),
+        str(c.end),
+        c.text,
+        d.key(),
+        d.base_key(),
+        d.body,
+        _number(c.clause_start),
+        _number(c.clause_end),
+        "1" if c.inferred else "0",
+    ]
+
+
+def _batches(rows: Iterable[list[str]]) -> Iterator[str]:
+    batch: list[list[str]] = []
+    for row in rows:
+        batch.append(row)
+        if len(batch) >= BATCH:
+            yield csv_chunk(batch)
+            batch = []
+    if batch:
+        yield csv_chunk(batch)
+
+
+def extract_chunks(path: Path, column_map: Path | None) -> Iterator[str]:
+    if path.suffix.lower() != ".csv" and column_map is not None:
+        raise InputError(
+            "--column-map works only with a .csv file, drop it or pass a .csv file"
+        )
+    if path.suffix.lower() == ".csv":
+        names = read_column_map(column_map) if column_map else None
+        rfis = iter_rfis(path, names)
+        return _chunks(_csv_rows(rfis))
+    text = read_text(path)
+    return _chunks(_row("", c) for c in extract(text, "text"))
+
+
+def _csv_rows(rfis: Iterable[Rfi]) -> Iterator[list[str]]:
+    for rfi in rfis:
+        for c in extract_rfi(rfi):
+            yield _row(rfi.rfi_id, c)
+
+
+def _chunks(rows: Iterable[list[str]]) -> Iterator[str]:
+    yield csv_chunk([list(EXTRACT_HEADER)])
+    yield from _batches(rows)
+
+
+def _quiet_stdout() -> None:
+    try:
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+    except (OSError, ValueError, AttributeError):
+        pass
+
+
+def stream_stdout(chunks: Iterable[str]) -> int:
+    try:
+        out = sys.stdout.buffer
+        for chunk in chunks:
+            out.write(chunk.encode("utf-8"))
+        out.flush()
+    except BrokenPipeError:
+        _quiet_stdout()
+        return 1
+    return 0
+
+
+def cmd_extract(args: argparse.Namespace) -> int:
+    path = Path(args.file)
+    protected = [path] if args.column_map is None else [path, args.column_map]
+    if args.out is not None:
+        check_output(args.out, protected)
+    chunks = extract_chunks(path, args.column_map)
+    if args.out is None:
+        return stream_stdout(chunks)
+    with atomic_text(args.out, protected) as handle:
+        for chunk in chunks:
+            handle.write(chunk)
+    return 0
+
+
+def read_manifest(folder: Path) -> Json | None:
+    try:
+        data = json.loads(read_text(folder / "manifest.json"))
+    except (InputError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def is_synthetic(folder: Path) -> bool:
+    manifest = read_manifest(folder)
+    return manifest is not None and manifest.get("synthetic") is True
+
+
+def check_folder(out: Path) -> None:
+    if out.is_symlink() or not out.is_dir():
+        return
+    try:
+        filled = any(out.iterdir())
+    except OSError:
+        raise InputError(
+            f"{shown(out)}: folder cannot be written, {WRITE_HINT}"
+        ) from None
+    if filled:
+        raise InputError(
+            f"{shown(out)}: folder is not empty, pick an empty or new folder"
+        )
+
+
+def cmd_generate(args: argparse.Namespace) -> int:
+    if args.seed < 0:
+        raise InputError("--seed must not be negative, pass 0 or a larger whole number")
+    if not 1 <= args.n <= MAX_N:
+        raise InputError(
+            f"--n must be between 1 and {MAX_N}, pass a number in that range"
+        )
+    check_folder(args.out)
+    corpus = generate(args.seed, args.n, GenParams())
+    try:
+        write_corpus(corpus, args.out)
+    except OSError:
+        raise InputError(
+            f"{shown(args.out)}: folder cannot be written, {WRITE_HINT}"
+        ) from None
+    print(
+        f"Wrote {len(corpus.rfis)} synthetic RFIs (seed {args.seed}) "
+        f"to {shown(args.out)}"
+    )
+    return 0
+
+
+def _fmt(value: float | None) -> str:
+    return "n/a" if value is None else f"{value:.3f}"
+
+
+def render_summary(summary: Json, synthetic: bool = True) -> str:
+    lines: list[str] = []
+    leak = summary["leak"]
+    for set_name, block in summary["sets"].items():
+        if block["methods"]["rfikit"]["rfis"] == 0:
+            lines.append(
+                f"Set {set_name}: no RFIs to score "
+                "(none left after the leak check, or the folder has none)"
+            )
+            lines.append("")
+            continue
+        lines.append(f"Set {set_name}")
+        lines.append(
+            f"{'method':<12}{'level':<9}{'precision':>10}{'recall':>8}{'F1':>8}"
+        )
+        for method, found in block["methods"].items():
+            for level in HEAD_LEVELS:
+                got = found["levels"].get(level, {})
+                cells = [_fmt(got.get(k)) for k in ("precision", "recall", "f1")]
+                lines.append(
+                    f"{method:<12}{level:<9}{cells[0]:>10}{cells[1]:>8}{cells[2]:>8}"
+                )
+        lines.append("")
+    parts = [f"pool {leak['pool_size']}"]
+    for name in ("A", "B"):
+        if name in leak:
+            parts.append(
+                f"{name} dropped {leak[name]['dropped']} of {leak[name]['rfis']}"
+            )
+    lines.append("Leak check: " + ", ".join(parts))
+    lines.append(SYNTHETIC_LINE if synthetic else OTHER_LINE)
+    return "\n".join(lines) + "\n"
+
+
+def need_folder(path: Path) -> None:
+    if not path.is_dir():
+        raise InputError(f"{shown(path)}: not a folder, check the path")
+
+
+LABEL_HINT = (
+    "check that the folder was written by rfikit generate or follows the "
+    "label format in docs/annotation_guide.md"
+)
+LINK_HINT = "replace the link with a real file"
+
+
+def label_hint(message: str) -> str:
+    return LINK_HINT if message.endswith("symbolic links are not read") else LABEL_HINT
+
+
+def run_evaluate(folders: list[Path], written: Path | None) -> Json:
+    try:
+        return summarize(evaluate(folders[0], written, EvalPlan()))
+    except LabelError as error:
+        names = " and ".join(shown(folder) for folder in folders)
+        raise InputError(f"{names}: {error}, {label_hint(str(error))}") from None
+
+
+def cmd_evaluate(args: argparse.Namespace) -> int:
+    folders = [args.data]
+    if args.written is not None:
+        folders.append(args.written)
+    for folder in folders:
+        need_folder(folder)
+    if args.json is not None:
+        check_output(args.json)
+        check_outside(args.json, folders)
+    summary = run_evaluate(folders, args.written)
+    synthetic = all(is_synthetic(folder) for folder in folders)
+    sys.stdout.write(render_summary(summary, synthetic))
+    if args.json is not None:
+        with atomic_text(args.json) as handle:
+            handle.write(json.dumps(summary, sort_keys=True, indent=1) + "\n")
+    return 0
+
+
+def cmd_analyze(args: argparse.Namespace) -> int:
+    print(
+        "rfikit: the command analyze is not built yet, "
+        "use extract, generate or evaluate",
+        file=sys.stderr,
+    )
+    return 1
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="rfikit")
+    parser.add_argument("--version", action="store_true")
+    sub = parser.add_subparsers(dest="command")
+    p = sub.add_parser("extract", help="list the standard citations in a file")
+    p.add_argument("file", type=Path)
+    p.add_argument("--out", type=Path)
+    p.add_argument("--column-map", type=Path)
+    p.set_defaults(run=cmd_extract)
+    p = sub.add_parser("generate", help="write a synthetic corpus")
+    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--n", type=int, required=True)
+    p.add_argument("--out", type=Path, required=True)
+    p.set_defaults(run=cmd_generate)
+    p = sub.add_parser("evaluate", help="score the extractor on labeled data")
+    p.add_argument("data", type=Path)
+    p.add_argument("--written", type=Path)
+    p.add_argument("--json", type=Path)
+    p.set_defaults(run=cmd_evaluate)
+    p = sub.add_parser("analyze", help="not built yet")
+    p.add_argument("rest", nargs="*")
+    p.set_defaults(run=cmd_analyze)
+    return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="rfikit")
-    parser.add_argument("--version", action="store_true")
-    parser.add_argument("command", nargs="?")
-    parser.add_argument("rest", nargs="*")
-    args = parser.parse_args(argv)
+    parser = build_parser()
+    try:
+        args = parser.parse_args(argv)
+    except SystemExit as stop:
+        return stop.code if isinstance(stop.code, int) else 2
     if args.version:
         print(__version__)
         return 0
     if args.command is None:
         print(f"rfikit {__version__}")
-        print("The commands are not built yet.")
+        print("Commands: extract, generate, evaluate.")
+        print("The command analyze is not built yet.")
         return 0
-    if args.command in COMMANDS:
-        print(f"The command {args.command} is not built yet.", file=sys.stderr)
+    try:
+        code: int = args.run(args)
+    except (InputError, LabelError, UnsafeOutput) as error:
+        print(f"rfikit: {error}", file=sys.stderr)
         return 1
-    print(f"Unknown command: {args.command}", file=sys.stderr)
-    return 2
+    return code

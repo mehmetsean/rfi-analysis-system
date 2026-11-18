@@ -2,6 +2,8 @@ import csv
 import hashlib
 import io
 import json
+import os
+import tempfile
 from collections.abc import Iterable
 from pathlib import Path
 
@@ -208,9 +210,30 @@ def _refuse_symlinks(out: Path, names: Iterable[str]) -> None:
     for path in paths:
         if path.is_symlink():
             raise UnsafeOutput(
-                f"{path} is a symbolic link. Pick a plain folder for the output "
-                "or replace the link with a real folder or file, then run again."
+                f"{path.name or 'the output folder'} is a symbolic link. "
+                "Pick a plain folder for the output, then run again."
             )
+
+
+def _replace_file(path: Path, data: bytes) -> None:
+    fd, temp = tempfile.mkstemp(dir=path.parent, prefix=".rfikit-", suffix=".tmp")
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data)
+        os.chmod(temp, 0o666 & ~_umask())
+        os.replace(temp, path)
+    except BaseException:
+        try:
+            os.unlink(temp)
+        except OSError:
+            pass
+        raise
+
+
+def _umask() -> int:
+    old = os.umask(0)
+    os.umask(old)
+    return old
 
 
 def write_corpus(corpus: Corpus, out: Path) -> None:
@@ -225,4 +248,4 @@ def write_corpus(corpus: Corpus, out: Path) -> None:
     for name, data in files.items():
         path = out / name
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(data)
+        _replace_file(path, data)

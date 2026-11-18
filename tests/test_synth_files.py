@@ -233,3 +233,17 @@ def test_manifest_records_the_parameters(tmp_path: Path) -> None:
     assert manifest["generator"]["params"]["noise_rate"] == 0.5
     assert manifest["generator"]["params"]["families"] == ["A"]
     assert list(manifest["counts"]["families"]) == ["A"]
+
+
+def test_replace_file_removes_temp_on_failure(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from rfikit.synth.files import _replace_file
+
+    def fail(src: str, dst: Path) -> None:
+        raise OSError("no")
+
+    monkeypatch.setattr("rfikit.synth.files.os.replace", fail)
+    with pytest.raises(OSError, match="no"):
+        _replace_file(tmp_path / "a.txt", b"x")
+    assert list(tmp_path.iterdir()) == []
