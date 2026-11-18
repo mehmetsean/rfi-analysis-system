@@ -3,8 +3,8 @@
 Repository: rfi-analysis-system. Package, import and CLI name: rfikit. This rebuild replaces the 2025 prototype script (see "The prototype").
 
 ## Problem
-A request for information (RFI) is a written question from a contractor to the design team on a construction or utility project. Many RFIs turn on a standard: which edition of IEEE C57.12.00 applies, whether NESC Rule 232 covers a crossing, whether an ASTM A123/A123M coating meets the spec. A team that wants to know which standards come up most, which RFIs repeat an earlier question and what kind of issue each one raises reads the log line by line. Project platforms offer RFI summaries and search inside their own cloud; we found no tool, open or commercial, that publishes the accuracy of its standard citation extraction, and none that runs on an exported log without sending the text out.
-rfikit reads an RFI export on the user's machine or in a static browser page. It finds standard citations and normalizes each to a designation key, assigns an issue type with a stated reason, and groups recurring questions. Each task ships with precision and recall measured on labeled synthetic data next to a simple baseline, and the scripts and seeds to rerun every number are in the repo.
+A request for information (RFI) is a written question from a contractor to the design team on a construction or utility project. Many RFIs turn on a standard: which edition of IEEE C57.12.00 applies, whether NESC Rule 232 covers a crossing, whether an ASTM A123/A123M coating meets the spec. A team that wants to know which standards come up most, which RFIs repeat an earlier question and what kind of issue each one raises reads the log line by line.
+rfikit reads an RFI export on the user's machine or in a static browser page, so the exported log does not have to leave that machine. It finds standard citations and normalizes each to a designation key, assigns an issue type with a stated reason, and groups recurring questions. Each task will ship with precision and recall measured on labeled synthetic data next to a simple baseline, and the scripts and seeds to rerun every number will be in the repo.
 
 ## User and buyer
 - Document control and engineering teams at EPC firms, utilities, owner's engineers and construction managers who export RFI logs to CSV and want citation counts, repeat questions and issue types without uploading project text.
@@ -100,7 +100,7 @@ rfi_analyzer.py and the stray one-byte file named src are deleted in PR 2 and st
 ## PR sequence
 One feature per PR, commits under about 800 lines except generated data.
 1. spec: this file.
-2. scaffold: delete the prototype, LICENSE fixed to the year the repo was created, plain stub README, pyproject, types, CI, and ADRs (stdlib and local-first, designations only, only evaluate reads labels, prefix-filter grouping). Then the main ruleset (PR and CI check required), Dependabot and CodeQL, since the repo is already public and main is unprotected.
+2. scaffold: delete the prototype, LICENSE fixed to the year the repo was created, plain stub README, pyproject, types, CI, and ADRs (stdlib and local-first, designations only, only evaluate reads labels, prefix-filter grouping). Then the main ruleset (PR and CI check required), Dependabot and CodeQL, since the repo is already public and main has no ruleset yet.
 3. written set: annotation guide, heldout/ files with sha256, label readers.
 4. generator: catalog, family A templates, family B in its own commit, negatives, noise, groups, manifest.
 5. extractor: textnorm and cite with unit and property tests; prototype baseline port.
@@ -119,6 +119,6 @@ If the schedule slips, 7 and 8 move after 10 and ship in a minor release.
 ## Liability notes
 - Every analysis file and the demo footer say: "Decision support only, not legal, engineering, tax, accounting or assurance advice. No guarantee of compliance. rfikit does not say whether a standard applies or what it requires; check every citation against the official standard. False positives and misses are expected; the measured rates are shown."
 - Output is called an analysis. Issue types and groups are suggestions with reasons.
-- Standard text stays with its owners: code, data and output hold only designations and clause numbers, which are identifiers. IEEE, NESC, IEC, ANSI, ASTM and NEMA are trademarks of their owners, named only to identify their documents; no affiliation or endorsement.
+- Standard text stays with its owners: code, data and output hold only designations and clause numbers, which are identifiers. The names IEEE, NESC, IEC, ANSI, ASTM and NEMA are used only to identify their documents. The names belong to their owners. This project has no affiliation with or endorsement from any of them.
 - All data is synthetic: project codes and role ids, no real company, facility, project or person, nothing from any employer. Measured rates come from synthetic data and say so; rates on real RFI logs will differ.
 - Pasted text stays in the browser, and the CLI makes no network calls.
