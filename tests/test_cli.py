@@ -11,9 +11,12 @@ def test_no_command(capsys: pytest.CaptureFixture[str]) -> None:
     assert "not built yet" in out
 
 
-def test_known_command(capsys: pytest.CaptureFixture[str]) -> None:
-    assert main(["extract", "notes.txt"]) == 0
-    assert "not built yet" in capsys.readouterr().out
+@pytest.mark.parametrize("name", ["extract", "analyze", "generate", "evaluate"])
+def test_stub_command(name: str, capsys: pytest.CaptureFixture[str]) -> None:
+    assert main([name, "x"]) == 1
+    captured = capsys.readouterr()
+    assert "not built yet" in captured.err
+    assert captured.out == ""
 
 
 def test_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:
@@ -23,4 +26,4 @@ def test_unknown_command(capsys: pytest.CaptureFixture[str]) -> None:
 
 def test_version_flag(capsys: pytest.CaptureFixture[str]) -> None:
     assert main(["--version"]) == 0
-    assert __version__ in capsys.readouterr().out
+    assert capsys.readouterr().out == __version__ + "\n"

@@ -23,7 +23,6 @@ class Designation:
     clause: str = ""
 
     def base_key(self) -> str:
-        # NESC keeps the rule or table, others keep body, number and part
         if self.body == "NESC":
             return _join(["NESC", self.clause])
         head = _join([self.body, self.doc_type, self.number])
@@ -51,8 +50,8 @@ class Citation:
     column: str
     start: int
     end: int
-    clause_start: int | None
-    clause_end: int | None
     text: str
     designation: Designation
+    clause_start: int | None = None
+    clause_end: int | None = None
     inferred: bool = False

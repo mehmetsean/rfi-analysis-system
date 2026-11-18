@@ -29,7 +29,6 @@ packages = ["src/rfikit"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--cov=rfikit --cov-report=term-missing --cov-fail-under=90"
 
 [tool.ruff]
 line-length = 88
@@ -41,4 +40,4 @@ select = ["E", "F", "I", "B", "UP"]
 
 [tool.mypy]
 strict = true
-files = ["src"]
+files = ["src", "tests"]

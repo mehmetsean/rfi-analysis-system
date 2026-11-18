@@ -87,26 +87,35 @@ def test_frozen() -> None:
 def test_rfi_and_citation() -> None:
     assert Rfi("R1", "s", "q").response == ""
     d = Designation("IEEE", "80")
-    c = Citation("text", 0, 7, None, None, "IEEE 80", d)
+    c = Citation("text", 0, 7, "IEEE 80", d)
     assert c.inferred is False
+    assert c.clause_start is None
 
 
 number = st.from_regex(r"[A-Z]?[0-9]{1,5}(\.[0-9]{1,2}){0,2}", fullmatch=True)
 year = st.one_of(st.just(""), st.from_regex(r"[0-9]{2,4}", fullmatch=True))
 suffix = st.one_of(st.just(""), st.just("e1"), st.just("+AMD1:2020"))
 body = st.sampled_from(["IEEE", "IEC", "ANSI", "ASTM", "NEMA"])
+co = st.lists(st.sampled_from(["ANSI", "IEEE", "IEC"]), max_size=2).map(tuple)
 
 
 @given(body, number, year, suffix)
-def test_key_stable_and_base_ignores_year_and_suffix(
-    b: str, n: str, y: str, s: str
-) -> None:
+def test_key_format(b: str, n: str, y: str, s: str) -> None:
     d = Designation(b, n, year=y, suffix=s)
-    same = Designation(b, n, year=y, suffix=s)
-    plain = Designation(b, n)
-    assert d.key() == same.key()
-    assert d.base_key() == plain.base_key()
-    assert d.key().startswith(d.base_key())
+    sep = ":" if b == "IEC" else "-"
+    expected = b + " " + n + (sep + y if y else "") + s
+    assert d.key() == expected
+    assert d.base_key() == b + " " + n
+
+
+@given(body, number, year, suffix, co)
+def test_co_bodies_change_no_key(
+    b: str, n: str, y: str, s: str, c: tuple[str, ...]
+) -> None:
+    a = Designation(b, n, year=y, suffix=s)
+    with_co = Designation(b, n, co_bodies=c, year=y, suffix=s)
+    assert a.key() == with_co.key()
+    assert a.base_key() == with_co.base_key()
 
 
 @given(year, year, suffix)
@@ -114,3 +123,13 @@ def test_nesc_base_ignores_year(y1: str, y2: str, s: str) -> None:
     a = Designation("NESC", "C2", year=y1, suffix=s, clause="Rule 232B1")
     b = Designation("NESC", "C2", year=y2, clause="Rule 232B1")
     assert a.base_key() == b.base_key() == "NESC Rule 232B1"
+
+
+def test_nesc_drops_suffix_and_doc_type() -> None:
+    d = Designation("NESC", "C2", doc_type="TS", year="2017", suffix="x")
+    assert d.key() == "NESC 2017"
+
+
+def test_iec_suffix_without_year() -> None:
+    d = Designation("IEC", "60076", suffix="+AMD1:2020")
+    assert d.key() == "IEC 60076+AMD1:2020"
