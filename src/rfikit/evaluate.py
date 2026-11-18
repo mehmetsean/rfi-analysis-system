@@ -62,6 +62,7 @@ CITATION_HEADER = (
 )
 NEGATIVE_HEADER = ("rfi_id", "column", "start", "end", "kind")
 RFI_HEADER = ("rfi_id", "issue_type", "group_id", "template_id", "family")
+RFI_REQUIRED = ("rfi_id", "template_id", "family")
 
 
 class LabelError(ValueError):
@@ -112,6 +113,9 @@ class _Row:
         return LabelError(
             f"{self.path.name} line {self.line}, column {name}: {message}"
         )
+
+    def has(self, name: str) -> bool:
+        return name in self.values
 
     def text(self, name: str) -> str:
         return self.values[name]
@@ -232,12 +236,16 @@ def read_negatives(path: Path) -> list[GoldNegative]:
 
 def read_rfi_labels(path: Path) -> list[RfiLabel]:
     result: list[RfiLabel] = []
-    for row in _read_rows(path, RFI_HEADER):
+    for row in _read_rows(path, RFI_REQUIRED):
+        issue_type = ""
+        if row.has("issue_type"):
+            issue_type = row.choice("issue_type", ISSUE_TYPES)
+        group_id = row.required("group_id") if row.has("group_id") else ""
         result.append(
             RfiLabel(
                 rfi_id=row.required("rfi_id"),
-                issue_type=row.choice("issue_type", ISSUE_TYPES),
-                group_id=row.required("group_id"),
+                issue_type=issue_type,
+                group_id=group_id,
                 template_id=row.text("template_id"),
                 family=row.required("family"),
             )

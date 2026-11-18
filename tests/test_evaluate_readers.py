@@ -94,6 +94,21 @@ def test_read_rfi_labels(tmp_path: Path) -> None:
     ]
 
 
+def test_rfi_labels_without_issue_type_and_group(tmp_path: Path) -> None:
+    path = write_csv(
+        tmp_path / "r.csv",
+        ("rfi_id", "template_id", "family"),
+        [["R0001", "mi-A1", "A"]],
+    )
+    assert read_rfi_labels(path) == [RfiLabel("R0001", "", "", "mi-A1", "A")]
+
+
+def test_rfi_labels_still_need_the_core_columns(tmp_path: Path) -> None:
+    path = write_csv(tmp_path / "r.csv", ("rfi_id", "family"), [["R0001", "A"]])
+    with pytest.raises(LabelError, match="missing column 'template_id'"):
+        read_rfi_labels(path)
+
+
 def test_extra_columns_and_order_are_fine(tmp_path: Path) -> None:
     path = tmp_path / "n.csv"
     path.write_text("kind,end,start,column,rfi_id,note\ndate,8,0,subject,W1,x\n")
