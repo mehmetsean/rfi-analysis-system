@@ -1,7 +1,7 @@
 import re
 from typing import NamedTuple
 
-# Six regex groups of the 2025 prototype, unchanged. Only findall became finditer.
+# Prototype patterns
 STANDARDS_PATTERNS = {
     "IEEE": [
         r"IEEE[-\s]?(\d{3,4}(?:\.\d+)?(?:-\d{4})?)",
@@ -41,7 +41,7 @@ def prototype_spans(text: str) -> list[Span]:
 
 
 def naive_spans(text: str) -> list[Span]:
-    # Body token plus the next token; NESC alone is already a citation.
+    # Naive baseline
     found: list[Span] = []
     for match in _BODY_TOKEN.finditer(text):
         body = match.group(0).upper()
