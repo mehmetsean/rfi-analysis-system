@@ -26,3 +26,5 @@ A clause number followed by more digits after a dot or hyphen ("Table 232-12345"
 An uppercase A or V right after a list item on the same line drops that item, so "IEEE C57.12.00 and C57.91 A copy follows" gives only IEEE C57.12.00.
 
 A clause written after a misspelled body ("IEE 81, Table 7") still binds to the nearest valid citation before it, because the extractor does not repair misspellings. This shows up as a wrong key, never as a new citation. The written set may label some "X and Rule N" cases the other way; PR 6 measures that once and any change goes to heldout/CHANGES.md.
+
+The C2 to NESC rule follows the same line-break skip as other IEEE numbers. "IEEE C2.\n1" reads as IEEE C2.1, because a dot, an optional line break (with up to four spaces or tabs of indent) and a digit continue the number. "IEEE C2", "IEEE C2-2017" and "IEEE C2. Next sentence" still read as NESC. A dot followed by a plain space ends the number, as it does for "IEEE C57. 12", so "IEEE C2. 1" reads as NESC. Only one line break is skipped, so "IEEE C2.\n\n1" with a blank line reads as NESC. "IEEE C57.\n\n12" with a blank line reads as IEEE C57 for the same reason.
