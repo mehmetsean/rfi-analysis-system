@@ -153,7 +153,8 @@ class _Row:
 
 def _read_rows(path: Path, header: tuple[str, ...]) -> list[_Row]:
     try:
-        text = path.read_text(encoding="utf-8", newline="")
+        with path.open(encoding="utf-8", newline="") as handle:
+            text = handle.read()
     except UnicodeDecodeError:
         raise LabelError(f"{path.name}: file is not valid UTF-8") from None
     if text.startswith("\ufeff"):
