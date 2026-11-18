@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling==1.33.0"]
+build-backend = "hatchling.build"
+
+[project]
+name = "rfikit"
+version = "0.1.0.dev0"
+description = "Finds standard citations in engineering RFIs and returns normalized designation keys."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "LicenseRef-Proprietary"
+license-files = ["LICENSE"]
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "hypothesis",
+    "ruff",
+    "mypy",
+]
+
+[project.scripts]
+rfikit = "rfikit.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/rfikit"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--cov=rfikit --cov-report=term-missing --cov-fail-under=90"
+
+[tool.ruff]
+line-length = 88
+extend-exclude = ["docs", "*.md"]
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.mypy]
+strict = true
+files = ["src"]
