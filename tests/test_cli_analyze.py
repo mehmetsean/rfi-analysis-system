@@ -428,3 +428,20 @@ def test_dangling_symlink_out_is_refused(
     assert "symbolic link" in capsys.readouterr().err
     assert link.is_symlink()
     assert not (tmp_path / "nowhere").exists()
+
+
+def test_make_folders_cleans_up_when_mkdir_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    middle = tmp_path / "a" / "b"
+    real = Path.mkdir
+
+    def failing(self: Path, *args: Any, **kwargs: Any) -> None:
+        if self == middle:
+            raise PermissionError(13, "denied")
+        real(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "mkdir", failing)
+    with pytest.raises(InputError, match="cannot be written"):
+        make_folders(middle / "c")
+    assert not (tmp_path / "a").exists()
