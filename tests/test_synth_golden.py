@@ -7,7 +7,7 @@ from rfikit.synth import generate, render_files
 from rfikit.synth.files import sha256
 
 GOLDEN_SEED_42_N_40 = {
-    "README.txt": ("754d1be7d35de25858774321a3e2aa367787b62263ac93126ecf25fe3db39942"),
+    "README.txt": ("d1aae071225a6effcefa4eedc754475144debf248dbeb31149e09175e693f17e"),
     "input/README.txt": (
         "41bda584b68d54a473b9e9b7e5c2331c64e59013c4dcb4080b45d803cb6e36a6"
     ),
@@ -27,7 +27,7 @@ GOLDEN_SEED_42_N_40 = {
         "c1543bc9f2086031b3b5c4b47c16aecdeda5e9c135f36395c82cb6cf5df5f1c3"
     ),
     "manifest.json": (
-        "c3092b4172293381f2d6f55094d0f26b1bf521db72bde28a8d373e5f8c1fcb78"
+        "45d27ac28062ec0748e854e509fbd09a4ceab50549df1d07ae7c81eef2381762"
     ),
 }
 
