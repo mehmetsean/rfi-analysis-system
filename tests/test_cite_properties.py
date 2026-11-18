@@ -1,7 +1,7 @@
 import time
 
 import pytest
-from hypothesis import given, settings
+from hypothesis import example, given, settings
 from hypothesis import strategies as st
 
 from rfikit.cite import extract
@@ -195,6 +195,8 @@ def render(text: str, gap: str, dash: str, case: str, brk: str) -> str:
     st.sampled_from(["", "lower", "title"]),
     st.sampled_from([""] + BREAKS),
 )
+@example(("IEEE C2.1", "IEEE C2.1"), "x", "y", " ", "-", "", "\n")
+@example(("IEEE C2.1", "IEEE C2.1"), "x", "y", " ", "-", "", "\r\n  ")
 @settings(max_examples=400)
 def test_rendered_designation_gives_the_same_key(
     item: tuple[str, str],

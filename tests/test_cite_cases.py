@@ -62,6 +62,12 @@ BODY_CASES = [
     ("ANSI/IEEE C2-2017 here", "ANSI/IEEE C2-2017", "NESC 2017"),
     ("IEEE C2 here", "IEEE C2", "NESC"),
     ("ANSI C2 here", "ANSI C2", "NESC"),
+    ("IEEE C2. Next sentence", "IEEE C2", "NESC"),
+    ("IEEE C2. 1 here", "IEEE C2", "NESC"),
+    ("IEEE C57. 12 here", "IEEE C57", "IEEE C57"),
+    ("IEEE C2.1 here", "IEEE C2.1", "IEEE C2.1"),
+    ("IEEE C2.\n1 here", "IEEE C2.\n1", "IEEE C2.1"),
+    ("IEEE C2.\r\n  1 here", "IEEE C2.\r\n  1", "IEEE C2.1"),
 ]
 
 
