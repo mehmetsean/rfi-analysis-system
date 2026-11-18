@@ -25,6 +25,7 @@ BODY_WEIGHTS = (
     ("ANSI", 12),
     ("NESC", 14),
 )
+OUT_BODIES = ("NFPA", "UL", "ASME", "ISA", "TIA", "CSA", "EN")
 LIST_BODIES = ("IEEE", "IEC", "ANSI", "ASTM", "NEMA")
 NON_NESC_WORDS = (
     ("Clause", "Clause"),
@@ -285,6 +286,7 @@ def make_bare(rng: Rng) -> CiteSpec:
 
 
 def make_out(rng: Rng) -> CiteSpec:
-    item = rng.pick(catalog.OUT_OF_SCOPE)
+    body = rng.pick(OUT_BODIES)
+    item = rng.pick([i for i in catalog.OUT_OF_SCOPE if i.body == body])
     dash = item.body == "TIA" and rng.chance(0.5)
     return CiteSpec(render_out_of_scope(item, dash))
