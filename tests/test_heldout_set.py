@@ -7,9 +7,18 @@ from pathlib import Path
 import build_heldout as bh
 import pytest
 
+from keychecks import (
+    CLAUSE_WORDS,
+    check_key_matches_slice,
+    expected_base,
+    is_bare,
+    key_clause,
+    norm,
+)
 from rfikit.evaluate import (
     ISSUE_TYPES,
     NEGATIVE_KINDS,
+    RFI_HEADER,
     GoldCitation,
     GoldNegative,
     RfiLabel,
@@ -252,6 +261,12 @@ def test_labels_cover_every_rfi(
     assert sum(1 for row in inputs.values() if row["response"]) >= len(inputs) // 2
 
 
+def test_label_header_is_the_full_one() -> None:
+    path = HELDOUT / "labels" / "rfis.csv"
+    first = path.read_text(encoding="utf-8").split("\n", 1)[0]
+    assert first == ",".join(RFI_HEADER)
+
+
 def test_issue_types_and_groups(labels: list[RfiLabel]) -> None:
     assert {label.issue_type for label in labels} == set(ISSUE_TYPES)
     groups: dict[str, list[RfiLabel]] = {}
@@ -269,27 +284,6 @@ def test_issue_types_and_groups(labels: list[RfiLabel]) -> None:
             assert name == "single-" + items[0].rfi_id
 
 
-DASH_MAP = {ord(ch): "-" for ch in DASHES}
-SPACE_CHARS = " " + chr(0xA0) + chr(0x202F) + "\n\r\t"
-CLAUSE_WORDS = r"(?:CLAUSE|SECTION|SEC\.|PARA|TABLE|FIGURE|ANNEX|RULE)"
-PREFIX = re.compile(r"(?:IEEE|IEC|ANSI|NEMA|ASTM|STD|/)*")
-
-
-def norm(text: str) -> str:
-    text = text.translate(DASH_MAP)
-    return "".join(ch for ch in text if ch not in SPACE_CHARS).upper()
-
-
-def key_clause(key: str) -> str:
-    match = re.search(r" (Clause|Table|Figure|Annex|Rule|Section) .*$", key)
-    return match.group(0).strip() if match else ""
-
-
-def key_core(key: str) -> str:
-    cut = key[: len(key) - len(key_clause(key))].strip() if key_clause(key) else key
-    return cut.split(" ", 1)[1] if " " in cut else ""
-
-
 def slice_of(inputs: dict[str, dict[str, str]], c: GoldCitation) -> str:
     return inputs[c.rfi_id][c.column][c.start : c.end]
 
@@ -298,54 +292,14 @@ def in_scope_rows(citations: list[GoldCitation]) -> list[GoldCitation]:
     return [c for c in citations if c.scope == "in"]
 
 
-def is_bare(c: GoldCitation) -> bool:
-    return c.clause_start is not None and c.clause_start == c.start
-
-
 def test_key_matches_slice(
     inputs: dict[str, dict[str, str]], citations: list[GoldCitation]
 ) -> None:
     checked = 0
     for c in in_scope_rows(citations):
-        body = c.key.split(" ")[0]
-        piece = slice_of(inputs, c)
-        if body == "NESC":
-            year = re.search(r"\b(\d{4})\b", c.key)
-            if not is_bare(c) and year:
-                assert year.group(1) in norm(piece), c
-            if not is_bare(c):
-                assert (
-                    "NESC" in norm(piece)
-                    or "C2" in norm(piece)
-                    or (c.noise_class == "misspelled")
-                ), c
-            continue
-        if c.noise_class == "misspelled":
-            continue
-        rest = norm(piece)
-        core = norm(key_core(c.key))
-        assert rest.endswith(core), (c, piece)
-        prefix = rest[: len(rest) - len(core)]
-        assert PREFIX.fullmatch(prefix), (c, piece)
-        if c.inferred:
-            assert prefix == "", c
-        else:
-            assert body in prefix, c
-        checked += 1
+        if check_key_matches_slice(c, slice_of(inputs, c)):
+            checked += 1
     assert checked > 100
-
-
-def expected_base(key: str) -> str:
-    body = key.split(" ")[0]
-    core = key[: len(key) - len(key_clause(key))].strip() if key_clause(key) else key
-    if body == "NESC":
-        clause = key_clause(key)
-        return "NESC " + clause if clause else "NESC"
-    if body == "IEC":
-        return core.split(":")[0]
-    if body == "ASTM":
-        return re.sub(r"-\d{2}[a-z]?(?:e\d)?(?:\(\d{4}\))?$", "", core)
-    return re.sub(r"-\d{4}$", "", core)
 
 
 def test_base_key_rule(citations: list[GoldCitation]) -> None:

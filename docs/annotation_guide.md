@@ -1,6 +1,6 @@
 # Annotation guide for the written held-out set
 
-This guide is the rulebook for labeling the RFIs in heldout/. One annotator follows it. A later synthetic data generator is planned to write labels in this same layout. Until it exists, these rules describe only the written set.
+This guide is the rulebook for labeling the RFIs in heldout/. One annotator follows it. The synthetic data generator in rfikit.synth writes labels in this same layout. The rules below were written for the written set and the generator follows them.
 
 This is synthetic data, written by hand. Only designations and clause numbers appear, never titles or standard text (see ADR 0003).
 
@@ -12,7 +12,7 @@ This is synthetic data, written by hand. Only designations and clause numbers ap
 - labels/rfis.csv: rfi_id, issue_type, group_id, template_id, family. For the written set template_id is empty and family is "written".
 - column is one of subject, question, response.
 - Offsets count Unicode code points (Python string indices) in the column text as stored in the CSV, start inclusive, end exclusive. clause_start and clause_end are empty when there is no clause.
-- inferred is 0 or 1. scope is "in" or "out". catalog is "real" or "invented".
+- inferred is 0 or 1. scope is "in" or "out". catalog is "real" or "invented" (see "The catalog column").
 
 ## What is a citation
 
@@ -141,10 +141,10 @@ The source text for the set writes special characters as escapes. The built inpu
 
 ## The catalog column
 
-For this set the catalog value describes the document, not the edition.
-- real: the designation is a published document of that body, to the best of the annotator's knowledge.
-- invented: the number fits the grammar but the annotator cannot confirm that the document exists. When unsure, mark invented.
-- A bare NESC rule or table is real only for rules the annotator is sure exist.
+The value "real" means the designation was written from knowledge of a published document of that body: in generated data it is a catalog entry, in the written set it is the annotator's judgment. Neither is checked against the standards, and both are identifiers only. The value "invented" means a number that fits the grammar and is not meant to match a published document. For this set the catalog value describes the document, not the edition.
+- real: the designation was written from knowledge of a published document of that body. Not checked against the standards.
+- invented: the number fits the grammar and is not meant to match a published document. When unsure, mark invented.
+- A bare NESC rule or table is real only for rule or table numbers the annotator is confident appear in the NESC.
 
 ## Issue types
 

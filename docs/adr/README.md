@@ -5,3 +5,4 @@
 - [0003 Designations and clause numbers only, never standard text](0003-designations-and-clause-numbers-only.md)
 - [0004 One span convention for citations](0004-one-span-convention.md)
 - [0005 Only the evaluate module reads labels](0005-only-evaluate-reads-labels.md)
+- [0006 Generated rfis.csv grows in two steps](0006-generator-labels-grow-in-two-steps.md)
