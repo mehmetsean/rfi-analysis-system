@@ -535,7 +535,7 @@ def test_clause_word_inside_a_designation_is_not_a_clause() -> None:
     assert keys("IEEE 80 NEMA SEC 5") == ["IEEE 80", "NEMA SEC 5"]
 
 
-def test_second_nesc_does_not_reuse_the_year_before_the_first() -> None:
+def test_second_nesc_does_not_reuse_a_year() -> None:
     assert keys("NESC 2017 NESC") == ["NESC 2017", "NESC"]
     assert keys("2017 NESC 2018 NESC") == ["NESC 2018", "NESC"]
 

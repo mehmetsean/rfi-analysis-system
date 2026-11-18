@@ -19,8 +19,10 @@ Options considered:
 - A full sentence parser. Too much for a grammar with no catalog.
 - The window with an and/or stop (chosen).
 
-A clause number followed by more digits after a dot or hyphen ("Table 232-12345") is rejected, not cut short. "2017 NESC 2018 NESC" gives NESC 2018 and a bare NESC: the first NESC takes the year after it.
+A clause number followed by more digits after a dot or hyphen ("Table 232-12345") is rejected, not cut short. The same rule drops a lettered annex clause with a hyphen level, such as "Annex B.2-1", which then has no clause. "2017 NESC 2018 NESC" gives NESC 2018 and a bare NESC: the first NESC takes the year after it.
 
 ## Consequences
+
+An uppercase A or V right after a list item on the same line drops that item, so "IEEE C57.12.00 and C57.91 A copy follows" gives only IEEE C57.12.00.
 
 A clause written after a misspelled body ("IEE 81, Table 7") still binds to the nearest valid citation before it, because the extractor does not repair misspellings. This shows up as a wrong key, never as a new citation. The written set may label some "X and Rule N" cases the other way; PR 6 measures that once and any change goes to heldout/CHANGES.md.
