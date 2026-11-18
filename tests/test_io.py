@@ -1,0 +1,221 @@
+import csv
+import json
+from pathlib import Path
+
+import pytest
+from hypothesis import given, settings
+from hypothesis import strategies as st
+
+from rfikit import io as rio
+from rfikit.cite import extract_rfi
+from rfikit.io import InputError, read_column_map, read_rfis, read_text
+from rfikit.report import csv_text, escape_cell
+from rfikit.types import Rfi
+
+
+def write(path: Path, text: str, bom: bool = False) -> Path:
+    data = text.encode("utf-8")
+    if bom:
+        data = b"\xef\xbb\xbf" + data
+    path.write_bytes(data)
+    return path
+
+
+def test_read_basic(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nR1,S,Q\n")
+    assert read_rfis(path) == [Rfi("R1", "S", "Q", "")]
+
+
+def test_read_response_and_extra_columns(tmp_path: Path) -> None:
+    text = "extra,response,question,subject,rfi_id\nx,A,Q,S,R1\n"
+    path = write(tmp_path / "a.csv", text)
+    assert read_rfis(path) == [Rfi("R1", "S", "Q", "A")]
+
+
+def test_bom_accepted(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nR1,S,Q\n", bom=True)
+    assert read_rfis(path)[0].rfi_id == "R1"
+
+
+def test_bom_text(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.txt", "hello", bom=True)
+    assert read_text(path) == "hello"
+
+
+def test_blank_line_skipped(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nR1,S,Q\n\n")
+    assert len(read_rfis(path)) == 1
+
+
+def test_symlink(tmp_path: Path) -> None:
+    real = write(tmp_path / "real.csv", "rfi_id,subject,question\n")
+    link = tmp_path / "link.csv"
+    link.symlink_to(real)
+    with pytest.raises(InputError, match="link.csv: symbolic links"):
+        read_rfis(link)
+    with pytest.raises(InputError, match="symbolic links"):
+        read_text(link)
+
+
+def test_missing_and_not_regular(tmp_path: Path) -> None:
+    with pytest.raises(InputError, match="nope.csv: missing or not a regular"):
+        read_rfis(tmp_path / "nope.csv")
+    with pytest.raises(InputError, match="not a regular"):
+        read_text(tmp_path)
+
+
+def test_unreadable(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.txt", "x")
+    path.chmod(0)
+    try:
+        with pytest.raises(InputError, match="a.txt: file cannot be read"):
+            read_text(path)
+    finally:
+        path.chmod(0o600)
+
+
+def test_over_cap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(rio, "MAX_BYTES", 10)
+    path = write(tmp_path / "a.txt", "x" * 11)
+    with pytest.raises(InputError, match="over the limit of 10 bytes"):
+        read_text(path)
+    assert read_text(write(tmp_path / "b.txt", "x" * 10)) == "x" * 10
+
+
+def test_not_utf8(tmp_path: Path) -> None:
+    path = tmp_path / "a.csv"
+    path.write_bytes(b"rfi_id,subject,question\nR1,\xff,Q\n")
+    with pytest.raises(InputError, match="not valid UTF-8"):
+        read_rfis(path)
+
+
+def test_empty_file(tmp_path: Path) -> None:
+    with pytest.raises(InputError, match="file is empty"):
+        read_rfis(write(tmp_path / "a.csv", ""))
+
+
+def test_malformed_csv(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", 'rfi_id,subject,question\nR1,"S"x,Q\n')
+    with pytest.raises(InputError, match="a.csv: bad CSV"):
+        read_rfis(path)
+
+
+def test_wrong_cell_count(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nR1,S\n")
+    with pytest.raises(InputError, match="line 2: expected 3 cells, got 2"):
+        read_rfis(path)
+
+
+@pytest.mark.parametrize("missing", ["rfi_id", "subject", "question"])
+def test_missing_column(tmp_path: Path, missing: str) -> None:
+    names = [n for n in ("rfi_id", "subject", "question") if n != missing]
+    path = write(tmp_path / "a.csv", ",".join(names) + "\n")
+    with pytest.raises(InputError, match=f"missing column '{missing}'"):
+        read_rfis(path)
+
+
+def test_duplicate_column(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question,subject\n")
+    with pytest.raises(InputError, match="duplicate column 'subject'"):
+        read_rfis(path)
+
+
+def test_empty_and_repeated_id(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nR1,S,Q\n,S,Q\n")
+    with pytest.raises(InputError, match="line 3: rfi_id is empty"):
+        read_rfis(path)
+    path = write(tmp_path / "b.csv", "rfi_id,subject,question\nR1,S,Q\nR1,S,Q\n")
+    with pytest.raises(InputError, match="line 3: rfi_id 'R1' repeats"):
+        read_rfis(path)
+
+
+def test_row_cap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(rio, "MAX_ROWS", 2)
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nA,S,Q\nB,S,Q\nC,S,Q\n")
+    with pytest.raises(InputError, match="more than 2 rows"):
+        read_rfis(path)
+    path = write(tmp_path / "b.csv", "rfi_id,subject,question\nA,S,Q\nB,S,Q\n")
+    assert len(read_rfis(path)) == 2
+
+
+def test_field_cap(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(rio, "MAX_FIELD", 5)
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\nA,S,123456\n")
+    with pytest.raises(InputError, match="line 2, column question: value is over 5"):
+        read_rfis(path)
+    path = write(tmp_path / "b.csv", "rfi_id,subject,question\nA,S,12345\n")
+    assert read_rfis(path)[0].question == "12345"
+
+
+def test_column_map(tmp_path: Path) -> None:
+    csv_path = write(tmp_path / "a.csv", "RFI No,Title,Body,Reply\n1,S,Q,A\n")
+    names = {"rfi_id": "RFI No", "subject": "Title", "question": "Body"}
+    names["response"] = "Reply"
+    map_path = write(tmp_path / "m.json", json.dumps(names))
+    assert read_rfis(csv_path, read_column_map(map_path)) == [Rfi("1", "S", "Q", "A")]
+
+
+def test_column_map_partial(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "RFI No,subject,question\n1,S,Q\n")
+    assert read_rfis(path, {"rfi_id": "RFI No"})[0].rfi_id == "1"
+
+
+def test_column_map_missing_column(tmp_path: Path) -> None:
+    path = write(tmp_path / "a.csv", "rfi_id,subject,question\n1,S,Q\n")
+    with pytest.raises(InputError, match="missing column 'Reply' for response"):
+        read_rfis(path, {"response": "Reply"})
+
+
+@pytest.mark.parametrize(
+    ("body", "message"),
+    [
+        ("{", "not valid JSON"),
+        ("[1]", "must be a JSON object"),
+        ('{"nope": "x"}', "unknown key 'nope'"),
+        ('{"subject": 3}', "value of 'subject' must be a column name"),
+        ('{"subject": ""}', "value of 'subject' must be a column name"),
+    ],
+)
+def test_column_map_errors(tmp_path: Path, body: str, message: str) -> None:
+    with pytest.raises(InputError, match=message):
+        read_column_map(write(tmp_path / "m.json", body))
+
+
+def test_escape_cell() -> None:
+    for start in "=+-@\t\r":
+        assert escape_cell(start + "x") == "'" + start + "x"
+    assert escape_cell("plain") == "plain"
+    assert escape_cell("") == ""
+    assert csv_text(["a"], [["=1+1"]]) == "a\n'=1+1\n"
+
+
+PIECES = st.one_of(
+    st.characters(codec="utf-8", exclude_characters="\x00\ufeff"),
+    st.sampled_from(['"', ",", "\n", "\r\n", "\U0001f600", "IEEE 1584", " NESC "]),
+)
+TEXT = st.lists(PIECES, max_size=15).map("".join)
+
+
+@settings(max_examples=100, deadline=None)
+@given(st.lists(st.tuples(TEXT, TEXT, TEXT), max_size=6))
+def test_csv_roundtrip_and_extract(
+    tmp_path_factory: pytest.TempPathFactory, rows: list[tuple[str, str, str]]
+) -> None:
+    folder = tmp_path_factory.mktemp("prop")
+    rfis = [Rfi(f"R{i}", s, q, a) for i, (s, q, a) in enumerate(rows)]
+    path = folder / "a.csv"
+    with path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.writer(handle)
+        writer.writerow(["rfi_id", "subject", "question", "response"])
+        for r in rfis:
+            writer.writerow([r.rfi_id, r.subject, r.question, r.response])
+    back = read_rfis(path)
+    assert back == rfis
+    for original, loaded in zip(rfis, back, strict=True):
+        assert extract_rfi(loaded) == extract_rfi(original)
+
+
+def test_cite_does_not_import_io() -> None:
+    source = (Path(rio.__file__).parent / "cite.py").read_text(encoding="utf-8")
+    for name in ("rfikit.io", "rfikit.synth", "rfikit.evaluate"):
+        assert name not in source
