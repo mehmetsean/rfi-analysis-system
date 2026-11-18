@@ -87,6 +87,21 @@ def test_macro_skips_none_and_counts_them() -> None:
     assert result.skipped == 2
 
 
+def test_macro_uses_exact_summation() -> None:
+    values: list[float | None] = [0.26801, 0.332233, 0.505888, 0.255291]
+    naive = 0.0
+    for v in values:
+        naive += v or 0.0
+    assert round(naive / 4, 6) == 0.340355
+    assert round(macro(values).value or 0.0, 6) == 0.340356
+    assert macro([0.1] * 10).value == 0.1
+
+
+def test_strict_pairs_duplicate_gold_gets_one_pair() -> None:
+    gold = [("q", 0, 3), ("q", 0, 3)]
+    assert strict_pairs(gold, [("q", 0, 3)]) == [(0, 0)]
+
+
 def test_macro_of_nothing_is_none() -> None:
     result = macro([None, None])
     assert result.value is None

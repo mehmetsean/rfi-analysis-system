@@ -60,7 +60,7 @@ def macro(values: Sequence[float | None]) -> Macro:
     skipped = len(values) - len(found)
     if not found:
         return Macro(None, 0, skipped)
-    return Macro(sum(found) / len(found), len(found), skipped)
+    return Macro(math.fsum(found) / len(found), len(found), skipped)
 
 
 def strict_pairs(gold: Sequence[Span], pred: Sequence[Span]) -> list[tuple[int, int]]:
