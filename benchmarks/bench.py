@@ -140,6 +140,13 @@ def render(
             f"| {r.method} | {r.name} | {r.chars} | {t.median:.4f} | {t.low:.4f} "
             f"| {t.high:.4f} | {speed} | {r.hits} | {cells} |"
         )
+    out += [
+        "",
+        "P and R columns: measured on synthetic data. The seed corpus rows show "
+        "family A on report seeds 101 to 130 (the speed input is seeds 101 to "
+        "103). Baselines have no key levels, so only strict and overlap span "
+        "are shown. n/a means no labels exist for that input.",
+    ]
     out += ["", f"Time on 2 MB over time on 1 MB for rfikit: {bound:.2f}.", ""]
     out += [
         f"The spec bound is under {SPEC_BOUND:.0f}.",
@@ -260,7 +267,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     names = [f"adversarial {s // 1024} KB" for s in sizes]
     inputs: list[tuple[str, list[str], str | None]] = [
         (
-            f"seed corpus A, seeds {seeds[0]} to {seeds[-1]}, {n} RFIs",
+            f"seed corpus A, seeds {seeds[0]} to {seeds[-1]}, {n} RFIs per seed",
             seed_texts(seeds, n),
             "A",
         ),
