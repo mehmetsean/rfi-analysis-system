@@ -3,8 +3,10 @@
 const $ = (id) => document.getElementById(id);
 
 function plainError(e) {
-  const lines = String(e && e.message ? e.message : e).trim().split("\n");
-  return lines[lines.length - 1].replace(/^[A-Za-z_.]*Error: /, "").replace(/\.$/, "");
+  const raw = e instanceof Error ? e.message : String(e ?? "");
+  const lines = raw.trim().split("\n");
+  const last = lines[lines.length - 1].replace(/^[A-Za-z_.]*Error: /, "").replace(/\.+$/, "");
+  return last || "unknown error";
 }
 
 function el(tag, text, className) {

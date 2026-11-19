@@ -256,6 +256,39 @@ def test_results_page_shows_measured_tables(context: Any, watch: Watch) -> None:
     pg.close()
 
 
+@pytest.mark.parametrize(
+    ("given", "want"),
+    [
+        ("Traceback (most recent call last):\nValueError: bad input.", "bad input"),
+        ("ValueError: key: value", "key: value"),
+        ("boom", "boom"),
+        ("done..", "done"),
+        ("", "unknown error"),
+    ],
+)
+def test_plain_error_cleans_messages(context: Any, given: str, want: str) -> None:
+    pg = context.new_page()
+    pg.goto(URL + "results.html")
+    got = pg.evaluate("m => [plainError(new Error(m)), plainError(m)]", given)
+    assert got == [want, want]
+    pg.close()
+
+
+def test_results_page_load_error_is_plain(context: Any) -> None:
+    pg = context.new_page()
+    pg.route("**/measured.json", lambda r: r.fulfill(status=404, body="no"))
+    pg.goto(URL + "results.html")
+    pg.wait_for_function(
+        "document.getElementById('status').textContent.includes('Could not')"
+    )
+    text = pg.inner_text("#status")
+    assert text == (
+        "Could not load the results: measured.json is missing from this site."
+        " Reload the page to try again."
+    )
+    pg.close()
+
+
 def test_footer_notices_are_on_both_pages(page: Any, context: Any) -> None:
     other = context.new_page()
     other.goto(URL + "results.html")
