@@ -12,15 +12,15 @@ rfikit has no runtime dependencies. It uses only the Python standard library.
 
 These are used to test and check the code only.
 
-| Part | Version | License |
-| --- | --- | --- |
-| pytest | 9.2.0 | MIT |
-| pytest-cov | 7.1.0 | MIT |
-| hypothesis | 6.170.15 | MPL-2.0 |
-| ruff | 0.17.5 | MIT |
-| mypy | 2.4.1 | MIT |
-| playwright (browser extra) | 1.65.2 | Apache-2.0 |
-| hatchling (build backend) | 1.33.0 | MIT |
+| Part | License |
+| --- | --- |
+| pytest | MIT |
+| pytest-cov | MIT |
+| hypothesis | MPL-2.0 |
+| ruff | MIT |
+| mypy | MIT |
+| playwright (browser extra) | Apache-2.0 |
+| hatchling (build backend) | MIT |
 
 These packages pull in their own dependencies. Each keeps its own license.
 

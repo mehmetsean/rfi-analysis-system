@@ -1,8 +1,4 @@
-"""Check the numbers in README.md against files and a fresh run.
-
-python scripts/reproduce_readme.py          rewrites the numbers block
-python scripts/reproduce_readme.py --check  exits 1 if the README is out of date
-"""
+"""Check the README numbers."""
 
 import argparse
 import json
@@ -84,10 +80,10 @@ def check_memory(text: str) -> list[str]:
 
 def check_benchmark(doc: Json) -> list[str]:
     problems = []
+    rows = BENCH.read_text(encoding="utf-8").splitlines()
     for set_name, label in (("A", "seed corpus A"), ("written", "written set")):
         p, r = level_rates(doc, set_name, "strict")
         want = f"| rfikit | {label}"
-        rows = [x for x in BENCH.read_text(encoding="utf-8").splitlines()]
         row = [x for x in rows if x.startswith(want)]
         if not row:
             problems.append(f"no rfikit row for {label} in docs/benchmark.md")

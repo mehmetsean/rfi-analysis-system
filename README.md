@@ -47,7 +47,7 @@ python scripts/build_site.py
 python -m http.server 8000 --bind 127.0.0.1 --directory _site
 ```
 
-The build downloads the Pyodide core archive (about 7 MB) once and checks it against pinned hashes. Details are in [ADR 12](docs/adr/0012-in-browser-demo.md).
+The build downloads the Pyodide core archive once and checks it against pinned hashes. Details are in [ADR 12](docs/adr/0012-in-browser-demo.md).
 
 ## Measured results
 
@@ -81,7 +81,7 @@ For example, after `rfikit generate --seed 42 --n 600 --out data/`, the command 
 - The rates are measured on synthetic data and on a small written set, not on real RFIs. Expect false positives and misses on real text.
 - Only designations and clause numbers are found. Whether a standard applies is not decided.
 - Limits per input: 32 MiB and 100,000 rows per export, 4 MiB per text file, 100,000 characters per value. `analyze` reads a .csv file only.
-- Peak memory and timing figures come from one machine and one run each.
+- Peak memory and timing figures come from one machine. The first run is quoted; reruns are in [ADR 10](docs/adr/0010-analyze-output-folder.md).
 - Version 0.1.0 is not released yet. The design is in [docs/spec.md](docs/spec.md) and the decisions are in [docs/adr](docs/adr/README.md).
 
 ## Disclaimer
