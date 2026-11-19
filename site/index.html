@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'wasm-unsafe-eval' 'unsafe-eval'; connect-src 'self'; style-src 'self'; img-src 'self' data:; base-uri 'none'; form-action 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#f5f7fa" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#12151b" media="(prefers-color-scheme: dark)">
+<title>rfikit demo</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<header>
+<div>
+<h1>rfikit demo</h1>
+<p class="lead">Finds standard citations in engineering RFIs (requests for information) and shows the normalized key of each one. It runs in your browser.</p>
+<p><a href="https://github.com/mehmetsean/rfi-analysis-system">Source code on GitHub</a></p>
+<nav aria-label="Pages">
+<a href="index.html" aria-current="page">Find citations</a>
+<a href="results.html">Measured results</a>
+</nav>
+<p class="note">Your text stays on this page and nothing is uploaded. The page loads Python (Pyodide) and the rfikit wheel from this site only, and its Content-Security-Policy blocks any background request to another host. Links you click still open. You can check this in the browser's Network tab.</p>
+</div>
+</header>
+<main id="main">
+<div class="card">
+<p id="status" role="status" aria-live="polite">Loading the Python runtime… The first load downloads about 13.8&nbsp;MB from this site.</p>
+<div class="field">
+<label for="text">RFI text</label>
+<textarea id="text" name="text" rows="10" placeholder="Paste RFI text, for example: Per IEEE 1547-2018 …" autocomplete="off" spellcheck="false"></textarea>
+</div>
+<div class="row">
+<button type="button" id="run" class="primary" disabled>Find citations</button>
+<button type="button" id="clear" class="secondary">Clear</button>
+</div>
+<div class="row sample-box">
+<div class="field">
+<label for="seed">Sample seed</label>
+<input id="seed" name="seed" type="number" inputmode="numeric" autocomplete="off" min="0" max="999999" step="1" value="42" aria-describedby="seed-error">
+</div>
+<button type="button" id="sample" class="secondary" disabled>Load synthetic sample</button>
+</div>
+<p id="seed-error" class="error" hidden></p>
+<p class="hint">A sample is three RFIs made from the seed. It is synthetic data: project codes and role names, no real company, facility, project or person.</p>
+</div>
+<section id="results" hidden>
+<h2>Citations in the text</h2>
+<p id="count" role="status"></p>
+<div id="marked" class="marked" tabindex="0" role="region" aria-label="Text with citations marked"></div>
+<h2>Keys</h2>
+<div id="keys"></div>
+</section>
+</main>
+<footer>
+<div>
+<p>Decision support only, not legal, engineering, tax, accounting or assurance advice. No guarantee of compliance. rfikit does not say whether a standard applies or what it requires; check every citation against the official standard. False positives and misses are expected; the measured rates are shown.</p>
+<p>All rights reserved. You may view the code and run it to evaluate it. Commercial use needs a paid license from Mehmet Tuzunkan: <a href="https://www.linkedin.com/in/mstuzunkan">https://www.linkedin.com/in/mstuzunkan</a></p>
+<p>Body names such as IEEE, NESC, IEC, ANSI, ASTM, NEMA, NFPA, UL, ASME, ISA, TIA, CSA and EN are used only to identify their documents. The names belong to their owners. This project has no affiliation with or endorsement from any of them.</p>
+<p>This site serves Pyodide (Mozilla Public License 2.0) and the CPython standard library (Python Software Foundation License) from its own origin. They keep their own licenses.</p>
+</div>
+</footer>
+<script src="pyodide/pyodide.js"></script>
+<script src="common.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

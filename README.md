@@ -2,6 +2,29 @@
 
 rfikit will find standard citations in engineering RFIs and return normalized designation keys. RFI here means request for information, not radio-frequency interference.
 
+![The rfikit demo with a synthetic sample, citations marked and a table of keys](docs/screenshots/demo.png)
+
+## Demo
+
+A static page runs rfikit in your browser with Pyodide. Paste RFI text to see each citation marked with its body name and a table of keys, or load a synthetic sample by seed. A second page shows the measured rates, labeled "measured on synthetic data". Pasted text is not uploaded, and the page requests nothing from other hosts. The live link is https://mehmetsean.github.io/rfi-analysis-system/. It is not active yet.
+
+To build and test it on your machine:
+
+```
+pip install -e ".[dev,browser]"
+python -m playwright install chromium
+python scripts/build_site.py
+python -m http.server 8000 --bind 127.0.0.1 --directory _site
+```
+
+In a second terminal:
+
+```
+RFIKIT_DEMO_URL=http://127.0.0.1:8000/ pytest tests_browser
+```
+
+The build downloads the Pyodide core archive (about 7 MB) once and checks it against pinned hashes. Details are in [ADR 12](docs/adr/0012-in-browser-demo.md).
+
 ## Status
 
 Being rebuilt. Version 0.1 is not released. The design is in [docs/spec.md](docs/spec.md) and the decisions are in [docs/adr](docs/adr/README.md). The package has the citation extractor, a synthetic data generator, an evaluation and a command line.
