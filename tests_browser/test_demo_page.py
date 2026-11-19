@@ -1,8 +1,3 @@
-"""Browser test for the demo. Needs RFIKIT_DEMO_URL and Chromium.
-
-Run: RFIKIT_DEMO_URL=http://127.0.0.1:8000/ pytest tests_browser
-"""
-
 import json
 import os
 from collections.abc import Iterator

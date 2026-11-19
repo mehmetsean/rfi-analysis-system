@@ -18,7 +18,9 @@ def utf16_offsets(text: str) -> list[int]:
 
 def find_citations(text: str) -> list[dict[str, Any]]:
     if len(text) > MAX_CHARS:
-        raise ValueError(f"the text has more than {MAX_CHARS} characters")
+        raise ValueError(
+            f"the text has more than {MAX_CHARS} characters, shorten it and try again"
+        )
     at = utf16_offsets(text)
     rows: list[dict[str, Any]] = []
     for c in extract(text):

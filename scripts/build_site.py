@@ -1,11 +1,3 @@
-"""Build _site/ for the demo: the pages, the rfikit wheel and the Pyodide core files.
-
-python scripts/build_site.py [--out _site] [--cache .cache]
-
-The Pyodide download is checked against a pinned sha256 before use. Nothing from
-the download is run. Files are only hashed, read from the archive and copied.
-"""
-
 import argparse
 import base64
 import hashlib
@@ -72,10 +64,6 @@ def fetch_tarball(cache: Path) -> Path:
 
 
 def extract_core(tarball: Path, out: Path, sri: str = PYODIDE_JS_SRI) -> None:
-    """Copy only CORE_FILES out of the archive, by exact path, as plain bytes.
-
-    The sha384 of pyodide.js is checked before anything is written.
-    """
     wanted = {f"pyodide/{name}": name for name in CORE_FILES}
     found: dict[str, bytes] = {}
     with tarfile.open(tarball, "r:bz2") as tar:

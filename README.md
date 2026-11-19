@@ -6,7 +6,7 @@ rfikit will find standard citations in engineering RFIs and return normalized de
 
 ## Demo
 
-A static page runs rfikit in your browser with Pyodide. Paste RFI text to see each citation marked with its body name and a table of keys, or load a synthetic sample by seed. A second page shows the measured rates, labeled "measured on synthetic data". Pasted text is not uploaded, and the page requests nothing from other hosts. The live link is https://mehmetsean.github.io/rfi-analysis-system/ and it goes live after the release; it does not work yet.
+A static page runs rfikit in your browser with Pyodide. Paste RFI text to see each citation marked with its body name and a table of keys, or load a synthetic sample by seed. A second page shows the measured rates, labeled "measured on synthetic data". Pasted text is not uploaded, and the page requests nothing from other hosts. The live link is https://mehmetsean.github.io/rfi-analysis-system/. It is not active yet.
 
 To build and test it on your machine:
 

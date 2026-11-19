@@ -70,9 +70,9 @@ async function start() {
     const box = $("sets");
     box.appendChild(el("p", doc.data + " Version " + doc.rfikit_version + "."));
     for (const [key, name] of SETS) renderSet(box, doc, key, name);
-    $("status").textContent = "Loaded measured.json.";
+    $("status").textContent = "Loaded the measured results.";
   } catch (e) {
-    $("status").textContent = "Could not load the results: " + e.message;
+    $("status").textContent = "Could not load the results: " + e.message + ". Reload the page to try again.";
   }
 }
 
