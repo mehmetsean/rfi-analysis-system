@@ -2,6 +2,11 @@
 
 const $ = (id) => document.getElementById(id);
 
+function plainError(e) {
+  const lines = String(e && e.message ? e.message : e).trim().split("\n");
+  return lines[lines.length - 1].replace(/^[A-Za-z_.]*Error: /, "").replace(/\.$/, "");
+}
+
 function el(tag, text, className) {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;

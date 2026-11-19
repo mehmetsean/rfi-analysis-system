@@ -72,7 +72,7 @@ async function start() {
     for (const [key, name] of SETS) renderSet(box, doc, key, name);
     $("status").textContent = "Loaded the measured results.";
   } catch (e) {
-    $("status").textContent = "Could not load the results: " + e.message + ". Reload the page to try again.";
+    $("status").textContent = "Could not load the results: " + plainError(e) + ". Reload the page to try again.";
   }
 }
 

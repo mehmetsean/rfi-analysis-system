@@ -10,11 +10,6 @@ function setStatus(text) {
   $("status").textContent = text;
 }
 
-function pyError(e) {
-  const lines = String(e && e.message ? e.message : e).trim().split("\n");
-  return lines[lines.length - 1];
-}
-
 function renderMarked(text, rows) {
   const box = $("marked");
   box.replaceChildren();
@@ -53,7 +48,7 @@ function findCitations() {
     rows = proxy.toJs({ dict_converter: Object.fromEntries });
     proxy.destroy();
   } catch (e) {
-    setStatus("Could not read the text: " + pyError(e));
+    setStatus("Could not read the text: " + plainError(e) + ".");
     return;
   }
   renderMarked(text, rows);
@@ -69,7 +64,7 @@ function loadSample() {
   const bad = raw === "" || !Number.isInteger(seed) || seed < 0 || seed > 999999;
   $("seed").setAttribute("aria-invalid", bad ? "true" : "false");
   $("seed-error").hidden = !bad;
-  $("seed-error").textContent = bad ? "Seed must be a whole number from 0 to 999999." : "";
+  $("seed-error").textContent = bad ? "Seed must be a whole number from 0 to 999999. Enter a whole number and try again." : "";
   if (bad) return;
   $("text").value = demo.sample_text(seed);
   findCitations();
@@ -110,7 +105,7 @@ async function start() {
     $("sample").disabled = false;
     setStatus("Ready. Paste text or load a sample.");
   } catch (e) {
-    setStatus("The Python runtime could not start: " + pyError(e) + ". Reload the page to try again.");
+    setStatus("The Python runtime could not start: " + plainError(e) + ". Reload the page to try again.");
   }
 }
 
