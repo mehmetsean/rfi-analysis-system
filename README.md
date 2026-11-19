@@ -38,7 +38,7 @@ All commands run on your machine. The package imports no network or subprocess m
 
 A static page runs rfikit in your browser with Pyodide. Paste RFI text to see each citation marked with its body name and a table of keys, or load a synthetic sample by seed. A second page shows the measured rates, labeled "measured on synthetic data". Pasted text is not uploaded, and the page requests nothing from other hosts.
 
-The live page is planned at https://mehmetsean.github.io/rfi-analysis-system/. It is not active yet. Until it is, build it on your machine:
+The live page is at https://mehmetsean.github.io/rfi-analysis-system/. To build it on your machine instead:
 
 ```
 pip install -e ".[dev,browser]"
@@ -82,7 +82,7 @@ For example, after `rfikit generate --seed 42 --n 600 --out data/`, the command 
 - Only designations and clause numbers are found. Whether a standard applies is not decided.
 - Limits per input: 32 MiB and 100,000 rows per export, 4 MiB per text file, 100,000 characters per value. `analyze` reads a .csv file only.
 - Peak memory and timing figures come from one machine. The first run is quoted; reruns are in [ADR 10](docs/adr/0010-analyze-output-folder.md).
-- Version 0.1.0 is not released yet. The design is in [docs/spec.md](docs/spec.md) and the decisions are in [docs/adr](docs/adr/README.md).
+- This is version 0.1.0, the first release. The design is in [docs/spec.md](docs/spec.md) and the decisions are in [docs/adr](docs/adr/README.md).
 
 ## Disclaimer
 

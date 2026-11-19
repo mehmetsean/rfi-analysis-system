@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-No version is released yet. The first planned release is 0.1.0, and this policy applies from that release.
+The latest release is 0.1.0.
 
 ## Report a problem
 
