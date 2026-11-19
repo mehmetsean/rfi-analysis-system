@@ -25,10 +25,10 @@
 </header>
 <main id="main">
 <div class="card">
-<p id="status" role="status" aria-live="polite">Loading the Python runtime. The first load downloads about 13 MB from this site.</p>
+<p id="status" role="status" aria-live="polite">Loading the Python runtime… The first load downloads about 13&nbsp;MB from this site.</p>
 <div class="field">
 <label for="text">RFI text</label>
-<textarea id="text" rows="10" autocomplete="off" spellcheck="false"></textarea>
+<textarea id="text" name="text" rows="10" placeholder="Paste RFI text here" autocomplete="off" spellcheck="false"></textarea>
 </div>
 <div class="row">
 <button type="button" id="run" class="primary" disabled>Find citations</button>
@@ -37,10 +37,11 @@
 <div class="row sample-box">
 <div class="field">
 <label for="seed">Sample seed</label>
-<input id="seed" type="number" min="0" max="999999" step="1" value="42">
+<input id="seed" name="seed" type="number" inputmode="numeric" autocomplete="off" min="0" max="999999" step="1" value="42" aria-describedby="seed-error">
 </div>
 <button type="button" id="sample" class="secondary" disabled>Load synthetic sample</button>
 </div>
+<p id="seed-error" class="error" hidden></p>
 <p class="hint">A sample is three RFIs made from the seed. It is synthetic data: project codes and role names, no real company, facility, project or person.</p>
 </div>
 <section id="results" hidden>

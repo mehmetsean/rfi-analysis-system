@@ -131,6 +131,11 @@ def test_html_in_the_text_stays_text(page: Any) -> None:
     assert [m["cited"] for m in marks(page)] == ["IEEE 1547-2018"]
 
 
+def test_one_citation_is_singular_and_counts_code_points(page: Any) -> None:
+    run(page, f"{EMOJI} ASTM A36")
+    assert page.inner_text("#count") == "1 citation found in 10 characters."
+
+
 def test_text_without_citations(page: Any) -> None:
     run(page, "Nothing to see here.")
     assert marks(page) == []
@@ -155,10 +160,17 @@ def test_sample_by_seed(page: Any) -> None:
     assert page.input_value("#text") == first
 
 
-def test_bad_seed_gives_a_message(page: Any) -> None:
-    page.fill("#seed", "-5")
+@pytest.mark.parametrize("bad", ["-5", "", "1.5", "1000000"])
+def test_bad_seed_gives_a_message_at_the_field(page: Any, bad: str) -> None:
+    page.fill("#seed", bad)
     page.click("#sample")
-    assert "whole number" in page.inner_text("#status")
+    assert "whole number" in page.inner_text("#seed-error")
+    assert page.get_attribute("#seed", "aria-invalid") == "true"
+    assert page.get_attribute("#seed", "aria-describedby") == "seed-error"
+    page.fill("#seed", "42")
+    page.click("#sample")
+    assert page.is_hidden("#seed-error")
+    assert page.get_attribute("#seed", "aria-invalid") == "false"
 
 
 def test_clear_hides_the_results(page: Any) -> None:

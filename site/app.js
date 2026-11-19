@@ -23,6 +23,7 @@ function renderMarked(text, rows) {
     if (row.start < pos) continue;
     if (row.start > pos) box.appendChild(document.createTextNode(text.slice(pos, row.start)));
     const mark = el("mark", undefined, "cite");
+    mark.translate = false;
     mark.appendChild(document.createTextNode(text.slice(row.start, row.end)));
     mark.appendChild(el("span", row.body, "tag"));
     box.appendChild(mark);
@@ -39,7 +40,9 @@ function renderKeys(rows) {
     return;
   }
   const body = rows.map((r, i) => [i + 1, r.text, r.key, r.base_key, r.body, r.clause]);
-  box.appendChild(makeTable("Citation keys", KEY_COLUMNS, body, [0]));
+  const table = makeTable("Citation keys", KEY_COLUMNS, body, [0]);
+  table.translate = false;
+  box.appendChild(table);
 }
 
 function findCitations() {
@@ -55,17 +58,19 @@ function findCitations() {
   }
   renderMarked(text, rows);
   renderKeys(rows);
-  $("count").textContent = rows.length + (rows.length === 1 ? " citation" : " citations") + " found in " + text.length + " characters.";
+  $("count").textContent = rows.length + (rows.length === 1 ? " citation" : " citations") + " found in " + [...text].length + " characters.";
   $("results").hidden = false;
   setStatus("Done.");
 }
 
 function loadSample() {
-  const seed = Number($("seed").value);
-  if (!Number.isInteger(seed) || seed < 0 || seed > 999999) {
-    setStatus("Seed must be a whole number from 0 to 999999.");
-    return;
-  }
+  const raw = $("seed").value.trim();
+  const seed = Number(raw);
+  const bad = raw === "" || !Number.isInteger(seed) || seed < 0 || seed > 999999;
+  $("seed").setAttribute("aria-invalid", bad ? "true" : "false");
+  $("seed-error").hidden = !bad;
+  $("seed-error").textContent = bad ? "Seed must be a whole number from 0 to 999999." : "";
+  if (bad) return;
   $("text").value = demo.sample_text(seed);
   findCitations();
   setStatus("Loaded the synthetic sample for seed " + seed + ".");
@@ -105,7 +110,7 @@ async function start() {
     $("sample").disabled = false;
     setStatus("Ready. Paste text or load a sample.");
   } catch (e) {
-    setStatus("The Python runtime could not start: " + pyError(e));
+    setStatus("The Python runtime could not start: " + pyError(e) + ". Reload the page to try again.");
   }
 }
 
