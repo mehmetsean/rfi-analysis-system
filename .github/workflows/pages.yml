@@ -31,7 +31,7 @@ jobs:
           path: _site
 
   deploy:
-    if: ${{ !github.event.repository.private && github.event_name != 'pull_request' }}
+    if: ${{ !github.event.repository.private && github.ref == 'refs/heads/main' && github.event_name != 'pull_request' }}
     needs: build
     runs-on: ubuntu-latest
     permissions:

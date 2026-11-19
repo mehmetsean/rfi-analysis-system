@@ -56,8 +56,8 @@ jobs:
 
   ci:
     name: ci
-    needs: [test]
+    needs: [test, browser]
     if: always()
     runs-on: ubuntu-latest
     steps:
-      - run: test "${{ needs.test.result }}" = "success"
+      - run: test "${{ needs.test.result }}" = "success" && test "${{ needs.browser.result }}" = "success"

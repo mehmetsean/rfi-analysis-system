@@ -26,4 +26,4 @@ Options considered:
 
 ## Consequences
 
-The site is about 13.8 MB, mostly pyodide.asm.wasm and python_stdlib.zip. The first load takes a while. A meta CSP cannot set frame-ancestors, and Pages cannot send headers, so another site can frame the page. The page has no login and sets no cookies. The text limit is 200,000 characters. A Pyodide upgrade changes the version, URL, sha256 and sha384 in one file. check.mjs (axe, console errors, overflow at 1366 and 390 pixels) is run by hand and is not in CI.
+The site is about 13.8 MB, mostly pyodide.asm.wasm and python_stdlib.zip. The first load takes a while. A meta CSP cannot set frame-ancestors, and Pages cannot send headers, so another site can frame the page. The page has no login and sets no cookies. The text limit is 200,000 characters. A Pyodide upgrade changes the version, URL, sha256 and sha384 in one file. Console error and overflow checks at 1366 and 390 pixels run in tests_browser. The axe accessibility check was run by hand, is not in this repo and is not in CI.
