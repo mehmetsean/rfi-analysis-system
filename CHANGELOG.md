@@ -2,9 +2,7 @@
 
 All notable changes are listed here. The format follows Keep a Changelog.
 
-## 0.1.0
-
-Release date: not set yet.
+## Unreleased
 
 ### Added
 
