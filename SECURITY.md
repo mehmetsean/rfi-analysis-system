@@ -2,7 +2,7 @@
 
 ## Supported versions
 
-Only the latest release, 0.1.x, gets fixes.
+The latest release is 0.1.0.
 
 ## Report a problem
 
