@@ -125,6 +125,12 @@ def test_astral_character_before_a_citation(page: Any) -> None:
     assert found[1]["before"] == f" and {EMOJI} "
 
 
+def test_marks_and_keys_are_not_translated(page: Any) -> None:
+    run(page, TEXT)
+    assert page.eval_on_selector("mark.cite", "e => e.translate") is False
+    assert page.eval_on_selector("#keys .scroll td", "e => e.translate") is False
+
+
 def test_html_in_the_text_stays_text(page: Any) -> None:
     run(page, "<b>bold</b> <img src=x onerror=alert(1)> IEEE 1547-2018")
     assert page.locator("#marked b, #marked img").count() == 0
@@ -164,7 +170,9 @@ def test_sample_by_seed(page: Any) -> None:
 def test_bad_seed_gives_a_message_at_the_field(page: Any, bad: str) -> None:
     page.fill("#seed", bad)
     page.click("#sample")
+    assert page.is_visible("#seed-error")
     assert "whole number" in page.inner_text("#seed-error")
+    assert "try again" in page.inner_text("#seed-error")
     assert page.get_attribute("#seed", "aria-invalid") == "true"
     assert page.get_attribute("#seed", "aria-describedby") == "seed-error"
     page.fill("#seed", "42")
